@@ -1,0 +1,320 @@
+@import url("https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700&family=Manrope:wght@400;600;700&display=swap");
+
+:root {
+  --bg: #0b1324;
+  --bg-soft: #121f38;
+  --text: #e9f1ff;
+  --muted: #9fb0ce;
+  --accent: #08d9b1;
+  --accent-2: #ff8f5a;
+  --danger: #ff6262;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Manrope", "Segoe UI", Tahoma, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(8, 217, 177, 0.25), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(255, 143, 90, 0.2), transparent 25%),
+    var(--bg);
+}
+
+.app-shell {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(8, 15, 29, 0.9), rgba(8, 15, 29, 0.55), rgba(8, 15, 29, 0));
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #5ff4dc);
+  box-shadow: 0 0 18px rgba(8, 217, 177, 0.75);
+}
+
+.brand-block h1 {
+  margin: 0;
+  font-family: "Exo 2", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
+
+.brand-block p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ghost-btn,
+.primary-btn {
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.logout-btn {
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  border: 1px solid rgba(240, 136, 136, 0.42);
+  background: linear-gradient(135deg, #e66767, #dc4653);
+  box-shadow: 0 10px 24px rgba(220, 70, 83, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.logout-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 13px 28px rgba(220, 70, 83, 0.45);
+}
+
+.ghost-btn {
+  color: #06101f;
+  background: linear-gradient(135deg, #66f0c8, #17c88c);
+  border: 1px solid rgba(126, 255, 212, 0.48);
+  box-shadow: 0 10px 24px rgba(23, 200, 140, 0.34);
+}
+
+.primary-btn {
+  color: #06101f;
+  background: linear-gradient(135deg, #ffd36e, #ff9a5f);
+  box-shadow: 0 10px 26px rgba(255, 154, 95, 0.38);
+}
+
+.ghost-btn:hover,
+.primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.ghost-btn:hover {
+  box-shadow: 0 13px 28px rgba(23, 200, 140, 0.44);
+}
+
+.primary-btn:hover {
+  box-shadow: 0 13px 30px rgba(255, 154, 95, 0.48);
+}
+
+.status-panel {
+  position: absolute;
+  z-index: 9;
+  top: 74px;
+  left: 18px;
+  background: rgba(9, 19, 39, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  backdrop-filter: blur(8px);
+}
+
+.map-root {
+  width: 100%;
+  height: 100%;
+}
+
+.tower-marker {
+  width: 42px;
+  height: 42px;
+  color: var(--accent-2);
+  background: rgba(10, 20, 39, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.48), 0 0 0 6px rgba(255, 143, 90, 0.12);
+}
+
+.tower-marker svg {
+  width: 26px;
+  height: 26px;
+}
+
+.maplibregl-popup-content {
+  background: rgba(10, 21, 42, 0.97) !important;
+  color: #eaf2ff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  font-size: 0.82rem !important;
+  line-height: 1.35 !important;
+}
+
+.maplibregl-popup-content strong {
+  color: #ffffff !important;
+}
+
+.maplibregl-popup-content * {
+  color: #eaf2ff !important;
+}
+
+.maplibregl-popup-close-button {
+  color: #eaf2ff !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(10, 21, 42, 0.97) !important;
+  border-bottom-color: rgba(10, 21, 42, 0.97) !important;
+}
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: rgba(4, 9, 18, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.modal-card {
+  position: relative;
+  width: min(420px, 100%);
+  border-radius: 16px;
+  background: linear-gradient(155deg, #132544, #0c162d);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.48);
+  padding: 18px 18px 16px;
+}
+
+.modal-card h2 {
+  margin: 0 0 14px;
+  font-family: "Exo 2", sans-serif;
+}
+
+.modal-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  font-size: 1.55rem;
+}
+
+.modal-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.87rem;
+  color: var(--muted);
+}
+
+.modal-card input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.modal-card input:focus {
+  border-color: rgba(8, 217, 177, 0.9);
+  box-shadow: 0 0 0 3px rgba(8, 217, 177, 0.22);
+}
+
+.modal-submit {
+  width: 100%;
+}
+
+.form-message {
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 0.82rem;
+}
+
+.form-message-error {
+  border: 1px solid rgba(255, 98, 98, 0.45);
+  background: rgba(255, 98, 98, 0.12);
+  color: #ffd1d1;
+}
+
+.form-message-success {
+  border: 1px solid rgba(8, 217, 177, 0.45);
+  background: rgba(8, 217, 177, 0.12);
+  color: #c9fff2;
+}
+
+.modal-submit:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .topbar-actions {
+    justify-content: stretch;
+  }
+
+  .topbar-actions button {
+    flex: 1;
+  }
+
+  .status-panel {
+    top: 122px;
+  }
+}
