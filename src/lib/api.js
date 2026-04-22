@@ -22,7 +22,7 @@ async function readError(response) {
 }
 
 export async function fetchDevices() {
-  const response = await fetch(buildUrl("/api/v1/devices"), {
+  const response = await fetch(buildUrl("/api/v1/monitoring_posts"), {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -34,10 +34,10 @@ export async function fetchDevices() {
   }
 
   const payload = await response.json();
-  if (!payload || !Array.isArray(payload.devices)) {
-    throw new Error("Некорректный формат ответа /api/v1/devices");
+  if (!payload || !Array.isArray(payload.monitoring_posts)) {
+    throw new Error("Некорректный формат ответа /api/v1/monitoring_posts");
   }
-  return payload.devices;
+  return payload.monitoring_posts;
 }
 
 export async function registerByEmail(email) {
