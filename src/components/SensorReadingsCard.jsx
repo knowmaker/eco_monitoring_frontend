@@ -8,6 +8,7 @@ import {
   fetchMeteoStateHourly,
 } from "../lib/api";
 import SimpleLineChart from "./SimpleLineChart";
+import WindCompassStrip from "./WindCompassStrip";
 
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
@@ -161,6 +162,8 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     return selectedSeries ? [selectedSeries] : [];
   }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series]);
 
+  const isWindDirectionMetric = selectedDeviceType === "meteo" && selectedMetricKey === "hor_win_dir";
+
   return (
     <aside className="readings-card">
       <h2>Показания датчиков</h2>
@@ -230,7 +233,13 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
 
           {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
-          {!isLoading && !errorText && <SimpleLineChart series={effectiveSeries} />}
+          {!isLoading &&
+            !errorText &&
+            (isWindDirectionMetric ? (
+              <WindCompassStrip points={effectiveSeries[0]?.points ?? []} />
+            ) : (
+              <SimpleLineChart series={effectiveSeries} />
+            ))}
         </>
       )}
     </aside>
