@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
@@ -16,10 +16,10 @@ const DEFAULT_ZOOM = 12;
 const POSTS_REFRESH_MS = 30_000;
 
 const DEVICE_TYPE_LABELS = {
-  gas: "Р“Р°Р·",
-  dust: "РџС‹Р»СЊ",
-  meteo: "РњРµС‚РµРѕ",
-  ivtm: "РР’РўРњ",
+  gas: "Газ",
+  dust: "Пыль",
+  meteo: "Метео",
+  ivtm: "ИВТМ",
 };
 
 function createTowerMarkerElement(isActive) {
@@ -37,29 +37,29 @@ function createTowerMarkerElement(isActive) {
 
 function formatEpochMs(epochMs) {
   if (!Number.isFinite(epochMs)) {
-    return "вЂ”";
+    return "—";
   }
   const date = new Date(epochMs);
   if (Number.isNaN(date.getTime())) {
-    return "вЂ”";
+    return "—";
   }
   return date.toLocaleString("ru-RU");
 }
 
 function formatDateTime(value) {
   if (!value) {
-    return "вЂ”";
+    return "—";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "вЂ”";
+    return "—";
   }
   return date.toLocaleString("ru-RU");
 }
 
 function formatCoordinates(latitude, longitude) {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return "вЂ”";
+    return "—";
   }
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 }
@@ -87,12 +87,12 @@ export default function App() {
 
   const statusText = useMemo(() => {
     if (isLoadingPosts) {
-      return "Р—Р°РіСЂСѓР·РєР° СЃС‚Р°РЅС†РёР№...";
+      return "Загрузка станций...";
     }
     if (loadError) {
       return loadError;
     }
-    return `РЎС‚Р°РЅС†РёР№ РЅР° РєР°СЂС‚Рµ: ${monitoringPosts.length}`;
+    return `Станций на карте: ${monitoringPosts.length}`;
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
 
   const selectedMonitoringPost =
@@ -149,7 +149,7 @@ export default function App() {
         if (cancelled) {
           return;
         }
-        setLoadError(error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ СЃС‚Р°РЅС†РёРё");
+        setLoadError(error instanceof Error ? error.message : "Не удалось получить станции");
       } finally {
         if (!cancelled) {
           setIsLoadingPosts(false);
@@ -179,7 +179,7 @@ export default function App() {
 
     points.forEach((post) => {
       const element = createTowerMarkerElement(post.id === selectedMonitoringPostId);
-      element.title = `РЎС‚Р°РЅС†РёСЏ ${post.serial}`;
+      element.title = `Станция ${post.serial}`;
       element.addEventListener("click", () => {
         setIsStationCardOpen(true);
         setIsReadingsCardOpen(true);
@@ -232,7 +232,7 @@ export default function App() {
         if (cancelled) {
           return;
         }
-        setDetailsError(error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ СЃС‚Р°РЅС†РёРё");
+        setDetailsError(error instanceof Error ? error.message : "Не удалось получить данные станции");
       })
       .finally(() => {
         if (!cancelled) {
@@ -260,15 +260,15 @@ export default function App() {
         <div className="topbar-actions">
           {isAuthenticated ? (
             <button className="logout-btn" type="button" onClick={handleLogout}>
-              Р’С‹С…РѕРґ
+              Выход
             </button>
           ) : (
             <>
               <button className="ghost-btn" type="button" onClick={() => setModalMode("login")}>
-                Р’С…РѕРґ
+                Вход
               </button>
               <button className="primary-btn" type="button" onClick={() => setModalMode("register")}>
-                Р РµРіРёСЃС‚СЂР°С†РёСЏ
+                Регистрация
               </button>
             </>
           )}
@@ -278,100 +278,102 @@ export default function App() {
       <div className="status-panel">{statusText}</div>
 
       {isStationCardOpen && (
-      <aside className="station-card">
-        <div className="card-header">
-          <h2>Карточка станции</h2>
-          <button
-            type="button"
-            className="card-close-btn"
-            aria-label="Закрыть карточки"
-            onClick={() => {
-              setIsStationCardOpen(false);
-              setIsReadingsCardOpen(false);
-            }}
-          >
-            x
-          </button>
-        </div>
+        <aside className="station-card">
+          <div className="card-header">
+            <h2>Карточка станции</h2>
+            <button
+              type="button"
+              className="card-close-btn"
+              aria-label="Закрыть карточки"
+              onClick={() => {
+                setIsStationCardOpen(false);
+                setIsReadingsCardOpen(false);
+              }}
+            >
+              ×
+            </button>
+          </div>
 
-        {selectedMonitoringPostId === null && (
-          <p className="station-card-hint">РќР°Р¶РјРёС‚Рµ РЅР° С‚РѕС‡РєСѓ РЅР° РєР°СЂС‚Рµ, С‡С‚РѕР±С‹ РїРѕСЃРјРѕС‚СЂРµС‚СЊ РґР°РЅРЅС‹Рµ СЃС‚Р°РЅС†РёРё.</p>
-        )}
+          {selectedMonitoringPostId === null && (
+            <p className="station-card-hint">Нажмите на точку на карте, чтобы посмотреть данные станции.</p>
+          )}
 
-        {selectedMonitoringPostId !== null && (
-          <>
-            <div className="station-grid">
-              <div>
-                <span className="station-grid-label">РЎРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ</span>
-                <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "вЂ”"}</span>
+          {selectedMonitoringPostId !== null && (
+            <>
+              <div className="station-grid">
+                <div>
+                  <span className="station-grid-label">Серийный номер</span>
+                  <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
+                </div>
+                <div>
+                  <span className="station-grid-label">Координаты</span>
+                  <span className="station-grid-value">
+                    {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
+                  </span>
+                </div>
+                <div>
+                  <span className="station-grid-label">Тип поста</span>
+                  <span className="station-grid-value">
+                    {selectedMonitoringPost?.is_stationary ? "Стационарный" : "Мобильный"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="station-grid-label">РљРѕРѕСЂРґРёРЅР°С‚С‹</span>
-                <span className="station-grid-value">
-                  {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
-                </span>
-              </div>
-              <div>
-                <span className="station-grid-label">РўРёРї РїРѕСЃС‚Р°</span>
-                <span className="station-grid-value">
-                  {selectedMonitoringPost?.is_stationary ? "РЎС‚Р°С†РёРѕРЅР°СЂРЅС‹Р№" : "РњРѕР±РёР»СЊРЅС‹Р№"}
-                </span>
-              </div>
-            </div>
 
-            {isLoadingDetails && <p className="station-card-hint">Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… СЃС‚Р°РЅС†РёРё...</p>}
-            {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
+              {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
+              {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
 
-            {!isLoadingDetails && !detailsError && (
-              <>
-                <section className="station-section">
-                  <h3>Р”Р°РЅРЅС‹Рµ PLC</h3>
-                  {selectedPlcState ? (
-                    <div className="station-grid station-grid-compact">
-                      <div>
-                        <span className="station-grid-label">Р’СЂРµРјСЏ PLC</span>
-                        <span className="station-grid-value">{formatEpochMs(selectedPlcState.plc_timestamp_ms)}</span>
+              {!isLoadingDetails && !detailsError && (
+                <>
+                  <section className="station-section">
+                    <h3>Данные PLC</h3>
+                    {selectedPlcState ? (
+                      <div className="station-grid station-grid-compact">
+                        <div>
+                          <span className="station-grid-label">Время PLC</span>
+                          <span className="station-grid-value">{formatEpochMs(selectedPlcState.plc_timestamp_ms)}</span>
+                        </div>
+                        <div>
+                          <span className="station-grid-label">Получено сервером</span>
+                          <span className="station-grid-value">{formatDateTime(selectedPlcState.received_at)}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="station-grid-label">РџРѕР»СѓС‡РµРЅРѕ СЃРµСЂРІРµСЂРѕРј</span>
-                        <span className="station-grid-value">{formatDateTime(selectedPlcState.received_at)}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="station-card-hint">РџРѕ СЌС‚РѕР№ СЃС‚Р°РЅС†РёРё РїРѕРєР° РЅРµС‚ Р·Р°РїРёСЃРµР№ РІ plc_state.</p>
-                  )}
-                </section>
+                    ) : (
+                      <p className="station-card-hint">По этой станции пока нет записей в plc_state.</p>
+                    )}
+                  </section>
 
-                <section className="station-section">
-                  <h3>РЈСЃС‚СЂРѕР№СЃС‚РІР° СЃС‚Р°РЅС†РёРё</h3>
-                  {selectedDevices.length ? (
-                    <ul className="station-device-list">
-                      {selectedDevices.map((device) => (
-                        <li key={device.device_type} className="station-device-item">
-                          <button
-                            type="button"
-                            className={`station-device-button${
-                              selectedDeviceType === device.device_type ? " station-device-button-active" : ""
-                            }`}
-                            onClick={() => setSelectedDeviceType(device.device_type)}
-                          >
-                            <span className="station-device-type">
-                              {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
-                            </span>
-                            <span className="station-device-name">{device.device_name || "Р‘РµР· РёРјРµРЅРё"}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="station-card-hint">РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ (С‚РѕР»СЊРєРѕ BAD ping Р·Р° РІРµСЃСЊ РїРµСЂРёРѕРґ).</p>
-                  )}
-                </section>
-              </>
-            )}
-          </>
-        )}
-      </aside>
+                  <section className="station-section">
+                    <h3>Устройства станции</h3>
+                    {selectedDevices.length ? (
+                      <ul className="station-device-list">
+                        {selectedDevices.map((device) => (
+                          <li key={device.device_type} className="station-device-item">
+                            <button
+                              type="button"
+                              className={`station-device-button${
+                                selectedDeviceType === device.device_type ? " station-device-button-active" : ""
+                              }`}
+                              onClick={() => setSelectedDeviceType(device.device_type)}
+                            >
+                              <span className="station-device-type">
+                                {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                              </span>
+                              <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="station-card-hint">
+                        Нет доступных устройств (только BAD ping за весь период).
+                      </p>
+                    )}
+                  </section>
+                </>
+              )}
+            </>
+          )}
+        </aside>
       )}
 
       {isStationCardOpen && isReadingsCardOpen && (
@@ -394,7 +396,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
