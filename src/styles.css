@@ -375,39 +375,36 @@ button {
   background: rgba(8, 217, 177, 0.14);
 }
 
+.metric-tabs {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.metric-tab {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.metric-tab-active {
+  border-color: rgba(8, 217, 177, 0.62);
+  background: rgba(8, 217, 177, 0.14);
+}
+
 .chart-wrap {
   margin-top: 8px;
 }
 
-.chart-svg {
+.chart-echarts {
   width: 100%;
-  display: block;
-}
-
-.chart-axis-label {
-  font-size: 11px;
-  fill: #9fb0ce;
-}
-
-.chart-legend {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-}
-
-.chart-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  color: var(--muted);
-}
-
-.chart-legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  height: 300px;
 }
 
 .chart-empty {

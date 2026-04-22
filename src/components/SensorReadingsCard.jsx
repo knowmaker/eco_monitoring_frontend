@@ -48,6 +48,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   const [series, setSeries] = useState([]);
   const [gasSubstances, setGasSubstances] = useState([]);
   const [selectedGasSubstance, setSelectedGasSubstance] = useState(null);
+  const [selectedMetricKey, setSelectedMetricKey] = useState(null);
   const [latestGasState, setLatestGasState] = useState(null);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       setSeries([]);
       setGasSubstances([]);
       setSelectedGasSubstance(null);
+      setSelectedMetricKey(null);
       setLatestGasState(null);
       setErrorText("");
       setIsLoading(false);
@@ -66,6 +68,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     setErrorText("");
     setSeries([]);
     setGasSubstances([]);
+    setSelectedMetricKey(null);
     setLatestGasState(null);
 
     const load = async () => {
@@ -87,6 +90,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           }
           return substances[0]?.substance_code ?? null;
         });
+        setSelectedMetricKey(null);
         return;
       }
 
@@ -104,7 +108,14 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       if (cancelled) {
         return;
       }
-      setSeries(payload.series || []);
+      const nextSeries = payload.series || [];
+      setSeries(nextSeries);
+      setSelectedMetricKey((current) => {
+        if (current && nextSeries.some((s) => s.key === current)) {
+          return current;
+        }
+        return nextSeries[0]?.key ?? null;
+      });
     };
 
     load()
@@ -126,25 +137,29 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   }, [monitoringPostId, selectedDeviceType, day]);
 
   const effectiveSeries = useMemo(() => {
-    if (selectedDeviceType !== "gas") {
-      return series;
+    if (selectedDeviceType === "gas") {
+      if (!selectedGasSubstance) {
+        return [];
+      }
+      const substance = gasSubstances.find((s) => s.substance_code === selectedGasSubstance);
+      if (!substance) {
+        return [];
+      }
+      return [
+        {
+          key: substance.substance_code,
+          label: substance.substance_code,
+          points: substance.points,
+        },
+      ];
     }
 
-    if (!selectedGasSubstance) {
+    if (!selectedMetricKey) {
       return [];
     }
-    const substance = gasSubstances.find((s) => s.substance_code === selectedGasSubstance);
-    if (!substance) {
-      return [];
-    }
-    return [
-      {
-        key: substance.substance_code,
-        label: substance.substance_code,
-        points: substance.points,
-      },
-    ];
-  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, series]);
+    const selectedSeries = series.find((s) => s.key === selectedMetricKey);
+    return selectedSeries ? [selectedSeries] : [];
+  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series]);
 
   return (
     <aside className="readings-card">
@@ -193,6 +208,21 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                   onClick={() => setSelectedGasSubstance(substance.substance_code)}
                 >
                   {substance.substance_code}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selectedDeviceType !== "gas" && series.length > 1 && (
+            <div className="metric-tabs">
+              {series.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`metric-tab${selectedMetricKey === item.key ? " metric-tab-active" : ""}`}
+                  onClick={() => setSelectedMetricKey(item.key)}
+                >
+                  {item.label}
                 </button>
               ))}
             </div>
