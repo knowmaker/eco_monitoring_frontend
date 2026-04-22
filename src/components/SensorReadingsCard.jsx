@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 import {
   fetchDustStateHourly,
@@ -29,10 +29,10 @@ function isWindSpeedSeries(item) {
 }
 
 const DEVICE_TYPE_LABELS = {
-  gas: "Газ",
-  dust: "Пыль",
-  meteo: "Метео",
-  ivtm: "ИВТМ",
+  gas: "Р“Р°Р·",
+  dust: "РџС‹Р»СЊ",
+  meteo: "РњРµС‚РµРѕ",
+  ivtm: "РР’РўРњ",
 };
 
 function toIsoDay(day) {
@@ -51,16 +51,16 @@ function shiftDay(day, delta) {
 
 function formatMs(value) {
   if (!Number.isFinite(value)) {
-    return "—";
+    return "вЂ”";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return "вЂ”";
   }
   return date.toLocaleString("ru-RU");
 }
 
-export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType }) {
+export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
   const [day, setDay] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
@@ -136,7 +136,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         if (cancelled) {
           return;
         }
-        setErrorText(error instanceof Error ? error.message : "Не удалось загрузить показания");
+        setErrorText(error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїРѕРєР°Р·Р°РЅРёСЏ");
       })
       .finally(() => {
         if (!cancelled) {
@@ -220,11 +220,16 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
 
   return (
     <aside className="readings-card">
-      <h2>Показания датчиков</h2>
+      <div className="card-header">
+        <h2>Показания датчиков</h2>
+        <button type="button" className="card-close-btn" aria-label="Закрыть правую карточку" onClick={onClose}>
+          x
+        </button>
+      </div>
 
-      {!monitoringPostId && <p className="station-card-hint">Сначала выберите станцию на карте.</p>}
+      {!monitoringPostId && <p className="station-card-hint">РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ СЃС‚Р°РЅС†РёСЋ РЅР° РєР°СЂС‚Рµ.</p>}
       {monitoringPostId && !selectedDeviceType && (
-        <p className="station-card-hint">Выберите тип датчика в левой карточке.</p>
+        <p className="station-card-hint">Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї РґР°С‚С‡РёРєР° РІ Р»РµРІРѕР№ РєР°СЂС‚РѕС‡РєРµ.</p>
       )}
 
       {monitoringPostId && selectedDeviceType && (
@@ -245,12 +250,12 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           {selectedDeviceType === "gas" && (
             <div className="gas-meta">
               <div className="gas-meta-row">
-                <span>Последняя запись gas_state</span>
-                <span>{latestGasState ? formatMs(latestGasState.device_timestamp_ms) : "—"}</span>
+                <span>РџРѕСЃР»РµРґРЅСЏСЏ Р·Р°РїРёСЃСЊ gas_state</span>
+                <span>{latestGasState ? formatMs(latestGasState.device_timestamp_ms) : "вЂ”"}</span>
               </div>
               <div className="gas-meta-row">
-                <span>Статус калибровки</span>
-                <span>{latestGasState?.calibration_status || "—"}</span>
+                <span>РЎС‚Р°С‚СѓСЃ РєР°Р»РёР±СЂРѕРІРєРё</span>
+                <span>{latestGasState?.calibration_status || "вЂ”"}</span>
               </div>
             </div>
           )}
@@ -285,7 +290,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           )}
 
-          {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
+          {isLoading && <p className="station-card-hint">Р—Р°РіСЂСѓР·РєР° РіСЂР°С„РёРєР°...</p>}
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
             !errorText &&
@@ -302,3 +307,5 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     </aside>
   );
 }
+
+
