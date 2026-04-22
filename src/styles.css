@@ -431,7 +431,35 @@ button {
   grid-template-columns: repeat(24, minmax(62px, 1fr));
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(8, 217, 177, 0.82) rgba(255, 255, 255, 0.14);
+}
+
+.wind-strip::-webkit-scrollbar {
+  height: 10px;
+}
+
+.wind-strip::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.wind-strip::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.wind-strip::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(8, 217, 177, 0.95), rgba(76, 184, 255, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.36);
+}
+
+.wind-strip::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(8, 217, 177, 1), rgba(76, 184, 255, 1));
 }
 
 .wind-strip-cell {
