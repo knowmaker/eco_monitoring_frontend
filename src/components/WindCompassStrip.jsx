@@ -62,7 +62,6 @@ export default function WindCompassStrip({ directionPoints, speedPoints }) {
 
   return (
     <div className="wind-strip-wrap">
-      <div className="wind-strip-help">Wind tab: arrow shows direction, bar length shows wind speed.</div>
       <div className="wind-strip">
         {hours.map((item) => (
           <div className="wind-strip-cell" key={item.hour}>

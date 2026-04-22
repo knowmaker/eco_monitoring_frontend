@@ -695,14 +695,19 @@ button {
   }
 
   .status-panel {
-    top: 122px;
+    top: 92px;
+    left: 10px;
+    right: 10px;
+    padding: 6px 10px;
+    font-size: 0.76rem;
   }
 
   .station-card {
-    top: 160px;
+    top: 136px;
     width: calc(100vw - 20px);
     left: 10px;
-    max-height: 42vh;
+    max-height: 28vh;
+    padding: 10px 10px 9px;
   }
 
   .readings-card {
@@ -710,6 +715,17 @@ button {
     bottom: 10px;
     right: 10px;
     width: calc(100vw - 20px);
-    max-height: 42vh;
+    max-height: 28vh;
+    padding: 10px 10px 9px;
+  }
+
+  .readings-toolbar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .day-switcher span {
+    min-width: 90px;
   }
 }
