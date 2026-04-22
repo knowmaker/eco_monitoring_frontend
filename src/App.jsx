@@ -271,10 +271,6 @@ export default function App() {
           <>
             <div className="station-grid">
               <div>
-                <span className="station-grid-label">ID</span>
-                <span className="station-grid-value">{selectedMonitoringPost?.id ?? "—"}</span>
-              </div>
-              <div>
                 <span className="station-grid-label">Серийный номер</span>
                 <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
               </div>
@@ -308,10 +304,6 @@ export default function App() {
                       <div>
                         <span className="station-grid-label">Получено сервером</span>
                         <span className="station-grid-value">{formatDateTime(selectedPlcState.received_at)}</span>
-                      </div>
-                      <div>
-                        <span className="station-grid-label">Период агрегации</span>
-                        <span className="station-grid-value">{selectedPlcState.aggregation_period_min} мин</span>
                       </div>
                     </div>
                   ) : (
