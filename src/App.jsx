@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
+
 import AuthModal from "./components/AuthModal";
+import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
   AUTH_TOKEN_STORAGE_KEY,
   fetchAvailableDeviceState,
@@ -70,11 +72,14 @@ export default function App() {
   const [monitoringPosts, setMonitoringPosts] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+
   const [selectedMonitoringPostId, setSelectedMonitoringPostId] = useState(null);
   const [selectedPlcState, setSelectedPlcState] = useState(null);
   const [selectedDevices, setSelectedDevices] = useState([]);
+  const [selectedDeviceType, setSelectedDeviceType] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState("");
+
   const [modalMode, setModalMode] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -189,6 +194,7 @@ export default function App() {
     if (selectedMonitoringPostId === null) {
       setSelectedPlcState(null);
       setSelectedDevices([]);
+      setSelectedDeviceType(null);
       setDetailsError("");
       setIsLoadingDetails(false);
       return;
@@ -199,6 +205,7 @@ export default function App() {
     setDetailsError("");
     setSelectedPlcState(null);
     setSelectedDevices([]);
+    setSelectedDeviceType(null);
 
     Promise.all([
       fetchLatestPlcState(selectedMonitoringPostId),
@@ -210,6 +217,12 @@ export default function App() {
         }
         setSelectedPlcState(plcState);
         setSelectedDevices(devices);
+        setSelectedDeviceType((current) => {
+          if (current && devices.some((device) => device.device_type === current)) {
+            return current;
+          }
+          return null;
+        });
       })
       .catch((error) => {
         if (cancelled) {
@@ -317,10 +330,18 @@ export default function App() {
                     <ul className="station-device-list">
                       {selectedDevices.map((device) => (
                         <li key={device.device_type} className="station-device-item">
-                          <span className="station-device-type">
-                            {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
-                          </span>
-                          <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                          <button
+                            type="button"
+                            className={`station-device-button${
+                              selectedDeviceType === device.device_type ? " station-device-button-active" : ""
+                            }`}
+                            onClick={() => setSelectedDeviceType(device.device_type)}
+                          >
+                            <span className="station-device-type">
+                              {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                            </span>
+                            <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -333,6 +354,11 @@ export default function App() {
           </>
         )}
       </aside>
+
+      <SensorReadingsCard
+        monitoringPostId={selectedMonitoringPostId}
+        selectedDeviceType={selectedDeviceType}
+      />
 
       <main ref={mapContainerRef} className="map-root" />
 
