@@ -10,6 +10,24 @@ import {
 import SimpleLineChart from "./SimpleLineChart";
 import WindCompassStrip from "./WindCompassStrip";
 
+const METEO_WIND_KEY = "__meteo_wind__";
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isWindDirectionSeries(item) {
+  const key = normalizeText(item?.key);
+  const label = normalizeText(item?.label);
+  return key === "hor_win_dir" || key === "wind_direction" || label === "wind direction";
+}
+
+function isWindSpeedSeries(item) {
+  const key = normalizeText(item?.key);
+  const label = normalizeText(item?.label);
+  return key === "hor_win_spd" || key === "wind_speed" || label === "wind speed";
+}
+
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
   dust: "Пыль",
@@ -111,12 +129,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       }
       const nextSeries = payload.series || [];
       setSeries(nextSeries);
-      setSelectedMetricKey((current) => {
-        if (current && nextSeries.some((s) => s.key === current)) {
-          return current;
-        }
-        return nextSeries[0]?.key ?? null;
-      });
     };
 
     load()
@@ -136,6 +148,45 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       cancelled = true;
     };
   }, [monitoringPostId, selectedDeviceType, day]);
+
+  const meteoWindDirectionSeries = useMemo(
+    () => (selectedDeviceType === "meteo" ? series.find((item) => isWindDirectionSeries(item)) ?? null : null),
+    [selectedDeviceType, series]
+  );
+
+  const meteoWindSpeedSeries = useMemo(
+    () => (selectedDeviceType === "meteo" ? series.find((item) => isWindSpeedSeries(item)) ?? null : null),
+    [selectedDeviceType, series]
+  );
+
+  const metricTabs = useMemo(() => {
+    if (selectedDeviceType === "gas") {
+      return [];
+    }
+    if (selectedDeviceType !== "meteo") {
+      return series;
+    }
+
+    const nonWindSeries = series.filter((item) => !isWindDirectionSeries(item) && !isWindSpeedSeries(item));
+    if (!meteoWindDirectionSeries && !meteoWindSpeedSeries) {
+      return nonWindSeries;
+    }
+    return [...nonWindSeries, { key: METEO_WIND_KEY, label: "Wind" }];
+  }, [selectedDeviceType, series, meteoWindDirectionSeries, meteoWindSpeedSeries]);
+
+  useEffect(() => {
+    if (!monitoringPostId || !selectedDeviceType || selectedDeviceType === "gas") {
+      setSelectedMetricKey(null);
+      return;
+    }
+    const availableKeys = metricTabs.map((item) => item.key);
+    setSelectedMetricKey((current) => {
+      if (current && availableKeys.includes(current)) {
+        return current;
+      }
+      return availableKeys[0] ?? null;
+    });
+  }, [monitoringPostId, selectedDeviceType, metricTabs]);
 
   const effectiveSeries = useMemo(() => {
     if (selectedDeviceType === "gas") {
@@ -158,11 +209,14 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     if (!selectedMetricKey) {
       return [];
     }
+    if (selectedMetricKey === METEO_WIND_KEY) {
+      return [];
+    }
     const selectedSeries = series.find((s) => s.key === selectedMetricKey);
     return selectedSeries ? [selectedSeries] : [];
   }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series]);
 
-  const isWindDirectionMetric = selectedDeviceType === "meteo" && selectedMetricKey === "hor_win_dir";
+  const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
 
   return (
     <aside className="readings-card">
@@ -216,9 +270,9 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           )}
 
-          {selectedDeviceType !== "gas" && series.length > 1 && (
+          {selectedDeviceType !== "gas" && metricTabs.length > 1 && (
             <div className="metric-tabs">
-              {series.map((item) => (
+              {metricTabs.map((item) => (
                 <button
                   key={item.key}
                   type="button"
@@ -235,8 +289,11 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
             !errorText &&
-            (isWindDirectionMetric ? (
-              <WindCompassStrip points={effectiveSeries[0]?.points ?? []} />
+            (isWindCompositeMetric ? (
+              <WindCompassStrip
+                directionPoints={meteoWindDirectionSeries?.points ?? []}
+                speedPoints={meteoWindSpeedSeries?.points ?? []}
+              />
             ) : (
               <SimpleLineChart series={effectiveSeries} />
             ))}

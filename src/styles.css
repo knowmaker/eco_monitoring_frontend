@@ -481,6 +481,27 @@ button {
   line-height: 1.2;
 }
 
+.wind-strip-speed-track {
+  margin-top: 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.wind-strip-speed-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4cb8ff, #08d9b1);
+}
+
+.wind-strip-speed-value {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.2;
+}
+
 .map-root {
   width: 100%;
   height: 100%;
