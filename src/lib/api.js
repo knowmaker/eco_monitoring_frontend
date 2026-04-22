@@ -21,7 +21,7 @@ async function readError(response) {
   return `HTTP ${response.status}`;
 }
 
-export async function fetchDevices() {
+export async function fetchMonitoringPosts() {
   const response = await fetch(buildUrl("/api/v1/monitoring_posts"), {
     method: "GET",
     headers: {
@@ -30,7 +30,7 @@ export async function fetchDevices() {
   });
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки устройств: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки станций: ${await readError(response)}`);
   }
 
   const payload = await response.json();
@@ -38,6 +38,44 @@ export async function fetchDevices() {
     throw new Error("Некорректный формат ответа /api/v1/monitoring_posts");
   }
   return payload.monitoring_posts;
+}
+
+export async function fetchLatestPlcState(monitoringPostId) {
+  const response = await fetch(buildUrl(`/api/v1/plc_state/latest?monitoring_post_id=${monitoringPostId}`), {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки данных PLC: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || (!payload.plc_state && payload.plc_state !== null)) {
+    throw new Error("Некорректный формат ответа /api/v1/plc_state/latest");
+  }
+  return payload.plc_state;
+}
+
+export async function fetchAvailableDeviceState(monitoringPostId) {
+  const response = await fetch(buildUrl(`/api/v1/device_state/available?monitoring_post_id=${monitoringPostId}`), {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки устройств станции: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.devices)) {
+    throw new Error("Некорректный формат ответа /api/v1/device_state/available");
+  }
+  return payload.devices;
 }
 
 export async function registerByEmail(email) {

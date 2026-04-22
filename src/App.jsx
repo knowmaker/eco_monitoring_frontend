@@ -1,16 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import AuthModal from "./components/AuthModal";
-import { AUTH_TOKEN_STORAGE_KEY, fetchDevices } from "./lib/api";
+import {
+  AUTH_TOKEN_STORAGE_KEY,
+  fetchAvailableDeviceState,
+  fetchLatestPlcState,
+  fetchMonitoringPosts,
+} from "./lib/api";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = [38.124629, 55.950523];
 const DEFAULT_ZOOM = 12;
-const DEVICES_REFRESH_MS = 30_000;
+const POSTS_REFRESH_MS = 30_000;
 
-function createTowerMarkerElement() {
+const DEVICE_TYPE_LABELS = {
+  gas: "Газ",
+  dust: "Пыль",
+  meteo: "Метео",
+  ivtm: "ИВТМ",
+};
+
+function createTowerMarkerElement(isActive) {
   const element = document.createElement("div");
-  element.className = "tower-marker";
+  element.className = `tower-marker${isActive ? " tower-marker-active" : ""}`;
   element.innerHTML = `
     <svg viewBox="0 0 64 64" aria-hidden="true">
       <path d="M30 10h4l6 36h-4l-2-12h-4l-2 12h-4z" fill="currentColor"/>
@@ -21,26 +33,63 @@ function createTowerMarkerElement() {
   return element;
 }
 
+function formatEpochMs(epochMs) {
+  if (!Number.isFinite(epochMs)) {
+    return "—";
+  }
+  const date = new Date(epochMs);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return date.toLocaleString("ru-RU");
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "—";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return date.toLocaleString("ru-RU");
+}
+
+function formatCoordinates(latitude, longitude) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return "—";
+  }
+  return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+}
+
 export default function App() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
 
-  const [devices, setDevices] = useState([]);
+  const [monitoringPosts, setMonitoringPosts] = useState([]);
   const [loadError, setLoadError] = useState("");
-  const [isLoadingDevices, setIsLoadingDevices] = useState(true);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [selectedMonitoringPostId, setSelectedMonitoringPostId] = useState(null);
+  const [selectedPlcState, setSelectedPlcState] = useState(null);
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
   const [modalMode, setModalMode] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const statusText = useMemo(() => {
-    if (isLoadingDevices) {
-      return "Загрузка устройств...";
+    if (isLoadingPosts) {
+      return "Загрузка станций...";
     }
     if (loadError) {
       return loadError;
     }
-    return `Устройств на карте: ${devices.length}`;
-  }, [devices.length, isLoadingDevices, loadError]);
+    return `Станций на карте: ${monitoringPosts.length}`;
+  }, [monitoringPosts.length, isLoadingPosts, loadError]);
+
+  const selectedMonitoringPost =
+    monitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
 
   useEffect(() => {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -74,28 +123,35 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
+    const loadMonitoringPosts = async () => {
       try {
-        const incomingDevices = await fetchDevices();
+        const incomingPosts = await fetchMonitoringPosts();
         if (cancelled) {
           return;
         }
-        setDevices(incomingDevices);
+
+        setMonitoringPosts(incomingPosts);
+        setSelectedMonitoringPostId((current) => {
+          if (current === null) {
+            return current;
+          }
+          return incomingPosts.some((post) => post.id === current) ? current : null;
+        });
         setLoadError("");
       } catch (error) {
         if (cancelled) {
           return;
         }
-        setLoadError(error instanceof Error ? error.message : "Не удалось получить устройства");
+        setLoadError(error instanceof Error ? error.message : "Не удалось получить станции");
       } finally {
         if (!cancelled) {
-          setIsLoadingDevices(false);
+          setIsLoadingPosts(false);
         }
       }
     };
 
-    load();
-    const intervalId = setInterval(load, DEVICES_REFRESH_MS);
+    loadMonitoringPosts();
+    const intervalId = setInterval(loadMonitoringPosts, POSTS_REFRESH_MS);
     return () => {
       cancelled = true;
       clearInterval(intervalId);
@@ -110,19 +166,67 @@ export default function App() {
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    const points = devices.filter((device) => Number.isFinite(device.latitude) && Number.isFinite(device.longitude));
-    points.forEach((device) => {
-      const marker = new maplibregl.Marker({ element: createTowerMarkerElement() })
-        .setLngLat([device.longitude, device.latitude])
-        .setPopup(
-          new maplibregl.Popup({ offset: 12 }).setHTML(
-            `<strong>${device.serial}</strong><br/>Широта: ${device.latitude}<br/>Долгота: ${device.longitude}`
-          )
-        )
+    const points = monitoringPosts.filter(
+      (post) => Number.isFinite(post.latitude) && Number.isFinite(post.longitude)
+    );
+
+    points.forEach((post) => {
+      const element = createTowerMarkerElement(post.id === selectedMonitoringPostId);
+      element.title = `Станция ${post.serial}`;
+      element.addEventListener("click", () => {
+        setSelectedMonitoringPostId(post.id);
+      });
+
+      const marker = new maplibregl.Marker({ element })
+        .setLngLat([post.longitude, post.latitude])
         .addTo(mapRef.current);
+
       markersRef.current.push(marker);
     });
-  }, [devices]);
+  }, [monitoringPosts, selectedMonitoringPostId]);
+
+  useEffect(() => {
+    if (selectedMonitoringPostId === null) {
+      setSelectedPlcState(null);
+      setSelectedDevices([]);
+      setDetailsError("");
+      setIsLoadingDetails(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingDetails(true);
+    setDetailsError("");
+    setSelectedPlcState(null);
+    setSelectedDevices([]);
+
+    Promise.all([
+      fetchLatestPlcState(selectedMonitoringPostId),
+      fetchAvailableDeviceState(selectedMonitoringPostId),
+    ])
+      .then(([plcState, devices]) => {
+        if (cancelled) {
+          return;
+        }
+        setSelectedPlcState(plcState);
+        setSelectedDevices(devices);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        setDetailsError(error instanceof Error ? error.message : "Не удалось получить данные станции");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingDetails(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMonitoringPostId]);
 
   const handleLogout = () => {
     localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
@@ -155,6 +259,89 @@ export default function App() {
       </header>
 
       <div className="status-panel">{statusText}</div>
+
+      <aside className="station-card">
+        <h2>Карточка станции</h2>
+
+        {selectedMonitoringPostId === null && (
+          <p className="station-card-hint">Нажмите на точку на карте, чтобы посмотреть данные станции.</p>
+        )}
+
+        {selectedMonitoringPostId !== null && (
+          <>
+            <div className="station-grid">
+              <div>
+                <span className="station-grid-label">ID</span>
+                <span className="station-grid-value">{selectedMonitoringPost?.id ?? "—"}</span>
+              </div>
+              <div>
+                <span className="station-grid-label">Серийный номер</span>
+                <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
+              </div>
+              <div>
+                <span className="station-grid-label">Координаты</span>
+                <span className="station-grid-value">
+                  {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
+                </span>
+              </div>
+              <div>
+                <span className="station-grid-label">Тип поста</span>
+                <span className="station-grid-value">
+                  {selectedMonitoringPost?.is_stationary ? "Стационарный" : "Мобильный"}
+                </span>
+              </div>
+            </div>
+
+            {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
+            {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
+
+            {!isLoadingDetails && !detailsError && (
+              <>
+                <section className="station-section">
+                  <h3>Данные PLC</h3>
+                  {selectedPlcState ? (
+                    <div className="station-grid station-grid-compact">
+                      <div>
+                        <span className="station-grid-label">Время PLC</span>
+                        <span className="station-grid-value">{formatEpochMs(selectedPlcState.plc_timestamp_ms)}</span>
+                      </div>
+                      <div>
+                        <span className="station-grid-label">Получено сервером</span>
+                        <span className="station-grid-value">{formatDateTime(selectedPlcState.received_at)}</span>
+                      </div>
+                      <div>
+                        <span className="station-grid-label">Период агрегации</span>
+                        <span className="station-grid-value">{selectedPlcState.aggregation_period_min} мин</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="station-card-hint">По этой станции пока нет записей в plc_state.</p>
+                  )}
+                </section>
+
+                <section className="station-section">
+                  <h3>Устройства станции</h3>
+                  {selectedDevices.length ? (
+                    <ul className="station-device-list">
+                      {selectedDevices.map((device) => (
+                        <li key={device.device_type} className="station-device-item">
+                          <span className="station-device-type">
+                            {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                          </span>
+                          <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="station-card-hint">Нет доступных устройств (только BAD ping за весь период).</p>
+                  )}
+                </section>
+              </>
+            )}
+          </>
+        )}
+      </aside>
+
       <main ref={mapContainerRef} className="map-root" />
 
       {modalMode && (
