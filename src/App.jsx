@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
@@ -14,6 +14,8 @@ const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = [38.124629, 55.950523];
 const DEFAULT_ZOOM = 12;
 const POSTS_REFRESH_MS = 30_000;
+const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
+const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
@@ -62,6 +64,27 @@ function formatCoordinates(latitude, longitude) {
     return "—";
   }
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+}
+
+function hidePoliticalBoundaries(map) {
+  HIDDEN_BOUNDARY_LAYER_IDS.forEach((layerId) => {
+    if (map.getLayer(layerId)) {
+      map.setLayoutProperty(layerId, "visibility", "none");
+    }
+  });
+}
+
+function isNameLabelLayer(layer) {
+  if (layer.type !== "symbol" || !layer.layout?.["text-field"]) {
+    return false;
+  }
+  return JSON.stringify(layer.layout["text-field"]).includes("name");
+}
+
+function applyRussianMapLabels(map) {
+  map.getStyle().layers.filter(isNameLabelLayer).forEach((layer) => {
+    map.setLayoutProperty(layer.id, "text-field", RUSSIAN_MAP_LABEL_FIELD);
+  });
 }
 
 export default function App() {
@@ -116,6 +139,10 @@ export default function App() {
       attributionControl: false,
     });
 
+    mapRef.current.on("load", () => {
+      hidePoliticalBoundaries(mapRef.current);
+      applyRussianMapLabels(mapRef.current);
+    });
     mapRef.current.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
     mapRef.current.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
