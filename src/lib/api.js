@@ -52,23 +52,6 @@ export async function fetchMonitoringPosts() {
   return payload.monitoring_posts;
 }
 
-export async function fetchLatestPlcState(monitoringPostId) {
-  const response = await fetch(buildUrl(`/api/v1/plc_state/latest?monitoring_post_id=${monitoringPostId}`), {
-    method: "GET",
-    headers: { Accept: "application/json" },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Ошибка загрузки данных PLC: ${await readError(response)}`);
-  }
-
-  const payload = await response.json();
-  if (!payload || (!payload.plc_state && payload.plc_state !== null)) {
-    throw new Error("Некорректный формат ответа /api/v1/plc_state/latest");
-  }
-  return payload.plc_state;
-}
-
 export async function fetchAvailableDeviceState(monitoringPostId) {
   const response = await fetch(buildUrl(`/api/v1/device_state/available?monitoring_post_id=${monitoringPostId}`), {
     method: "GET",

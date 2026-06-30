@@ -3,9 +3,19 @@ import ReactECharts from "echarts-for-react";
 
 const PALETTE = ["#08d9b1", "#ff8f5a", "#8bc3ff", "#ffd36e", "#f67ecb", "#73e9ff"];
 
+function hasNumericValues(series) {
+  return Boolean(
+    series?.some((item) =>
+      (item.points || []).some((point) => Number.isFinite(point.value))
+    )
+  );
+}
+
 export default function SimpleLineChart({ series }) {
+  const hasValues = useMemo(() => hasNumericValues(series), [series]);
+
   const option = useMemo(() => {
-    if (!series?.length) {
+    if (!series?.length || !hasValues) {
       return null;
     }
 
@@ -78,9 +88,9 @@ export default function SimpleLineChart({ series }) {
       },
       series: preparedSeries,
     };
-  }, [series]);
+  }, [series, hasValues]);
 
-  if (!series?.length || !option) {
+  if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">Нет данных за выбранные сутки.</div>;
   }
 

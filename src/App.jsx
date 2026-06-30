@@ -6,7 +6,6 @@ import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
   AUTH_TOKEN_STORAGE_KEY,
   fetchAvailableDeviceState,
-  fetchLatestPlcState,
   fetchMonitoringPosts,
 } from "./lib/api";
 
@@ -35,28 +34,6 @@ function createTowerMarkerElement(isActive) {
     </svg>
   `;
   return element;
-}
-
-function formatEpochMs(epochMs) {
-  if (!Number.isFinite(epochMs)) {
-    return "—";
-  }
-  const date = new Date(epochMs);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleString("ru-RU");
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return "—";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleString("ru-RU");
 }
 
 function formatCoordinates(latitude, longitude) {
@@ -97,7 +74,6 @@ export default function App() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   const [selectedMonitoringPostId, setSelectedMonitoringPostId] = useState(null);
-  const [selectedPlcState, setSelectedPlcState] = useState(null);
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [selectedDeviceType, setSelectedDeviceType] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -223,7 +199,6 @@ export default function App() {
 
   useEffect(() => {
     if (selectedMonitoringPostId === null) {
-      setSelectedPlcState(null);
       setSelectedDevices([]);
       setSelectedDeviceType(null);
       setDetailsError("");
@@ -234,19 +209,14 @@ export default function App() {
     let cancelled = false;
     setIsLoadingDetails(true);
     setDetailsError("");
-    setSelectedPlcState(null);
     setSelectedDevices([]);
     setSelectedDeviceType(null);
 
-    Promise.all([
-      fetchLatestPlcState(selectedMonitoringPostId),
-      fetchAvailableDeviceState(selectedMonitoringPostId),
-    ])
-      .then(([plcState, devices]) => {
+    fetchAvailableDeviceState(selectedMonitoringPostId)
+      .then((devices) => {
         if (cancelled) {
           return;
         }
-        setSelectedPlcState(plcState);
         setSelectedDevices(devices);
         setSelectedDeviceType((current) => {
           if (current && devices.some((device) => device.device_type === current)) {
@@ -351,24 +321,6 @@ export default function App() {
 
               {!isLoadingDetails && !detailsError && (
                 <>
-                  <section className="station-section">
-                    <h3>Данные PLC</h3>
-                    {selectedPlcState ? (
-                      <div className="station-grid station-grid-compact">
-                        <div>
-                          <span className="station-grid-label">Время PLC</span>
-                          <span className="station-grid-value">{formatEpochMs(selectedPlcState.plc_timestamp_ms)}</span>
-                        </div>
-                        <div>
-                          <span className="station-grid-label">Получено сервером</span>
-                          <span className="station-grid-value">{formatDateTime(selectedPlcState.received_at)}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="station-card-hint">По этой станции пока нет записей в plc_state.</p>
-                    )}
-                  </section>
-
                   <section className="station-section">
                     <h3>Устройства станции</h3>
                     {selectedDevices.length ? (

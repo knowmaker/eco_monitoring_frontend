@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   fetchDustStateHourly,
   fetchGasSensorsHourly,
-  fetchGasStateLatest,
   fetchIvtmStateHourly,
   fetchMeteoStateHourly,
 } from "../lib/api";
@@ -11,6 +10,40 @@ import SimpleLineChart from "./SimpleLineChart";
 import WindCompassStrip from "./WindCompassStrip";
 
 const METEO_WIND_KEY = "__meteo_wind__";
+
+const DEVICE_TYPE_LABELS = {
+  gas: "Газ",
+  dust: "Пыль",
+  meteo: "Метео",
+  ivtm: "ИВТМ",
+};
+
+const GAS_SUBSTANCE_TABS = ["CO", "NO", "NO2", "O3", "SO2"];
+
+const DEVICE_METRIC_TABS = {
+  dust: [
+    { key: "humidity", label: "Humidity" },
+    { key: "temp", label: "Temperature" },
+    { key: "pm1_concentration", label: "PM1" },
+    { key: "pm2_concentration", label: "PM2.5" },
+    { key: "pm10_concentration", label: "PM10" },
+    { key: "tsp_concentration", label: "TSP" },
+  ],
+  meteo: [
+    { key: "atm_press", label: "Pressure" },
+    { key: "air_temp", label: "Air Temperature" },
+    { key: "air_hum", label: "Air Humidity" },
+    { key: METEO_WIND_KEY, label: "Wind" },
+  ],
+  ivtm: [
+    { key: "sensor_ivtm_hum", label: "IVTM Humidity" },
+    { key: "sensor_ivtm_temp", label: "IVTM Temperature" },
+  ],
+};
+
+function createEmptyPoints() {
+  return Array.from({ length: 24 }, (_, hour) => ({ hour, value: null }));
+}
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
@@ -28,13 +61,6 @@ function isWindSpeedSeries(item) {
   return key === "hor_win_spd" || key === "wind_speed" || label === "wind speed";
 }
 
-const DEVICE_TYPE_LABELS = {
-  gas: "Газ",
-  dust: "Пыль",
-  meteo: "Метео",
-  ivtm: "ИВТМ",
-};
-
 function toIsoDay(day) {
   const date = day instanceof Date ? day : new Date(day);
   const y = date.getFullYear();
@@ -43,21 +69,21 @@ function toIsoDay(day) {
   return `${y}-${m}-${d}`;
 }
 
+function parseIsoDay(value) {
+  const [year, month, day] = String(value || "")
+    .split("-")
+    .map((part) => Number.parseInt(part, 10));
+  if (!year || !month || !day) {
+    return null;
+  }
+  const date = new Date(year, month - 1, day);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function shiftDay(day, delta) {
   const date = new Date(day);
   date.setDate(date.getDate() + delta);
   return date;
-}
-
-function formatMs(value) {
-  if (!Number.isFinite(value)) {
-    return "—";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleString("ru-RU");
 }
 
 export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
@@ -68,7 +94,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   const [gasSubstances, setGasSubstances] = useState([]);
   const [selectedGasSubstance, setSelectedGasSubstance] = useState(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState(null);
-  const [latestGasState, setLatestGasState] = useState(null);
 
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType) {
@@ -76,7 +101,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       setGasSubstances([]);
       setSelectedGasSubstance(null);
       setSelectedMetricKey(null);
-      setLatestGasState(null);
       setErrorText("");
       setIsLoading(false);
       return;
@@ -88,28 +112,22 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     setSeries([]);
     setGasSubstances([]);
     setSelectedMetricKey(null);
-    setLatestGasState(null);
 
     const load = async () => {
       if (selectedDeviceType === "gas") {
-        const [gasState, gasSensors] = await Promise.all([
-          fetchGasStateLatest(monitoringPostId),
-          fetchGasSensorsHourly(monitoringPostId, day),
-        ]);
+        const gasSensors = await fetchGasSensorsHourly(monitoringPostId, day);
         if (cancelled) {
           return;
         }
 
         const substances = gasSensors.substances || [];
-        setLatestGasState(gasState);
         setGasSubstances(substances);
         setSelectedGasSubstance((current) => {
-          if (current && substances.some((s) => s.substance_code === current)) {
+          if (current && GAS_SUBSTANCE_TABS.includes(current)) {
             return current;
           }
-          return substances[0]?.substance_code ?? null;
+          return GAS_SUBSTANCE_TABS[0];
         });
-        setSelectedMetricKey(null);
         return;
       }
 
@@ -127,8 +145,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       if (cancelled) {
         return;
       }
-      const nextSeries = payload.series || [];
-      setSeries(nextSeries);
+      setSeries(payload.series || []);
     };
 
     load()
@@ -149,6 +166,19 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     };
   }, [monitoringPostId, selectedDeviceType, day]);
 
+  useEffect(() => {
+    if (selectedDeviceType !== "gas") {
+      setSelectedGasSubstance(null);
+      return;
+    }
+    setSelectedGasSubstance((current) => {
+      if (current && GAS_SUBSTANCE_TABS.includes(current)) {
+        return current;
+      }
+      return GAS_SUBSTANCE_TABS[0];
+    });
+  }, [selectedDeviceType]);
+
   const meteoWindDirectionSeries = useMemo(
     () => (selectedDeviceType === "meteo" ? series.find((item) => isWindDirectionSeries(item)) ?? null : null),
     [selectedDeviceType, series]
@@ -163,22 +193,15 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     if (selectedDeviceType === "gas") {
       return [];
     }
-    if (selectedDeviceType !== "meteo") {
-      return series;
-    }
-
-    const nonWindSeries = series.filter((item) => !isWindDirectionSeries(item) && !isWindSpeedSeries(item));
-    if (!meteoWindDirectionSeries && !meteoWindSpeedSeries) {
-      return nonWindSeries;
-    }
-    return [...nonWindSeries, { key: METEO_WIND_KEY, label: "Wind" }];
-  }, [selectedDeviceType, series, meteoWindDirectionSeries, meteoWindSpeedSeries]);
+    return DEVICE_METRIC_TABS[selectedDeviceType] || [];
+  }, [selectedDeviceType]);
 
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType || selectedDeviceType === "gas") {
       setSelectedMetricKey(null);
       return;
     }
+
     const availableKeys = metricTabs.map((item) => item.key);
     setSelectedMetricKey((current) => {
       if (current && availableKeys.includes(current)) {
@@ -194,27 +217,28 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         return [];
       }
       const substance = gasSubstances.find((s) => s.substance_code === selectedGasSubstance);
-      if (!substance) {
-        return [];
-      }
       return [
         {
-          key: substance.substance_code,
-          label: substance.substance_code,
-          points: substance.points,
+          key: selectedGasSubstance,
+          label: selectedGasSubstance,
+          points: substance?.points || createEmptyPoints(),
         },
       ];
     }
 
-    if (!selectedMetricKey) {
-      return [];
-    }
-    if (selectedMetricKey === METEO_WIND_KEY) {
+    if (!selectedMetricKey || selectedMetricKey === METEO_WIND_KEY) {
       return [];
     }
     const selectedSeries = series.find((s) => s.key === selectedMetricKey);
-    return selectedSeries ? [selectedSeries] : [];
-  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series]);
+    const selectedMetric = metricTabs.find((item) => item.key === selectedMetricKey);
+    return [
+      {
+        key: selectedMetricKey,
+        label: selectedSeries?.label || selectedMetric?.label || selectedMetricKey,
+        points: selectedSeries?.points || createEmptyPoints(),
+      },
+    ];
+  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, metricTabs]);
 
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
 
@@ -237,39 +261,36 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           <div className="readings-toolbar">
             <div className="readings-type">{DEVICE_TYPE_LABELS[selectedDeviceType] ?? selectedDeviceType}</div>
             <div className="day-switcher">
-              <button type="button" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
+              <button type="button" aria-label="Предыдущий день" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
                 &lt;
               </button>
-              <span>{toIsoDay(day)}</span>
-              <button type="button" onClick={() => setDay((prev) => shiftDay(prev, 1))}>
+              <input
+                type="date"
+                aria-label="Выбрать дату графика"
+                value={toIsoDay(day)}
+                onChange={(event) => {
+                  const nextDay = parseIsoDay(event.target.value);
+                  if (nextDay) {
+                    setDay(nextDay);
+                  }
+                }}
+              />
+              <button type="button" aria-label="Следующий день" onClick={() => setDay((prev) => shiftDay(prev, 1))}>
                 &gt;
               </button>
             </div>
           </div>
 
           {selectedDeviceType === "gas" && (
-            <div className="gas-meta">
-              <div className="gas-meta-row">
-                <span>Последняя запись gas_state</span>
-                <span>{latestGasState ? formatMs(latestGasState.device_timestamp_ms) : "—"}</span>
-              </div>
-              <div className="gas-meta-row">
-                <span>Статус калибровки</span>
-                <span>{latestGasState?.calibration_status || "—"}</span>
-              </div>
-            </div>
-          )}
-
-          {selectedDeviceType === "gas" && (
             <div className="gas-tabs">
-              {gasSubstances.map((substance) => (
+              {GAS_SUBSTANCE_TABS.map((substanceCode) => (
                 <button
-                  key={substance.substance_code}
+                  key={substanceCode}
                   type="button"
-                  className={`gas-tab${selectedGasSubstance === substance.substance_code ? " gas-tab-active" : ""}`}
-                  onClick={() => setSelectedGasSubstance(substance.substance_code)}
+                  className={`gas-tab${selectedGasSubstance === substanceCode ? " gas-tab-active" : ""}`}
+                  onClick={() => setSelectedGasSubstance(substanceCode)}
                 >
-                  {substance.substance_code}
+                  {substanceCode}
                 </button>
               ))}
             </div>
