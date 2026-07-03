@@ -252,7 +252,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand-block">
           <span className="brand-dot" />
-          <h1>ЭкоМониторинг МГТУ им. Н.Э. Баумана</h1>
+          <h1>ЭкоМониторинг МГТУ</h1>
         </div>
         <div className="topbar-actions">
           {isAuthenticated ? (
