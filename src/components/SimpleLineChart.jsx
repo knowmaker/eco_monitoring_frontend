@@ -11,6 +11,21 @@ function hasNumericValues(series) {
   );
 }
 
+function formatAxisValue(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+  const abs = Math.abs(number);
+  if (abs > 0 && abs < 0.01) {
+    return number.toFixed(4);
+  }
+  if (abs > 0 && abs < 1) {
+    return number.toFixed(3);
+  }
+  return number.toFixed(2);
+}
+
 export default function SimpleLineChart({ series }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
 
@@ -83,7 +98,7 @@ export default function SimpleLineChart({ series }) {
         axisLine: { show: false },
         axisLabel: {
           color: "#9fb0ce",
-          formatter: (value) => Number(value).toFixed(2),
+          formatter: formatAxisValue,
         },
       },
       series: preparedSeries,
