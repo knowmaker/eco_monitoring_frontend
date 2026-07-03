@@ -19,16 +19,9 @@ const DEVICE_TYPE_LABELS = {
 };
 
 const GAS_SUBSTANCE_TABS = ["CO", "NO", "NO2", "O3", "SO2"];
+const DUST_METRIC_KEYS = ["pm1_concentration", "pm2_concentration", "pm10_concentration", "tsp_concentration"];
 
 const DEVICE_METRIC_TABS = {
-  dust: [
-    { key: "humidity", label: "Humidity" },
-    { key: "temp", label: "Temperature" },
-    { key: "pm1_concentration", label: "PM1" },
-    { key: "pm2_concentration", label: "PM2.5" },
-    { key: "pm10_concentration", label: "PM10" },
-    { key: "tsp_concentration", label: "TSP" },
-  ],
   meteo: [
     { key: "atm_press", label: "Pressure" },
     { key: "air_temp", label: "Air Temperature" },
@@ -197,7 +190,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   }, [selectedDeviceType]);
 
   useEffect(() => {
-    if (!monitoringPostId || !selectedDeviceType || selectedDeviceType === "gas") {
+    if (!monitoringPostId || !selectedDeviceType || selectedDeviceType === "gas" || selectedDeviceType === "dust") {
       setSelectedMetricKey(null);
       return;
     }
@@ -224,6 +217,19 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           points: substance?.points || createEmptyPoints(),
         },
       ];
+    }
+
+    if (selectedDeviceType === "dust") {
+      return DUST_METRIC_KEYS.map((key) => {
+        const item = series.find((candidate) => candidate.key === key);
+        return item
+          ? {
+              key: item.key,
+              label: item.label,
+              points: item.points || createEmptyPoints(),
+            }
+          : null;
+      }).filter(Boolean);
     }
 
     if (!selectedMetricKey || selectedMetricKey === METEO_WIND_KEY) {
