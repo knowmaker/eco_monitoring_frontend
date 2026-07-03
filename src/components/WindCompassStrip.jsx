@@ -26,6 +26,11 @@ function toCardinal(degrees) {
   return CARDINALS[index];
 }
 
+function toArrowRotation(degrees) {
+  const normalized = normalizeDegrees(degrees);
+  return normalized === null ? 0 : (normalized + 180) % 360;
+}
+
 export default function WindCompassStrip({ directionPoints, speedPoints }) {
   const directionByHour = useMemo(
     () => new Map((directionPoints || []).map((point) => [point.hour, point.value])),
@@ -46,6 +51,7 @@ export default function WindCompassStrip({ directionPoints, speedPoints }) {
           direction,
           speed,
           cardinal: toCardinal(direction),
+          arrowRotation: toArrowRotation(direction),
           directionText: direction === null ? EMPTY : `${Math.round(direction)} deg`,
           speedText: speed === null ? EMPTY : `${speed.toFixed(1)} m/s`,
         };
@@ -70,7 +76,7 @@ export default function WindCompassStrip({ directionPoints, speedPoints }) {
               {item.direction === null ? (
                 <span className="wind-strip-empty">{EMPTY}</span>
               ) : (
-                <span className="wind-strip-arrow" style={{ transform: `rotate(${item.direction}deg)` }}>
+                <span className="wind-strip-arrow" style={{ transform: `rotate(${item.arrowRotation}deg)` }}>
                   ↑
                 </span>
               )}
