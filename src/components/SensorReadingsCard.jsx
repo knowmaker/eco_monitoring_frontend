@@ -19,20 +19,32 @@ const DEVICE_TYPE_LABELS = {
 };
 
 const GAS_SUBSTANCE_TABS = ["CO", "NO", "NO2", "O3", "SO2"];
-const DUST_METRIC_KEYS = ["pm1_concentration", "pm2_concentration", "pm10_concentration", "tsp_concentration"];
+const DUST_METRIC_TABS = [
+  { key: "pm1_concentration", label: "PM1" },
+  { key: "pm2_concentration", label: "PM2.5" },
+  { key: "pm10_concentration", label: "PM10" },
+  { key: "tsp_concentration", label: "TSP" },
+];
+const DUST_METRIC_KEYS = DUST_METRIC_TABS.map((item) => item.key);
 
 const DEVICE_METRIC_TABS = {
   meteo: [
-    { key: "atm_press", label: "Pressure" },
-    { key: "air_temp", label: "Air Temperature" },
-    { key: "air_hum", label: "Air Humidity" },
-    { key: METEO_WIND_KEY, label: "Wind" },
+    { key: "air_temp", label: "Температура воздуха" },
+    { key: "air_hum", label: "Влажность воздуха" },
+    { key: "atm_press", label: "Давление" },
+    { key: METEO_WIND_KEY, label: "Ветер" },
   ],
   ivtm: [
     { key: "sensor_ivtm_hum", label: "IVTM Humidity" },
     { key: "sensor_ivtm_temp", label: "IVTM Temperature" },
   ],
 };
+
+const METRIC_LABELS_BY_KEY = Object.fromEntries(
+  [DUST_METRIC_TABS, ...Object.values(DEVICE_METRIC_TABS)]
+    .flat()
+    .map((item) => [item.key, item.label])
+);
 
 function createEmptyPoints() {
   return Array.from({ length: 24 }, (_, hour) => ({ hour, value: null }));
@@ -44,14 +56,16 @@ function normalizeText(value) {
 
 function isWindDirectionSeries(item) {
   const key = normalizeText(item?.key);
-  const label = normalizeText(item?.label);
-  return key === "hor_win_dir" || key === "wind_direction" || label === "wind direction";
+  return key === "hor_win_dir" || key === "wind_direction";
 }
 
 function isWindSpeedSeries(item) {
   const key = normalizeText(item?.key);
-  const label = normalizeText(item?.label);
-  return key === "hor_win_spd" || key === "wind_speed" || label === "wind speed";
+  return key === "hor_win_spd" || key === "wind_speed";
+}
+
+function getMetricLabel(key) {
+  return METRIC_LABELS_BY_KEY[key] || key;
 }
 
 function toIsoDay(day) {
@@ -225,7 +239,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         return item
           ? {
               key: item.key,
-              label: item.label,
+              label: getMetricLabel(item.key),
               points: item.points || createEmptyPoints(),
             }
           : null;
@@ -236,11 +250,10 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       return [];
     }
     const selectedSeries = series.find((s) => s.key === selectedMetricKey);
-    const selectedMetric = metricTabs.find((item) => item.key === selectedMetricKey);
     return [
       {
         key: selectedMetricKey,
-        label: selectedSeries?.label || selectedMetric?.label || selectedMetricKey,
+        label: getMetricLabel(selectedMetricKey),
         points: selectedSeries?.points || createEmptyPoints(),
       },
     ];
