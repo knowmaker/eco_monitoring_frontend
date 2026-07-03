@@ -52,8 +52,8 @@ export default function WindCompassStrip({ directionPoints, speedPoints }) {
           speed,
           cardinal: toCardinal(direction),
           arrowRotation: toArrowRotation(direction),
-          directionText: direction === null ? EMPTY : `${Math.round(direction)} deg`,
-          speedText: speed === null ? EMPTY : `${speed.toFixed(1)} m/s`,
+          directionText: direction === null ? EMPTY : `${Math.round(direction)}°`,
+          speedText: speed === null ? EMPTY : `${speed.toFixed(1)} м/с`,
         };
       }),
     [directionByHour, speedByHour]
