@@ -391,6 +391,39 @@ input:focus-visible {
   font-weight: 700;
 }
 
+.period-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.period-switcher {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.period-tab {
+  height: 26px;
+  padding: 0 8px;
+  color: var(--muted-strong);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.period-tab:hover {
+  color: var(--text);
+}
+
+.period-tab-active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
 .day-switcher {
   display: flex;
   align-items: center;
@@ -491,7 +524,8 @@ input:focus-visible {
 
 .wind-strip {
   display: grid;
-  grid-template-columns: repeat(24, minmax(62px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(62px, 1fr);
   gap: 6px;
   padding-bottom: 6px;
   overflow-x: auto;
@@ -809,6 +843,11 @@ input:focus-visible {
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .period-controls {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .day-switcher input {

@@ -3,9 +3,13 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 import {
   fetchDustStateHourly,
+  fetchDustStateMonthly,
   fetchGasSensorsHourly,
+  fetchGasSensorsMonthly,
   fetchIvtmStateHourly,
+  fetchIvtmStateMonthly,
   fetchMeteoStateHourly,
+  fetchMeteoStateMonthly,
 } from "../lib/api";
 import SimpleLineChart from "./SimpleLineChart";
 import WindCompassStrip from "./WindCompassStrip";
@@ -47,8 +51,8 @@ const METRIC_LABELS_BY_KEY = Object.fromEntries(
     .map((item) => [item.key, item.label])
 );
 
-function createEmptyPoints() {
-  return Array.from({ length: 24 }, (_, hour) => ({ hour, value: null }));
+function createEmptyPoints(axisValues, xKey) {
+  return axisValues.map((value) => ({ [xKey]: value, value: null }));
 }
 
 function normalizeText(value) {
@@ -77,6 +81,13 @@ function toIsoDay(day) {
   return `${y}-${m}-${d}`;
 }
 
+function toIsoMonth(month) {
+  const date = month instanceof Date ? month : new Date(month);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
 function parseIsoDay(value) {
   const [year, month, day] = String(value || "")
     .split("-")
@@ -88,20 +99,67 @@ function parseIsoDay(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseIsoMonth(value) {
+  const [year, month] = String(value || "")
+    .split("-")
+    .map((part) => Number.parseInt(part, 10));
+  if (!year || !month) {
+    return null;
+  }
+  const date = new Date(year, month - 1, 1);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function shiftDay(day, delta) {
   const date = new Date(day);
   date.setDate(date.getDate() + delta);
   return date;
 }
 
+function shiftMonth(month, delta) {
+  const date = new Date(month);
+  date.setDate(1);
+  date.setMonth(date.getMonth() + delta);
+  return date;
+}
+
+function getDaysInMonth(month) {
+  const date = month instanceof Date ? month : new Date(month);
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
 export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
+  const [viewMode, setViewMode] = useState("day");
   const [day, setDay] = useState(new Date());
+  const [month, setMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [series, setSeries] = useState([]);
   const [gasSubstances, setGasSubstances] = useState([]);
   const [selectedGasSubstance, setSelectedGasSubstance] = useState(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState(null);
+
+  const axis = useMemo(() => {
+    if (viewMode === "month") {
+      const values = Array.from({ length: getDaysInMonth(month) }, (_, index) => index + 1);
+      return {
+        key: "day",
+        values,
+        labels: values.map((value) => String(value).padStart(2, "0")),
+        windLabelFormatter: (value) => String(value).padStart(2, "0"),
+        emptyText: "Нет данных за выбранный месяц.",
+      };
+    }
+
+    const values = Array.from({ length: 24 }, (_, hour) => hour);
+    return {
+      key: "hour",
+      values,
+      labels: values.map((value) => String(value).padStart(2, "0")),
+      windLabelFormatter: (value) => `${String(value).padStart(2, "0")}:00`,
+      emptyText: "Нет данных за выбранные сутки.",
+    };
+  }, [viewMode, month]);
 
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType) {
@@ -119,11 +177,15 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     setErrorText("");
     setSeries([]);
     setGasSubstances([]);
-    setSelectedMetricKey(null);
 
     const load = async () => {
+      const periodValue = viewMode === "month" ? month : day;
+
       if (selectedDeviceType === "gas") {
-        const gasSensors = await fetchGasSensorsHourly(monitoringPostId, day);
+        const gasSensors =
+          viewMode === "month"
+            ? await fetchGasSensorsMonthly(monitoringPostId, periodValue)
+            : await fetchGasSensorsHourly(monitoringPostId, periodValue);
         if (cancelled) {
           return;
         }
@@ -141,11 +203,20 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
 
       let payload;
       if (selectedDeviceType === "dust") {
-        payload = await fetchDustStateHourly(monitoringPostId, day);
+        payload =
+          viewMode === "month"
+            ? await fetchDustStateMonthly(monitoringPostId, periodValue)
+            : await fetchDustStateHourly(monitoringPostId, periodValue);
       } else if (selectedDeviceType === "meteo") {
-        payload = await fetchMeteoStateHourly(monitoringPostId, day);
+        payload =
+          viewMode === "month"
+            ? await fetchMeteoStateMonthly(monitoringPostId, periodValue)
+            : await fetchMeteoStateHourly(monitoringPostId, periodValue);
       } else if (selectedDeviceType === "ivtm") {
-        payload = await fetchIvtmStateHourly(monitoringPostId, day);
+        payload =
+          viewMode === "month"
+            ? await fetchIvtmStateMonthly(monitoringPostId, periodValue)
+            : await fetchIvtmStateHourly(monitoringPostId, periodValue);
       } else {
         payload = { series: [] };
       }
@@ -172,7 +243,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     return () => {
       cancelled = true;
     };
-  }, [monitoringPostId, selectedDeviceType, day]);
+  }, [monitoringPostId, selectedDeviceType, day, month, viewMode]);
 
   useEffect(() => {
     if (selectedDeviceType !== "gas") {
@@ -229,7 +300,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         {
           key: selectedGasSubstance,
           label: selectedGasSubstance,
-          points: substance?.points || createEmptyPoints(),
+          points: substance?.points || createEmptyPoints(axis.values, axis.key),
         },
       ];
     }
@@ -241,7 +312,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           ? {
               key: item.key,
               label: getMetricLabel(item.key),
-              points: item.points || createEmptyPoints(),
+              points: item.points || createEmptyPoints(axis.values, axis.key),
             }
           : null;
       }).filter(Boolean);
@@ -255,12 +326,37 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       {
         key: selectedMetricKey,
         label: getMetricLabel(selectedMetricKey),
-        points: selectedSeries?.points || createEmptyPoints(),
+        points: selectedSeries?.points || createEmptyPoints(axis.values, axis.key),
       },
     ];
-  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, metricTabs]);
+  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, axis]);
 
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
+  const dateInputType = viewMode === "month" ? "month" : "date";
+  const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
+
+  const shiftPeriod = (delta) => {
+    if (viewMode === "month") {
+      setMonth((prev) => shiftMonth(prev, delta));
+      return;
+    }
+    setDay((prev) => shiftDay(prev, delta));
+  };
+
+  const handleDateInputChange = (value) => {
+    if (viewMode === "month") {
+      const nextMonth = parseIsoMonth(value);
+      if (nextMonth) {
+        setMonth(nextMonth);
+      }
+      return;
+    }
+
+    const nextDay = parseIsoDay(value);
+    if (nextDay) {
+      setDay(nextDay);
+    }
+  };
 
   return (
     <aside className="readings-card">
@@ -275,24 +371,37 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         <>
           <div className="readings-toolbar">
             <div className="readings-type">{DEVICE_TYPE_LABELS[selectedDeviceType] ?? selectedDeviceType}</div>
-            <div className="day-switcher">
-              <button type="button" aria-label="Предыдущий день" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
-                <ChevronLeft size={16} aria-hidden="true" />
-              </button>
-              <input
-                type="date"
-                aria-label="Выбрать дату графика"
-                value={toIsoDay(day)}
-                onChange={(event) => {
-                  const nextDay = parseIsoDay(event.target.value);
-                  if (nextDay) {
-                    setDay(nextDay);
-                  }
-                }}
-              />
-              <button type="button" aria-label="Следующий день" onClick={() => setDay((prev) => shiftDay(prev, 1))}>
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
+            <div className="period-controls">
+              <div className="period-switcher" aria-label="Период графика">
+                <button
+                  type="button"
+                  className={`period-tab${viewMode === "day" ? " period-tab-active" : ""}`}
+                  onClick={() => setViewMode("day")}
+                >
+                  День
+                </button>
+                <button
+                  type="button"
+                  className={`period-tab${viewMode === "month" ? " period-tab-active" : ""}`}
+                  onClick={() => setViewMode("month")}
+                >
+                  Месяц
+                </button>
+              </div>
+              <div className="day-switcher">
+                <button type="button" aria-label="Предыдущий период" onClick={() => shiftPeriod(-1)}>
+                  <ChevronLeft size={16} aria-hidden="true" />
+                </button>
+                <input
+                  type={dateInputType}
+                  aria-label="Выбрать период графика"
+                  value={dateInputValue}
+                  onChange={(event) => handleDateInputChange(event.target.value)}
+                />
+                <button type="button" aria-label="Следующий период" onClick={() => shiftPeriod(1)}>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -334,9 +443,19 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
               <WindCompassStrip
                 directionPoints={meteoWindDirectionSeries?.points ?? []}
                 speedPoints={meteoWindSpeedSeries?.points ?? []}
+                xKey={axis.key}
+                xValues={axis.values}
+                labelFormatter={axis.windLabelFormatter}
+                emptyText={axis.emptyText}
               />
             ) : (
-              <SimpleLineChart series={effectiveSeries} />
+              <SimpleLineChart
+                series={effectiveSeries}
+                xKey={axis.key}
+                xValues={axis.values}
+                xLabels={axis.labels}
+                emptyText={axis.emptyText}
+              />
             ))}
         </>
       )}

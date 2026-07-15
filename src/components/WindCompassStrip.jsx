@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-const EMPTY = "—";
+const EMPTY = "-";
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
 function normalizeDegrees(value) {
@@ -31,47 +31,60 @@ function toArrowRotation(degrees) {
   return normalized === null ? 0 : (normalized + 180) % 360;
 }
 
-export default function WindCompassStrip({ directionPoints, speedPoints }) {
-  const directionByHour = useMemo(
-    () => new Map((directionPoints || []).map((point) => [point.hour, point.value])),
-    [directionPoints]
+export default function WindCompassStrip({
+  directionPoints,
+  speedPoints,
+  xKey = "hour",
+  xValues,
+  labelFormatter,
+  emptyText = "Нет данных за выбранный период.",
+}) {
+  const directionByAxisValue = useMemo(
+    () => new Map((directionPoints || []).map((point) => [point[xKey], point.value])),
+    [directionPoints, xKey]
   );
-  const speedByHour = useMemo(
-    () => new Map((speedPoints || []).map((point) => [point.hour, point.value])),
-    [speedPoints]
+  const speedByAxisValue = useMemo(
+    () => new Map((speedPoints || []).map((point) => [point[xKey], point.value])),
+    [speedPoints, xKey]
   );
 
-  const hours = useMemo(
+  const axisValues = useMemo(
+    () => (xValues?.length ? xValues : Array.from({ length: 24 }, (_, hour) => hour)),
+    [xValues]
+  );
+
+  const items = useMemo(
     () =>
-      Array.from({ length: 24 }, (_, hour) => {
-        const direction = normalizeDegrees(directionByHour.get(hour));
-        const speed = normalizeSpeed(speedByHour.get(hour));
+      axisValues.map((axisValue) => {
+        const direction = normalizeDegrees(directionByAxisValue.get(axisValue));
+        const speed = normalizeSpeed(speedByAxisValue.get(axisValue));
         return {
-          hour,
+          axisValue,
           direction,
           speed,
+          label: labelFormatter ? labelFormatter(axisValue) : `${String(axisValue).padStart(2, "0")}:00`,
           cardinal: toCardinal(direction),
           arrowRotation: toArrowRotation(direction),
           directionText: direction === null ? EMPTY : `${Math.round(direction)}°`,
           speedText: speed === null ? EMPTY : `${speed.toFixed(1)} м/с`,
         };
       }),
-    [directionByHour, speedByHour]
+    [axisValues, directionByAxisValue, speedByAxisValue, labelFormatter]
   );
 
-  const maxSpeed = hours.reduce((max, item) => (item.speed !== null && item.speed > max ? item.speed : max), 0);
-  const hasValues = hours.some((item) => item.direction !== null || item.speed !== null);
+  const maxSpeed = items.reduce((max, item) => (item.speed !== null && item.speed > max ? item.speed : max), 0);
+  const hasValues = items.some((item) => item.direction !== null || item.speed !== null);
 
   if (!hasValues) {
-    return <div className="chart-empty">Нет данных за выбранные сутки.</div>;
+    return <div className="chart-empty">{emptyText}</div>;
   }
 
   return (
     <div className="wind-strip-wrap">
       <div className="wind-strip">
-        {hours.map((item) => (
-          <div className="wind-strip-cell" key={item.hour}>
-            <div className="wind-strip-hour">{String(item.hour).padStart(2, "0")}:00</div>
+        {items.map((item) => (
+          <div className="wind-strip-cell" key={item.axisValue}>
+            <div className="wind-strip-hour">{item.label}</div>
             <div className="wind-strip-arrow-box">
               {item.direction === null ? (
                 <span className="wind-strip-empty">{EMPTY}</span>

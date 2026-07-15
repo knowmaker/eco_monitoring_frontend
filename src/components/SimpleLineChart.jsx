@@ -26,7 +26,13 @@ function formatAxisValue(value) {
   return number.toFixed(2);
 }
 
-export default function SimpleLineChart({ series }) {
+export default function SimpleLineChart({
+  series,
+  xKey = "hour",
+  xValues,
+  xLabels,
+  emptyText = "Нет данных за выбранный период.",
+}) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
 
   const option = useMemo(() => {
@@ -34,9 +40,13 @@ export default function SimpleLineChart({ series }) {
       return null;
     }
 
-    const categories = Array.from({ length: 24 }, (_, idx) => String(idx).padStart(2, "0"));
+    const axisValues = xValues?.length ? xValues : Array.from({ length: 24 }, (_, idx) => idx);
+    const categories = xLabels?.length
+      ? xLabels
+      : axisValues.map((value) => String(value).padStart(2, "0"));
+
     const preparedSeries = series.map((item, index) => {
-      const byHour = new Map((item.points || []).map((point) => [point.hour, point.value]));
+      const byAxisValue = new Map((item.points || []).map((point) => [point[xKey], point.value]));
       return {
         type: "line",
         name: item.label,
@@ -52,8 +62,8 @@ export default function SimpleLineChart({ series }) {
         itemStyle: {
           color: PALETTE[index % PALETTE.length],
         },
-        data: Array.from({ length: 24 }, (_, hour) => {
-          const value = byHour.get(hour);
+        data: axisValues.map((axisValue) => {
+          const value = byAxisValue.get(axisValue);
           return value === undefined ? null : value;
         }),
       };
@@ -84,7 +94,7 @@ export default function SimpleLineChart({ series }) {
         data: categories,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
-        axisLabel: { color: "#647184", interval: 2 },
+        axisLabel: { color: "#647184", interval: xKey === "day" ? 1 : 2 },
       },
       yAxis: {
         type: "value",
@@ -103,10 +113,10 @@ export default function SimpleLineChart({ series }) {
       },
       series: preparedSeries,
     };
-  }, [series, hasValues]);
+  }, [series, hasValues, xKey, xValues, xLabels]);
 
   if (!series?.length || !hasValues || !option) {
-    return <div className="chart-empty">Нет данных за выбранные сутки.</div>;
+    return <div className="chart-empty">{emptyText}</div>;
   }
 
   return (

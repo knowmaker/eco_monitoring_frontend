@@ -35,6 +35,19 @@ function formatDayParam(day) {
   return `${y}-${m}-${d}`;
 }
 
+function formatMonthParam(month) {
+  if (typeof month === "string" && /^\d{4}-\d{2}$/.test(month)) {
+    return month;
+  }
+  const date = month instanceof Date ? month : new Date(month);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Некорректный месяц запроса графика");
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
 export async function fetchMonitoringPosts() {
   const response = await fetch(buildUrl("/api/v1/monitoring_posts"), {
     method: "GET",
@@ -107,6 +120,27 @@ export async function fetchGasSensorsHourly(monitoringPostId, day) {
   return payload;
 }
 
+export async function fetchGasSensorsMonthly(monitoringPostId, month) {
+  const monthParam = formatMonthParam(month);
+  const response = await fetch(
+    buildUrl(`/api/v1/gas_sensors/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки месячного графика gas_sensors: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.substances)) {
+    throw new Error("Некорректный формат ответа /api/v1/gas_sensors/monthly");
+  }
+  return payload;
+}
+
 export async function fetchDustStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
@@ -124,6 +158,27 @@ export async function fetchDustStateHourly(monitoringPostId, day) {
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
     throw new Error("Некорректный формат ответа /api/v1/dust_state/hourly");
+  }
+  return payload;
+}
+
+export async function fetchDustStateMonthly(monitoringPostId, month) {
+  const monthParam = formatMonthParam(month);
+  const response = await fetch(
+    buildUrl(`/api/v1/dust_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки месячного графика dust_state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/dust_state/monthly");
   }
   return payload;
 }
@@ -149,6 +204,27 @@ export async function fetchMeteoStateHourly(monitoringPostId, day) {
   return payload;
 }
 
+export async function fetchMeteoStateMonthly(monitoringPostId, month) {
+  const monthParam = formatMonthParam(month);
+  const response = await fetch(
+    buildUrl(`/api/v1/meteo_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки месячного графика meteo_state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/meteo_state/monthly");
+  }
+  return payload;
+}
+
 export async function fetchIvtmStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
@@ -166,6 +242,27 @@ export async function fetchIvtmStateHourly(monitoringPostId, day) {
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
     throw new Error("Некорректный формат ответа /api/v1/ivtm_state/hourly");
+  }
+  return payload;
+}
+
+export async function fetchIvtmStateMonthly(monitoringPostId, month) {
+  const monthParam = formatMonthParam(month);
+  const response = await fetch(
+    buildUrl(`/api/v1/ivtm_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки месячного графика ivtm_state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/ivtm_state/monthly");
   }
   return payload;
 }
