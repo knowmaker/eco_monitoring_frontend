@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { LogIn, Send, UserPlus, X } from "lucide-react";
+
 import { AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../lib/api";
 
 export default function AuthModal({ mode, onClose, onAuthSuccess }) {
@@ -10,6 +12,7 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
 
   const isRegister = mode === "register";
   const title = useMemo(() => (isRegister ? "Регистрация" : "Вход"), [isRegister]);
+  const SubmitIcon = isSubmitting ? Send : isRegister ? UserPlus : LogIn;
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -43,8 +46,8 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
   return (
     <div className="modal-overlay" role="presentation">
       <div className="modal-card" role="dialog" aria-modal="true">
-        <button className="modal-close" type="button" onClick={onClose} aria-label="Закрыть">
-          ×
+        <button className="modal-close icon-btn" type="button" onClick={onClose} aria-label="Закрыть">
+          <X size={17} aria-hidden="true" />
         </button>
         <h2>{title}</h2>
         <form onSubmit={onSubmit}>
@@ -78,10 +81,11 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
           {successText ? <div className="form-message form-message-success">{successText}</div> : null}
 
           <button
-            className={`${isRegister ? "primary-btn" : "ghost-btn"} modal-submit`}
+            className={`btn ${isRegister ? "btn-primary" : "btn-secondary"} modal-submit`}
             type="submit"
             disabled={isSubmitting}
           >
+            <SubmitIcon size={16} aria-hidden="true" />
             {isSubmitting ? "Отправка..." : isRegister ? "Регистрация" : "Вход"}
           </button>
         </form>

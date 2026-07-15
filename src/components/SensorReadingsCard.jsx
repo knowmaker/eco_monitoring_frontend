@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 import {
   fetchDustStateHourly,
@@ -266,11 +267,10 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       <div className="card-header">
         <h2>Показания датчиков</h2>
         <button type="button" className="card-close-btn" aria-label="Закрыть правую карточку" onClick={onClose}>
-          ×
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
 
-      {!monitoringPostId && <p className="station-card-hint">Сначала выберите станцию на карте.</p>}
       {monitoringPostId && !selectedDeviceType && (
         <p className="station-card-hint">Выберите тип датчика в левой карточке.</p>
       )}
@@ -281,7 +281,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             <div className="readings-type">{DEVICE_TYPE_LABELS[selectedDeviceType] ?? selectedDeviceType}</div>
             <div className="day-switcher">
               <button type="button" aria-label="Предыдущий день" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
-                &lt;
+                <ChevronLeft size={16} aria-hidden="true" />
               </button>
               <input
                 type="date"
@@ -295,7 +295,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                 }}
               />
               <button type="button" aria-label="Следующий день" onClick={() => setDay((prev) => shiftDay(prev, 1))}>
-                &gt;
+                <ChevronRight size={16} aria-hidden="true" />
               </button>
             </div>
           </div>

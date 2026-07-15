@@ -1,4 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { LogIn, LogOut, MapPin, RadioTower, UserPlus, X } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
@@ -26,14 +28,16 @@ const DEVICE_TYPE_LABELS = {
 function createTowerMarkerElement(isActive) {
   const element = document.createElement("div");
   element.className = `tower-marker${isActive ? " tower-marker-active" : ""}`;
-  element.innerHTML = `
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <path d="M30 10h4l6 36h-4l-2-12h-4l-2 12h-4z" fill="currentColor"/>
-      <circle cx="32" cy="8" r="4" fill="currentColor"/>
-      <path d="M22 22c4-4 16-4 20 0M18 16c6-6 22-6 28 0M26 28c3-3 9-3 12 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-    </svg>
-  `;
-  return element;
+  const root = createRoot(element);
+  root.render(<RadioTower size={23} strokeWidth={2.2} aria-hidden="true" />);
+  return { element, root };
+}
+
+function removeTowerMarkers(markerEntries) {
+  markerEntries.forEach(({ marker, root }) => {
+    root.unmount();
+    marker.remove();
+  });
 }
 
 function formatCoordinates(latitude, longitude) {
@@ -78,8 +82,8 @@ export default function App() {
   const [selectedDeviceType, setSelectedDeviceType] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState("");
-  const [isStationCardOpen, setIsStationCardOpen] = useState(true);
-  const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(true);
+  const [isStationCardOpen, setIsStationCardOpen] = useState(false);
+  const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(false);
 
   const [modalMode, setModalMode] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -93,6 +97,7 @@ export default function App() {
     }
     return `Станций на карте: ${monitoringPosts.length}`;
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
+  const statusKind = loadError ? "error" : isLoadingPosts ? "loading" : "ready";
 
   const selectedMonitoringPost =
     monitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
@@ -123,7 +128,7 @@ export default function App() {
     mapRef.current.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
+      removeTowerMarkers(markersRef.current);
       markersRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
@@ -173,7 +178,7 @@ export default function App() {
       return;
     }
 
-    markersRef.current.forEach((marker) => marker.remove());
+    removeTowerMarkers(markersRef.current);
     markersRef.current = [];
 
     const points = monitoringPosts.filter(
@@ -181,7 +186,7 @@ export default function App() {
     );
 
     points.forEach((post) => {
-      const element = createTowerMarkerElement(post.id === selectedMonitoringPostId);
+      const { element, root } = createTowerMarkerElement(post.id === selectedMonitoringPostId);
       element.title = `Станция ${post.serial}`;
       element.addEventListener("click", () => {
         setIsStationCardOpen(true);
@@ -193,7 +198,7 @@ export default function App() {
         .setLngLat([post.longitude, post.latitude])
         .addTo(mapRef.current);
 
-      markersRef.current.push(marker);
+      markersRef.current.push({ marker, root });
     });
   }, [monitoringPosts, selectedMonitoringPostId]);
 
@@ -251,20 +256,27 @@ export default function App() {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-block">
-          <span className="brand-dot" />
+          <img className="brand-logo" src="/favicon.png" alt="" aria-hidden="true" />
           <h1>ЭкоМониторинг МГТУ</h1>
+          <div className={`topbar-status topbar-status-${statusKind}`} title={statusText}>
+            <MapPin size={15} aria-hidden="true" />
+            <span>{statusText}</span>
+          </div>
         </div>
         <div className="topbar-actions">
           {isAuthenticated ? (
-            <button className="logout-btn" type="button" onClick={handleLogout}>
+            <button className="btn btn-danger" type="button" onClick={handleLogout}>
+              <LogOut size={16} aria-hidden="true" />
               Выход
             </button>
           ) : (
             <>
-              <button className="ghost-btn" type="button" onClick={() => setModalMode("login")}>
+              <button className="btn btn-secondary" type="button" onClick={() => setModalMode("login")}>
+                <LogIn size={16} aria-hidden="true" />
                 Вход
               </button>
-              <button className="primary-btn" type="button" onClick={() => setModalMode("register")}>
+              <button className="btn btn-primary" type="button" onClick={() => setModalMode("register")}>
+                <UserPlus size={16} aria-hidden="true" />
                 Регистрация
               </button>
             </>
@@ -272,12 +284,10 @@ export default function App() {
         </div>
       </header>
 
-      <div className="status-panel">{statusText}</div>
-
-      {isStationCardOpen && (
+      {isStationCardOpen && selectedMonitoringPostId !== null && (
         <aside className="station-card">
           <div className="card-header">
-            <h2>Карточка станции</h2>
+            <h2>Информация о станции</h2>
             <button
               type="button"
               className="card-close-btn"
@@ -285,77 +295,70 @@ export default function App() {
               onClick={() => {
                 setIsStationCardOpen(false);
                 setIsReadingsCardOpen(false);
+                setSelectedMonitoringPostId(null);
               }}
             >
-              ×
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
 
-          {selectedMonitoringPostId === null && (
-            <p className="station-card-hint">Нажмите на точку на карте, чтобы посмотреть данные станции.</p>
-          )}
-
-          {selectedMonitoringPostId !== null && (
-            <>
-              <div className="station-grid">
-                <div>
-                  <span className="station-grid-label">Серийный номер</span>
-                  <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
-                </div>
-                <div>
-                  <span className="station-grid-label">Координаты</span>
-                  <span className="station-grid-value">
-                    {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
-                  </span>
-                </div>
-                <div>
-                  <span className="station-grid-label">Тип поста</span>
-                  <span className="station-grid-value">
-                    {selectedMonitoringPost?.is_stationary ? "Стационарный" : "Мобильный"}
-                  </span>
-                </div>
+          <>
+            <div className="station-grid">
+              <div>
+                <span className="station-grid-label">Серийный номер</span>
+                <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
               </div>
+              <div>
+                <span className="station-grid-label">Координаты</span>
+                <span className="station-grid-value">
+                  {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
+                </span>
+              </div>
+              <div>
+                <span className="station-grid-label">Тип поста</span>
+                <span className="station-grid-value">
+                  {selectedMonitoringPost?.is_stationary ? "Стационарный" : "Мобильный"}
+                </span>
+              </div>
+            </div>
 
-              {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
-              {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
+            {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
+            {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
 
-              {!isLoadingDetails && !detailsError && (
-                <>
-                  <section className="station-section">
-                    <h3>Устройства станции</h3>
-                    {selectedDevices.length ? (
-                      <ul className="station-device-list">
-                        {selectedDevices.map((device) => (
-                          <li key={device.device_type} className="station-device-item">
-                            <button
-                              type="button"
-                              className={`station-device-button${
-                                selectedDeviceType === device.device_type ? " station-device-button-active" : ""
-                              }`}
-                              onClick={() => setSelectedDeviceType(device.device_type)}
-                            >
-                              <span className="station-device-type">
-                                {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
-                              </span>
-                              <span className="station-device-name">{device.device_name || "Без имени"}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="station-card-hint">
-                        Нет доступных устройств (только BAD ping за весь период).
-                      </p>
-                    )}
-                  </section>
-                </>
-              )}
-            </>
-          )}
+            {!isLoadingDetails && !detailsError && (
+              <section className="station-section">
+                <h3>Устройства станции</h3>
+                {selectedDevices.length ? (
+                  <ul className="station-device-list">
+                    {selectedDevices.map((device) => (
+                      <li key={device.device_type} className="station-device-item">
+                        <button
+                          type="button"
+                          className={`station-device-button${
+                            selectedDeviceType === device.device_type ? " station-device-button-active" : ""
+                          }`}
+                          onClick={() => setSelectedDeviceType(device.device_type)}
+                        >
+                          <span className="station-device-type">
+                            {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                          </span>
+                          <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="station-card-hint">
+                    Нет доступных устройств (только BAD ping за весь период).
+                  </p>
+                )}
+              </section>
+            )}
+          </>
         </aside>
       )}
 
-      {isStationCardOpen && isReadingsCardOpen && (
+      {isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && (
         <SensorReadingsCard
           monitoringPostId={selectedMonitoringPostId}
           selectedDeviceType={selectedDeviceType}

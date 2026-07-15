@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-const PALETTE = ["#08d9b1", "#ff8f5a", "#8bc3ff", "#ffd36e", "#f67ecb", "#73e9ff"];
+const PALETTE = ["#16856d", "#4f6db8", "#d4872d", "#8b5fbf", "#c5536f", "#2f8aa6"];
 
 function hasNumericValues(series) {
   return Boolean(
@@ -70,34 +70,34 @@ export default function SimpleLineChart({ series }) {
       },
       tooltip: {
         trigger: "axis",
-        backgroundColor: "rgba(11, 19, 36, 0.94)",
-        borderColor: "rgba(255,255,255,0.15)",
-        textStyle: { color: "#e9f1ff" },
+        backgroundColor: "rgba(255, 255, 255, 0.98)",
+        borderColor: "rgba(15, 23, 42, 0.14)",
+        textStyle: { color: "#172033" },
       },
       legend: {
         top: 0,
         right: 10,
-        textStyle: { color: "#9fb0ce", fontSize: 11 },
+        textStyle: { color: "#647184", fontSize: 11 },
       },
       xAxis: {
         type: "category",
         data: categories,
-        axisLine: { lineStyle: { color: "rgba(255,255,255,0.22)" } },
+        axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
-        axisLabel: { color: "#9fb0ce", interval: 2 },
+        axisLabel: { color: "#647184", interval: 2 },
       },
       yAxis: {
         type: "value",
         scale: true,
         splitLine: {
           lineStyle: {
-            color: "rgba(255,255,255,0.1)",
+            color: "rgba(15, 23, 42, 0.08)",
             type: "dashed",
           },
         },
         axisLine: { show: false },
         axisLabel: {
-          color: "#9fb0ce",
+          color: "#647184",
           formatter: formatAxisValue,
         },
       },
