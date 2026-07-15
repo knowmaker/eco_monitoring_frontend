@@ -271,10 +271,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         </button>
       </div>
 
-      {monitoringPostId && !selectedDeviceType && (
-        <p className="station-card-hint">Выберите тип датчика в левой карточке.</p>
-      )}
-
       {monitoringPostId && selectedDeviceType && (
         <>
           <div className="readings-toolbar">

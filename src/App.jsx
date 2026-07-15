@@ -190,7 +190,7 @@ export default function App() {
       element.title = `Станция ${post.serial}`;
       element.addEventListener("click", () => {
         setIsStationCardOpen(true);
-        setIsReadingsCardOpen(true);
+        setIsReadingsCardOpen(false);
         setSelectedMonitoringPostId(post.id);
       });
 
@@ -267,17 +267,17 @@ export default function App() {
           {isAuthenticated ? (
             <button className="btn btn-danger" type="button" onClick={handleLogout}>
               <LogOut size={16} aria-hidden="true" />
-              Выход
+              <span className="btn-label">Выход</span>
             </button>
           ) : (
             <>
               <button className="btn btn-secondary" type="button" onClick={() => setModalMode("login")}>
                 <LogIn size={16} aria-hidden="true" />
-                Вход
+                <span className="btn-label">Вход</span>
               </button>
               <button className="btn btn-primary" type="button" onClick={() => setModalMode("register")}>
                 <UserPlus size={16} aria-hidden="true" />
-                Регистрация
+                <span className="btn-label">Регистрация</span>
               </button>
             </>
           )}
@@ -337,7 +337,10 @@ export default function App() {
                           className={`station-device-button${
                             selectedDeviceType === device.device_type ? " station-device-button-active" : ""
                           }`}
-                          onClick={() => setSelectedDeviceType(device.device_type)}
+                          onClick={() => {
+                            setSelectedDeviceType(device.device_type);
+                            setIsReadingsCardOpen(true);
+                          }}
                         >
                           <span className="station-device-type">
                             {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
@@ -358,7 +361,7 @@ export default function App() {
         </aside>
       )}
 
-      {isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && (
+      {isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && selectedDeviceType && (
         <SensorReadingsCard
           monitoringPostId={selectedMonitoringPostId}
           selectedDeviceType={selectedDeviceType}
