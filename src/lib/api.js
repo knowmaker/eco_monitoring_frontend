@@ -1,4 +1,4 @@
-const rawBase = import.meta.env.VITE_API_BASE_URL ?? "";
+﻿const rawBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const API_BASE_URL = rawBase.replace(/\/+$/, "");
 export const AUTH_TOKEN_STORAGE_KEY = "eco_monitoring_access_token";
 
@@ -82,21 +82,24 @@ export async function fetchAvailableDeviceState(monitoringPostId) {
   return payload.devices;
 }
 
-export async function fetchGasStateLatest(monitoringPostId) {
-  const response = await fetch(buildUrl(`/api/v1/gas_state/latest?monitoring_post_id=${monitoringPostId}`), {
-    method: "GET",
-    headers: { Accept: "application/json" },
-  });
+export async function fetchStationLatestHourlyReadings(monitoringPostId) {
+  const response = await fetch(
+    buildUrl(`/api/v1/station_readings/latest_hourly?monitoring_post_id=${monitoringPostId}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки данных gas_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки последних показаний станции: ${await readError(response)}`);
   }
 
   const payload = await response.json();
-  if (!payload || (!payload.gas_state && payload.gas_state !== null)) {
-    throw new Error("Некорректный формат ответа /api/v1/gas_state/latest");
+  if (!payload || !Object.prototype.hasOwnProperty.call(payload, "bucket_ms")) {
+    throw new Error("Некорректный формат ответа /api/v1/station_readings/latest_hourly");
   }
-  return payload.gas_state;
+  return payload;
 }
 
 export async function fetchGasSensorsHourly(monitoringPostId, day) {

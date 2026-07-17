@@ -4,6 +4,7 @@ import { LogIn, LogOut, MapPin, RadioTower, UserPlus, X } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
+import LatestStationReadings from "./components/LatestStationReadings";
 import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
   AUTH_TOKEN_STORAGE_KEY,
@@ -322,12 +323,14 @@ export default function App() {
               </div>
             </div>
 
+            <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
+
             {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
             {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
 
             {!isLoadingDetails && !detailsError && (
-              <section className="station-section">
-                <h3>Устройства станции</h3>
+              <section className="station-section station-devices-section">
+                <h3>Исторические наблюдения</h3>
                 {selectedDevices.length ? (
                   <ul className="station-device-list">
                     {selectedDevices.map((device) => (

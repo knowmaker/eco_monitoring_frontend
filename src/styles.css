@@ -287,16 +287,16 @@ input:focus-visible {
 }
 
 .station-section {
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 0;
+  padding-top: 7px;
   border-top: 1px solid var(--border);
 }
 
 .station-section h3 {
   margin: 0 0 8px;
-  color: var(--muted-strong);
-  font-size: 0.84rem;
-  font-weight: 700;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 750;
 }
 
 .station-grid {
@@ -458,6 +458,90 @@ input:focus-visible {
   font-size: 0.8rem;
   outline: none;
   color-scheme: light;
+}
+
+.latest-readings {
+  padding: 10px 0 4px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  border-top: 1px solid var(--border);
+}
+
+.latest-readings-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.latest-readings-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.latest-readings-header span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.latest-readings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.latest-device-block {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.latest-device-block h4 {
+  margin: 0 0 7px;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.latest-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.latest-metrics-gas {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.latest-metric {
+  min-width: 0;
+}
+
+.latest-metric-label {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.latest-metric-value {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gas-tabs,
@@ -826,17 +910,13 @@ input:focus-visible {
     top: 82px;
     left: 10px;
     width: calc(100vw - 20px);
-    max-height: 22vh;
+    max-height: calc(100vh - 104px);
     padding: 10px;
   }
 
+  .station-devices-section,
   .readings-card {
-    top: auto;
-    right: 10px;
-    bottom: 10px;
-    width: calc(100vw - 20px);
-    max-height: 42vh;
-    padding: 10px;
+    display: none;
   }
 
   .readings-toolbar {
@@ -852,5 +932,9 @@ input:focus-visible {
 
   .day-switcher input {
     width: 130px;
+  }
+
+  .latest-readings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

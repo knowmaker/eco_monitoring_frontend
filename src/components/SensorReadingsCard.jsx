@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 import {
@@ -160,6 +160,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       emptyText: "Нет данных за выбранные сутки.",
     };
   }, [viewMode, month]);
+
 
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType) {
@@ -361,7 +362,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   return (
     <aside className="readings-card">
       <div className="card-header">
-        <h2>Показания датчиков</h2>
+        <h2>Исторические наблюдения</h2>
         <button type="button" className="card-close-btn" aria-label="Закрыть правую карточку" onClick={onClose}>
           <X size={16} aria-hidden="true" />
         </button>
