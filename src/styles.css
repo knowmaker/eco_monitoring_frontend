@@ -521,6 +521,27 @@ input:focus-visible {
 
 .latest-metric {
   min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.latest-metric-ok {
+  border-color: rgba(20, 122, 99, 0.18);
+  background: rgba(22, 133, 109, 0.08);
+}
+
+.latest-metric-danger {
+  border-color: rgba(195, 63, 63, 0.24);
+  background: var(--danger-soft);
+}
+
+.latest-metric-ok .latest-metric-value {
+  color: var(--accent-strong);
+}
+
+.latest-metric-danger .latest-metric-value {
+  color: #9f2f2f;
 }
 
 .latest-metric-label {

@@ -27,6 +27,29 @@ function formatLatestValue(value, unit = "", precision = null) {
   return `${text}${unit ? ` ${unit}` : ""}`;
 }
 
+function formatPdkValue(value) {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  return value.toLocaleString("ru-RU", { maximumFractionDigits: 3 });
+}
+
+function getLimitStatus(value, limit) {
+  const comparisonPdk = limit?.comparison_pdk;
+  if (!Number.isFinite(value) || !Number.isFinite(comparisonPdk)) {
+    return "neutral";
+  }
+  return value > comparisonPdk ? "danger" : "ok";
+}
+
+function getLimitTitle(limit) {
+  const pdkText = formatPdkValue(limit?.comparison_pdk);
+  if (!pdkText) {
+    return undefined;
+  }
+  return `ПДК: ${pdkText}`;
+}
+
 function normalizeDegrees(value) {
   if (!Number.isFinite(value)) {
     return null;
@@ -64,9 +87,10 @@ function formatWindValue(direction, speed) {
   );
 }
 
-function LatestMetric({ label, value, unit, precision, displayValue }) {
+function LatestMetric({ label, value, unit, precision, displayValue, limit }) {
+  const limitStatus = getLimitStatus(value, limit);
   return (
-    <div className="latest-metric">
+    <div className={`latest-metric latest-metric-${limitStatus}`} title={getLimitTitle(limit)}>
       <span className="latest-metric-label">{label}</span>
       <span className="latest-metric-value">{displayValue ?? formatLatestValue(value, unit, precision)}</span>
     </div>
@@ -132,7 +156,12 @@ export default function LatestStationReadings({ monitoringPostId }) {
               <h4>Газ</h4>
               <div className="latest-metrics latest-metrics-gas">
                 {latestReadings.gas.substances.map((item) => (
-                  <LatestMetric key={item.substance_code} label={item.substance_code} value={item.value} />
+                  <LatestMetric
+                    key={item.substance_code}
+                    label={item.substance_code}
+                    value={item.value}
+                    limit={item.limit}
+                  />
                 ))}
               </div>
             </div>
@@ -142,10 +171,30 @@ export default function LatestStationReadings({ monitoringPostId }) {
             <div className="latest-device-block">
               <h4>Пыль</h4>
               <div className="latest-metrics">
-                <LatestMetric label="PM1" value={latestReadings.dust.pm1} precision={3} />
-                <LatestMetric label="PM2.5" value={latestReadings.dust.pm2} precision={3} />
-                <LatestMetric label="PM10" value={latestReadings.dust.pm10} precision={3} />
-                <LatestMetric label="TSP" value={latestReadings.dust.tsp} precision={3} />
+                <LatestMetric
+                  label="PM1"
+                  value={latestReadings.dust.pm1}
+                  precision={3}
+                  limit={latestReadings.dust.limits?.pm1}
+                />
+                <LatestMetric
+                  label="PM2.5"
+                  value={latestReadings.dust.pm2}
+                  precision={3}
+                  limit={latestReadings.dust.limits?.pm2}
+                />
+                <LatestMetric
+                  label="PM10"
+                  value={latestReadings.dust.pm10}
+                  precision={3}
+                  limit={latestReadings.dust.limits?.pm10}
+                />
+                <LatestMetric
+                  label="TSP"
+                  value={latestReadings.dust.tsp}
+                  precision={3}
+                  limit={latestReadings.dust.limits?.tsp}
+                />
               </div>
             </div>
           )}
