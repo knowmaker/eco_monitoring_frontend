@@ -521,27 +521,25 @@ input:focus-visible {
 
 .latest-metric {
   min-width: 0;
-  padding: 4px 5px;
-  border: 1px solid transparent;
-  border-radius: 6px;
 }
 
-.latest-metric-ok {
-  border-color: rgba(20, 122, 99, 0.18);
-  background: rgba(22, 133, 109, 0.08);
+.latest-metric-ok .latest-metric-label::after,
+.latest-metric-danger .latest-metric-label::after {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  vertical-align: 0.08em;
+  border-radius: 999px;
+  content: "";
 }
 
-.latest-metric-danger {
-  border-color: rgba(195, 63, 63, 0.24);
-  background: var(--danger-soft);
+.latest-metric-ok .latest-metric-label::after {
+  background: var(--accent-strong);
 }
 
-.latest-metric-ok .latest-metric-value {
-  color: var(--accent-strong);
-}
-
-.latest-metric-danger .latest-metric-value {
-  color: #9f2f2f;
+.latest-metric-danger .latest-metric-label::after {
+  background: #9f2f2f;
 }
 
 .latest-metric-label {
