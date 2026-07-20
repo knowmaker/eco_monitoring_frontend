@@ -146,9 +146,6 @@ export default function LatestStationReadings({ monitoringPostId }) {
 
       {isLoadingLatest && <p className="station-card-hint">Загрузка последних показаний...</p>}
       {!isLoadingLatest && latestErrorText && <p className="station-card-error">{latestErrorText}</p>}
-      {!isLoadingLatest && !latestErrorText && latestReadings?.bucket_ms === null && (
-        <p className="station-card-hint">Нет последних агрегированных данных.</p>
-      )}
       {!isLoadingLatest && !latestErrorText && latestReadings?.bucket_ms !== null && latestReadings && (
         <div className="latest-readings-grid">
           {latestReadings.gas && (

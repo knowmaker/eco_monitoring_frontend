@@ -1,6 +1,7 @@
 ﻿const rawBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const API_BASE_URL = rawBase.replace(/\/+$/, "");
 export const AUTH_TOKEN_STORAGE_KEY = "eco_monitoring_access_token";
+export const AUTH_IS_ADMIN_STORAGE_KEY = "eco_monitoring_is_admin";
 
 function buildUrl(path) {
   if (!API_BASE_URL) {
@@ -331,13 +332,14 @@ export async function registerByEmail(email) {
 }
 
 export async function loginByEmailPassword(email, password) {
+  const normalizedLogin = email.trim().toLowerCase();
   const response = await fetch(buildUrl("/api/v1/auth/login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email: normalizedLogin, password }),
   });
 
   if (!response.ok) {
@@ -352,5 +354,6 @@ export async function loginByEmailPassword(email, password) {
   return {
     accessToken: payload.access_token,
     tokenType: payload.token_type ?? "bearer",
+    isAdmin: Boolean(payload.is_admin),
   };
 }

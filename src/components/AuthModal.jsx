@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { LogIn, Send, UserPlus, X } from "lucide-react";
 
-import { AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../lib/api";
+import { AUTH_IS_ADMIN_STORAGE_KEY, AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../lib/api";
 
 export default function AuthModal({ mode, onClose, onAuthSuccess }) {
   const [email, setEmail] = useState("");
@@ -32,8 +32,9 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
       } else {
         const result = await loginByEmailPassword(normalizedEmail, password);
         localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, result.accessToken);
+        localStorage.setItem(AUTH_IS_ADMIN_STORAGE_KEY, result.isAdmin ? "true" : "false");
         setSuccessText("Вход выполнен.");
-        onAuthSuccess?.();
+        onAuthSuccess?.({ isAdmin: result.isAdmin });
         setTimeout(() => onClose(), 220);
       }
     } catch (error) {
@@ -52,11 +53,11 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
         <h2>{title}</h2>
         <form onSubmit={onSubmit}>
           <label>
-            Email
+            {isRegister ? "Email" : "Логин"}
             <input
-              type="email"
-              autoComplete="email"
-              placeholder="user@example.com"
+              type={isRegister ? "email" : "text"}
+              autoComplete={isRegister ? "email" : "username"}
+              placeholder={isRegister ? "user@example.com" : "demo"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

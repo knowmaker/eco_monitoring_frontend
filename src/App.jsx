@@ -21,6 +21,7 @@ import AuthModal from "./components/AuthModal";
 import LatestStationReadings from "./components/LatestStationReadings";
 import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
+  AUTH_IS_ADMIN_STORAGE_KEY,
   AUTH_TOKEN_STORAGE_KEY,
   fetchAvailableDeviceState,
   fetchMonitoringPosts,
@@ -146,10 +147,12 @@ export default function App() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState("");
   const [isStationCardOpen, setIsStationCardOpen] = useState(false);
+  const [stationCardSource, setStationCardSource] = useState(null);
   const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(false);
 
   const [modalMode, setModalMode] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const statusText = useMemo(() => {
     if (isLoadingPosts) {
@@ -162,14 +165,16 @@ export default function App() {
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
   const statusKind = loadError ? "error" : isLoadingPosts ? "loading" : "ready";
 
-  const stationPanelPosts = isAuthenticated ? adminMonitoringPosts : monitoringPosts;
-  const knownMonitoringPosts = isAuthenticated && adminMonitoringPosts.length ? adminMonitoringPosts : monitoringPosts;
+  const stationPanelPosts = isAdmin ? adminMonitoringPosts : monitoringPosts;
+  const knownMonitoringPosts = isAdmin && adminMonitoringPosts.length ? adminMonitoringPosts : monitoringPosts;
   const selectedMonitoringPost =
     knownMonitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
 
   useEffect(() => {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+    const storedIsAdmin = localStorage.getItem(AUTH_IS_ADMIN_STORAGE_KEY) === "true";
     setIsAuthenticated(Boolean(token));
+    setIsAdmin(Boolean(token) && storedIsAdmin);
   }, []);
 
   useEffect(() => {
@@ -215,7 +220,7 @@ export default function App() {
           if (current === null) {
             return current;
           }
-          if (isAuthenticated) {
+          if (isAdmin) {
             return current;
           }
           return incomingPosts.some((post) => post.id === current) ? current : null;
@@ -239,10 +244,10 @@ export default function App() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [isAuthenticated, postsReloadToken]);
+  }, [isAdmin, postsReloadToken]);
 
   const loadAdminMonitoringPosts = useCallback(async () => {
-    if (!isAuthenticated) {
+    if (!isAdmin) {
       setAdminMonitoringPosts([]);
       setAdminPostsError("");
       setIsLoadingAdminPosts(false);
@@ -259,7 +264,7 @@ export default function App() {
     } finally {
       setIsLoadingAdminPosts(false);
     }
-  }, [isAuthenticated]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (activeMenuPanel === "stations") {
@@ -283,7 +288,10 @@ export default function App() {
       const { element, root } = createTowerMarkerElement(post.id === selectedMonitoringPostId);
       element.title = getPostTitle(post);
       element.addEventListener("click", () => {
+        setActiveMenuPanel("stations");
         setIsStationCardOpen(true);
+        setStationCardSource("map");
+        setEditingStationId(null);
         setIsReadingsCardOpen(false);
         setSelectedMonitoringPostId(post.id);
       });
@@ -343,15 +351,19 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(AUTH_IS_ADMIN_STORAGE_KEY);
     setIsAuthenticated(false);
+    setIsAdmin(false);
     setAdminMonitoringPosts([]);
     setEditingStationId(null);
+    setStationCardSource(null);
     setStationForm(createEmptyStationForm());
   };
 
   const handleSelectMonitoringPost = (post) => {
     setSelectedMonitoringPostId(post.id);
     setIsStationCardOpen(true);
+    setStationCardSource("list");
     setIsReadingsCardOpen(false);
     if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {
       mapRef.current.flyTo({ center: [post.longitude, post.latitude], zoom: Math.max(mapRef.current.getZoom(), 13) });
@@ -407,6 +419,161 @@ export default function App() {
     }
   };
 
+  const isStationDetailsInPanel =
+    activeMenuPanel === "stations" &&
+    isStationCardOpen &&
+    selectedMonitoringPostId !== null;
+
+  const closeStationDetails = () => {
+    setIsStationCardOpen(false);
+    setIsReadingsCardOpen(false);
+    if (stationCardSource === "map") {
+      setSelectedMonitoringPostId(null);
+      setActiveMenuPanel(null);
+    }
+    setStationCardSource(null);
+  };
+
+  const stationDetailsBody = (
+    <>
+      <div className="station-grid">
+        <div>
+          <span className="station-grid-label">Название</span>
+          <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
+        </div>
+        <div>
+          <span className="station-grid-label">Тип поста</span>
+          <span className="station-grid-value">
+            {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "—"}
+          </span>
+        </div>
+        <div>
+          <span className="station-grid-label">Координаты</span>
+          <span className="station-grid-value">
+            {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
+          </span>
+        </div>
+      </div>
+      <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
+
+      {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
+      {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
+
+      {!isLoadingDetails && !detailsError && (
+        <section className="station-section station-devices-section">
+          <h3>Исторические наблюдения</h3>
+          {selectedDevices.length ? (
+            <ul className="station-device-list">
+              {selectedDevices.map((device) => (
+                <li key={device.device_type} className="station-device-item">
+                  <button
+                    type="button"
+                    className={`station-device-button${
+                      selectedDeviceType === device.device_type ? " station-device-button-active" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedDeviceType(device.device_type);
+                      setIsReadingsCardOpen(true);
+                    }}
+                  >
+                    <span className="station-device-type">
+                      {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                    </span>
+                    <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      )}
+    </>
+  );
+
+  const stationEditForm = (
+    <form className="station-edit-form station-edit-form-inline" onSubmit={handleSaveStation}>
+      <label>
+        <span>Серийный номер</span>
+        <strong className="station-readonly-value">{stationForm.serial}</strong>
+      </label>
+      <label>
+        <span>Название</span>
+        <input
+          value={stationForm.name}
+          onChange={(event) => setStationForm((current) => ({ ...current, name: event.target.value }))}
+          placeholder="Например, Пост у главного корпуса"
+        />
+      </label>
+      <label>
+        <span>Тип поста</span>
+        <select
+          value={stationForm.post_type}
+          onChange={(event) => setStationForm((current) => ({ ...current, post_type: event.target.value }))}
+        >
+          <option value="">Выберите тип</option>
+          <option value="stationary">Стационарный</option>
+          <option value="mobile">Мобильный</option>
+          <option value="drone">Дрон</option>
+        </select>
+      </label>
+      <div className="station-edit-grid">
+        <label>
+          <span>Широта</span>
+          <input
+            value={stationForm.latitude}
+            onChange={(event) => setStationForm((current) => ({ ...current, latitude: event.target.value }))}
+            inputMode="decimal"
+          />
+        </label>
+        <label>
+          <span>Долгота</span>
+          <input
+            value={stationForm.longitude}
+            onChange={(event) => setStationForm((current) => ({ ...current, longitude: event.target.value }))}
+            inputMode="decimal"
+          />
+        </label>
+      </div>
+      <div className="station-radio-group" role="radiogroup" aria-label="Статус подтверждения станции">
+        <label>
+          <input
+            type="radio"
+            name="station-confirmed"
+            checked={stationForm.is_confirmed}
+            onChange={() => setStationForm((current) => ({ ...current, is_confirmed: true }))}
+          />
+          <span>Подтверждена</span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="station-confirmed"
+            checked={!stationForm.is_confirmed}
+            onChange={() => setStationForm((current) => ({ ...current, is_confirmed: false }))}
+          />
+          <span>Не подтверждена</span>
+        </label>
+      </div>
+      {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
+      <div className="station-form-actions">
+        <button className="btn btn-secondary" type="submit" disabled={isSavingStation}>
+          <Save size={16} aria-hidden="true" />
+          <span>{isSavingStation ? "Сохранение..." : "Сохранить"}</span>
+        </button>
+        <button
+          className="btn"
+          type="button"
+          onClick={() => {
+            setEditingStationId(null);
+            setStationSaveError("");
+          }}
+        >
+          Отмена
+        </button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -439,7 +606,7 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="side-menu" aria-label="Разделы системы">
+      <nav className={`side-menu${activeMenuPanel ? " side-menu-collapsed" : ""}`} aria-label="Разделы системы">
         <button
           type="button"
           className={`side-menu-button${activeMenuPanel === "stations" ? " side-menu-button-active" : ""}`}
@@ -461,215 +628,81 @@ export default function App() {
       {activeMenuPanel === "stations" && (
         <aside className="stations-panel">
           <div className="card-header">
-            <h2>Станции мониторинга</h2>
+            <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
             <button
               type="button"
               className="card-close-btn"
-              aria-label="Закрыть список станций"
-              onClick={() => setActiveMenuPanel(null)}
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
-          </div>
-
-          {isAuthenticated ? (
-            <p className="station-card-hint">
-              Станции появляются здесь после первого пакета данных. Выберите станцию, чтобы подтвердить ее и заполнить
-              координаты.
-            </p>
-          ) : (
-            <p className="station-card-hint">Войдите, чтобы редактировать и подтверждать станции.</p>
-          )}
-
-          {editingStationId !== null && (
-            <form className="station-edit-form" onSubmit={handleSaveStation}>
-              <label>
-                <span>Серийный номер</span>
-                <input
-                  value={stationForm.serial}
-                  readOnly
-                />
-              </label>
-              <label>
-                <span>Название</span>
-                <input
-                  value={stationForm.name}
-                  onChange={(event) => setStationForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Например, Пост у главного корпуса"
-                />
-              </label>
-              <label>
-                <span>Тип поста</span>
-                <select
-                  value={stationForm.post_type}
-                  onChange={(event) => setStationForm((current) => ({ ...current, post_type: event.target.value }))}
-                >
-                  <option value="">Выберите тип</option>
-                  <option value="stationary">Стационарный</option>
-                  <option value="mobile">Мобильный</option>
-                  <option value="drone">Дрон</option>
-                </select>
-              </label>
-              <div className="station-edit-grid">
-                <label>
-                  <span>Широта</span>
-                  <input
-                    value={stationForm.latitude}
-                    onChange={(event) => setStationForm((current) => ({ ...current, latitude: event.target.value }))}
-                    inputMode="decimal"
-                  />
-                </label>
-                <label>
-                  <span>Долгота</span>
-                  <input
-                    value={stationForm.longitude}
-                    onChange={(event) => setStationForm((current) => ({ ...current, longitude: event.target.value }))}
-                    inputMode="decimal"
-                  />
-                </label>
-              </div>
-              <label className="station-confirm-row">
-                <input
-                  type="checkbox"
-                  checked={stationForm.is_confirmed}
-                  onChange={(event) =>
-                    setStationForm((current) => ({ ...current, is_confirmed: event.target.checked }))
-                  }
-                />
-                <span>Подтверждена и видна на карте</span>
-              </label>
-              {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
-              <div className="station-form-actions">
-                <button className="btn btn-secondary" type="submit" disabled={isSavingStation}>
-                  <Save size={16} aria-hidden="true" />
-                  <span>{isSavingStation ? "Сохранение..." : "Сохранить"}</span>
-                </button>
-                <button
-                  className="btn"
-                  type="button"
-                  onClick={() => {
-                    setEditingStationId(null);
-                    setStationSaveError("");
-                  }}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-          )}
-
-          {isAuthenticated && isLoadingAdminPosts && <p className="station-card-hint">Загрузка списка станций...</p>}
-          {isAuthenticated && adminPostsError && <p className="station-card-error">{adminPostsError}</p>}
-
-          <ul className="stations-list">
-            {stationPanelPosts.map((post) => (
-              <li key={post.id}>
-                <button
-                  type="button"
-                  className={`station-list-button${
-                    selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
-                  }`}
-                  onClick={() => handleSelectMonitoringPost(post)}
-                >
-                  <span>
-                    <strong>{getPostTitle(post)}</strong>
-                    <small>{post.serial} · {POST_TYPE_LABELS[post.post_type] ?? post.post_type}</small>
-                  </span>
-                  {post.is_confirmed ? (
-                    <CheckCircle2 size={16} aria-label="Подтверждена" />
-                  ) : (
-                    <CircleDashed size={16} aria-label="Не подтверждена" />
-                  )}
-                </button>
-                {isAuthenticated && (
-                  <button className="station-row-edit" type="button" onClick={() => handleStartEditStation(post)}>
-                    <Pencil size={14} aria-hidden="true" />
-                    <span>Изменить</span>
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </aside>
-      )}
-
-      {isStationCardOpen && selectedMonitoringPostId !== null && (
-        <aside className="station-card">
-          <div className="card-header">
-            <h2>Информация о станции</h2>
-            <button
-              type="button"
-              className="card-close-btn"
-              aria-label="Закрыть карточки"
+              aria-label={
+                isStationDetailsInPanel && stationCardSource === "list"
+                  ? "Вернуться к списку станций"
+                  : isStationDetailsInPanel
+                    ? "Закрыть карточку станции"
+                    : "Закрыть список станций"
+              }
               onClick={() => {
-                setIsStationCardOpen(false);
-                setIsReadingsCardOpen(false);
-                setSelectedMonitoringPostId(null);
+                if (isStationDetailsInPanel) {
+                  closeStationDetails();
+                } else {
+                  setActiveMenuPanel(null);
+                }
               }}
             >
               <X size={16} aria-hidden="true" />
             </button>
           </div>
 
-          <>
-            <div className="station-grid">
-              <div>
-                <span className="station-grid-label">Название</span>
-                <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
-              </div>
-              <div>
-                <span className="station-grid-label">Серийный номер</span>
-                <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
-              </div>
-              <div>
-                <span className="station-grid-label">Тип поста</span>
-                <span className="station-grid-value">
-                  {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "—"}
-                </span>
-              </div>
-              <div>
-                <span className="station-grid-label">Координаты</span>
-                <span className="station-grid-value">
-                  {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
-                </span>
-              </div>
-            </div>
-            <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
+          {isStationDetailsInPanel ? (
+            stationDetailsBody
+          ) : (
+            <>
+              {isAdmin && isLoadingAdminPosts && (
+                <p className="station-card-hint">Загрузка списка станций...</p>
+              )}
+              {isAdmin && adminPostsError && <p className="station-card-error">{adminPostsError}</p>}
 
-            {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
-            {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
-
-            {!isLoadingDetails && !detailsError && (
-              <section className="station-section station-devices-section">
-                <h3>Исторические наблюдения</h3>
-                {selectedDevices.length ? (
-                  <ul className="station-device-list">
-                    {selectedDevices.map((device) => (
-                      <li key={device.device_type} className="station-device-item">
-                        <button
-                          type="button"
-                          className={`station-device-button${
-                            selectedDeviceType === device.device_type ? " station-device-button-active" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedDeviceType(device.device_type);
-                            setIsReadingsCardOpen(true);
-                          }}
-                        >
-                          <span className="station-device-type">
-                            {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+              <ul className="stations-list">
+                {stationPanelPosts.map((post) => (
+                  <li key={post.id}>
+                    <div className="station-list-row">
+                      <button
+                        type="button"
+                        className={`station-list-button${
+                          selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
+                        }`}
+                        onClick={() => handleSelectMonitoringPost(post)}
+                      >
+                        <span>
+                          <strong>{getPostTitle(post)}</strong>
+                          <small>{POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран"}</small>
+                        </span>
+                        {post.is_confirmed ? (
+                          <span className="station-status station-status-confirmed" title="Подтверждена">
+                            <CheckCircle2 size={16} aria-label="Подтверждена" />
                           </span>
-                          <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                        ) : (
+                          <span className="station-status station-status-pending" title="Не подтверждена">
+                            <CircleDashed size={16} aria-label="Не подтверждена" />
+                          </span>
+                        )}
+                      </button>
+                      {isAdmin && (
+                        <button
+                          className="station-row-edit"
+                          type="button"
+                          aria-label="Редактировать станцию"
+                          title="Редактировать"
+                          onClick={() => handleStartEditStation(post)}
+                        >
+                          <Pencil size={14} aria-hidden="true" />
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="station-card-hint">Нет доступных устройств (только BAD ping за весь период).</p>
-                )}
-              </section>
-            )}
-          </>
+                      )}
+                    </div>
+                    {editingStationId === post.id && stationEditForm}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </aside>
       )}
 
@@ -687,7 +720,10 @@ export default function App() {
         <AuthModal
           mode={modalMode}
           onClose={() => setModalMode(null)}
-          onAuthSuccess={() => setIsAuthenticated(true)}
+          onAuthSuccess={({ isAdmin: nextIsAdmin }) => {
+            setIsAuthenticated(true);
+            setIsAdmin(Boolean(nextIsAdmin));
+          }}
         />
       )}
     </div>
