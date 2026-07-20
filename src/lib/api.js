@@ -21,6 +21,11 @@ async function readError(response) {
   return `HTTP ${response.status}`;
 }
 
+function authHeaders() {
+  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function formatDayParam(day) {
   if (typeof day === "string" && day.length >= 10) {
     return day.slice(0, 10);
@@ -63,6 +68,41 @@ export async function fetchMonitoringPosts() {
     throw new Error("Некорректный формат ответа /api/v1/monitoring_posts");
   }
   return payload.monitoring_posts;
+}
+
+export async function fetchMonitoringPostsAdmin() {
+  const response = await fetch(buildUrl("/api/v1/monitoring_posts/admin"), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки списка станций: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.monitoring_posts)) {
+    throw new Error("Некорректный формат ответа /api/v1/monitoring_posts/admin");
+  }
+  return payload.monitoring_posts;
+}
+
+export async function updateMonitoringPost(monitoringPostId, payload) {
+  const response = await fetch(buildUrl(`/api/v1/monitoring_posts/${monitoringPostId}`), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка сохранения станции: ${await readError(response)}`);
+  }
+
+  return response.json();
 }
 
 export async function fetchAvailableDeviceState(monitoringPostId) {

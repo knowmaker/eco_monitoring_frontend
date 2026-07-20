@@ -1,6 +1,20 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { LogIn, LogOut, MapPin, RadioTower, UserPlus, X } from "lucide-react";
+import {
+  Calculator,
+  CheckCircle2,
+  CircleDashed,
+  List,
+  LogIn,
+  LogOut,
+  MapPin,
+  Pencil,
+  RadioTower,
+  Save,
+  TrendingUp,
+  UserPlus,
+  X,
+} from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
@@ -10,6 +24,8 @@ import {
   AUTH_TOKEN_STORAGE_KEY,
   fetchAvailableDeviceState,
   fetchMonitoringPosts,
+  fetchMonitoringPostsAdmin,
+  updateMonitoringPost,
 } from "./lib/api";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
@@ -24,6 +40,12 @@ const DEVICE_TYPE_LABELS = {
   dust: "Пыль",
   meteo: "Метео",
   ivtm: "ИВТМ",
+};
+
+const POST_TYPE_LABELS = {
+  stationary: "Стационарный",
+  mobile: "Мобильный",
+  drone: "Дрон",
 };
 
 function createTowerMarkerElement(isActive) {
@@ -46,6 +68,37 @@ function formatCoordinates(latitude, longitude) {
     return "—";
   }
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+}
+
+function getPostTitle(post) {
+  if (!post) {
+    return "—";
+  }
+  return post.name || post.serial;
+}
+
+function formatCoordinateInput(value) {
+  return Number.isFinite(value) ? String(value) : "";
+}
+
+function toNullableFloat(value) {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) {
+    return null;
+  }
+  const parsed = Number(trimmed.replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function createEmptyStationForm() {
+  return {
+    serial: "",
+    name: "",
+    post_type: "",
+    latitude: "",
+    longitude: "",
+    is_confirmed: true,
+  };
 }
 
 function hidePoliticalBoundaries(map) {
@@ -77,6 +130,15 @@ export default function App() {
   const [monitoringPosts, setMonitoringPosts] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [postsReloadToken, setPostsReloadToken] = useState(0);
+  const [activeMenuPanel, setActiveMenuPanel] = useState(null);
+  const [adminMonitoringPosts, setAdminMonitoringPosts] = useState([]);
+  const [isLoadingAdminPosts, setIsLoadingAdminPosts] = useState(false);
+  const [adminPostsError, setAdminPostsError] = useState("");
+  const [editingStationId, setEditingStationId] = useState(null);
+  const [stationForm, setStationForm] = useState(createEmptyStationForm);
+  const [isSavingStation, setIsSavingStation] = useState(false);
+  const [stationSaveError, setStationSaveError] = useState("");
 
   const [selectedMonitoringPostId, setSelectedMonitoringPostId] = useState(null);
   const [selectedDevices, setSelectedDevices] = useState([]);
@@ -100,8 +162,10 @@ export default function App() {
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
   const statusKind = loadError ? "error" : isLoadingPosts ? "loading" : "ready";
 
+  const stationPanelPosts = isAuthenticated ? adminMonitoringPosts : monitoringPosts;
+  const knownMonitoringPosts = isAuthenticated && adminMonitoringPosts.length ? adminMonitoringPosts : monitoringPosts;
   const selectedMonitoringPost =
-    monitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
+    knownMonitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
 
   useEffect(() => {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -151,6 +215,9 @@ export default function App() {
           if (current === null) {
             return current;
           }
+          if (isAuthenticated) {
+            return current;
+          }
           return incomingPosts.some((post) => post.id === current) ? current : null;
         });
         setLoadError("");
@@ -172,7 +239,33 @@ export default function App() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [isAuthenticated, postsReloadToken]);
+
+  const loadAdminMonitoringPosts = useCallback(async () => {
+    if (!isAuthenticated) {
+      setAdminMonitoringPosts([]);
+      setAdminPostsError("");
+      setIsLoadingAdminPosts(false);
+      return;
+    }
+
+    setIsLoadingAdminPosts(true);
+    setAdminPostsError("");
+    try {
+      const incomingPosts = await fetchMonitoringPostsAdmin();
+      setAdminMonitoringPosts(incomingPosts);
+    } catch (error) {
+      setAdminPostsError(error instanceof Error ? error.message : "Не удалось загрузить список станций");
+    } finally {
+      setIsLoadingAdminPosts(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (activeMenuPanel === "stations") {
+      loadAdminMonitoringPosts();
+    }
+  }, [activeMenuPanel, loadAdminMonitoringPosts, postsReloadToken]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -188,7 +281,7 @@ export default function App() {
 
     points.forEach((post) => {
       const { element, root } = createTowerMarkerElement(post.id === selectedMonitoringPostId);
-      element.title = `Станция ${post.serial}`;
+      element.title = getPostTitle(post);
       element.addEventListener("click", () => {
         setIsStationCardOpen(true);
         setIsReadingsCardOpen(false);
@@ -251,6 +344,67 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
     setIsAuthenticated(false);
+    setAdminMonitoringPosts([]);
+    setEditingStationId(null);
+    setStationForm(createEmptyStationForm());
+  };
+
+  const handleSelectMonitoringPost = (post) => {
+    setSelectedMonitoringPostId(post.id);
+    setIsStationCardOpen(true);
+    setIsReadingsCardOpen(false);
+    if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {
+      mapRef.current.flyTo({ center: [post.longitude, post.latitude], zoom: Math.max(mapRef.current.getZoom(), 13) });
+    }
+  };
+
+  const handleStartEditStation = (post) => {
+    setEditingStationId(post.id);
+    setStationSaveError("");
+    setStationForm({
+      serial: post.serial,
+      name: post.name || "",
+      post_type: post.post_type || "",
+      latitude: formatCoordinateInput(post.latitude),
+      longitude: formatCoordinateInput(post.longitude),
+      is_confirmed: Boolean(post.is_confirmed),
+    });
+  };
+
+  const handleSaveStation = async (event) => {
+    event.preventDefault();
+    setIsSavingStation(true);
+    setStationSaveError("");
+
+    const payload = {
+      name: stationForm.name.trim() || null,
+      post_type: stationForm.post_type || null,
+      latitude: toNullableFloat(stationForm.latitude),
+      longitude: toNullableFloat(stationForm.longitude),
+      is_confirmed: stationForm.is_confirmed,
+    };
+
+    if (
+      payload.is_confirmed &&
+      (!payload.name || !payload.post_type || payload.latitude === null || payload.longitude === null)
+    ) {
+      setStationSaveError("Для подтверждения станции заполните название, тип поста и координаты.");
+      setIsSavingStation(false);
+      return;
+    }
+
+    try {
+      const savedPost = await updateMonitoringPost(editingStationId, payload);
+      setEditingStationId(null);
+      setStationForm(createEmptyStationForm());
+      setSelectedMonitoringPostId(savedPost.id);
+      setPostsReloadToken((value) => value + 1);
+      await loadAdminMonitoringPosts();
+    } catch (error) {
+      setStationSaveError(error instanceof Error ? error.message : "Не удалось сохранить станцию");
+    } finally {
+      setIsSavingStation(false);
+    }
   };
 
   return (
@@ -285,6 +439,160 @@ export default function App() {
         </div>
       </header>
 
+      <nav className="side-menu" aria-label="Разделы системы">
+        <button
+          type="button"
+          className={`side-menu-button${activeMenuPanel === "stations" ? " side-menu-button-active" : ""}`}
+          onClick={() => setActiveMenuPanel((current) => (current === "stations" ? null : "stations"))}
+        >
+          <List size={18} aria-hidden="true" />
+          <span>Станции мониторинга</span>
+        </button>
+        <button type="button" className="side-menu-button side-menu-button-disabled" disabled>
+          <Calculator size={18} aria-hidden="true" />
+          <span>Математические модели расчетов</span>
+        </button>
+        <button type="button" className="side-menu-button side-menu-button-disabled" disabled>
+          <TrendingUp size={18} aria-hidden="true" />
+          <span>Прогнозирование</span>
+        </button>
+      </nav>
+
+      {activeMenuPanel === "stations" && (
+        <aside className="stations-panel">
+          <div className="card-header">
+            <h2>Станции мониторинга</h2>
+            <button
+              type="button"
+              className="card-close-btn"
+              aria-label="Закрыть список станций"
+              onClick={() => setActiveMenuPanel(null)}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+
+          {isAuthenticated ? (
+            <p className="station-card-hint">
+              Станции появляются здесь после первого пакета данных. Выберите станцию, чтобы подтвердить ее и заполнить
+              координаты.
+            </p>
+          ) : (
+            <p className="station-card-hint">Войдите, чтобы редактировать и подтверждать станции.</p>
+          )}
+
+          {editingStationId !== null && (
+            <form className="station-edit-form" onSubmit={handleSaveStation}>
+              <label>
+                <span>Серийный номер</span>
+                <input
+                  value={stationForm.serial}
+                  readOnly
+                />
+              </label>
+              <label>
+                <span>Название</span>
+                <input
+                  value={stationForm.name}
+                  onChange={(event) => setStationForm((current) => ({ ...current, name: event.target.value }))}
+                  placeholder="Например, Пост у главного корпуса"
+                />
+              </label>
+              <label>
+                <span>Тип поста</span>
+                <select
+                  value={stationForm.post_type}
+                  onChange={(event) => setStationForm((current) => ({ ...current, post_type: event.target.value }))}
+                >
+                  <option value="">Выберите тип</option>
+                  <option value="stationary">Стационарный</option>
+                  <option value="mobile">Мобильный</option>
+                  <option value="drone">Дрон</option>
+                </select>
+              </label>
+              <div className="station-edit-grid">
+                <label>
+                  <span>Широта</span>
+                  <input
+                    value={stationForm.latitude}
+                    onChange={(event) => setStationForm((current) => ({ ...current, latitude: event.target.value }))}
+                    inputMode="decimal"
+                  />
+                </label>
+                <label>
+                  <span>Долгота</span>
+                  <input
+                    value={stationForm.longitude}
+                    onChange={(event) => setStationForm((current) => ({ ...current, longitude: event.target.value }))}
+                    inputMode="decimal"
+                  />
+                </label>
+              </div>
+              <label className="station-confirm-row">
+                <input
+                  type="checkbox"
+                  checked={stationForm.is_confirmed}
+                  onChange={(event) =>
+                    setStationForm((current) => ({ ...current, is_confirmed: event.target.checked }))
+                  }
+                />
+                <span>Подтверждена и видна на карте</span>
+              </label>
+              {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
+              <div className="station-form-actions">
+                <button className="btn btn-secondary" type="submit" disabled={isSavingStation}>
+                  <Save size={16} aria-hidden="true" />
+                  <span>{isSavingStation ? "Сохранение..." : "Сохранить"}</span>
+                </button>
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => {
+                    setEditingStationId(null);
+                    setStationSaveError("");
+                  }}
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          )}
+
+          {isAuthenticated && isLoadingAdminPosts && <p className="station-card-hint">Загрузка списка станций...</p>}
+          {isAuthenticated && adminPostsError && <p className="station-card-error">{adminPostsError}</p>}
+
+          <ul className="stations-list">
+            {stationPanelPosts.map((post) => (
+              <li key={post.id}>
+                <button
+                  type="button"
+                  className={`station-list-button${
+                    selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
+                  }`}
+                  onClick={() => handleSelectMonitoringPost(post)}
+                >
+                  <span>
+                    <strong>{getPostTitle(post)}</strong>
+                    <small>{post.serial} · {POST_TYPE_LABELS[post.post_type] ?? post.post_type}</small>
+                  </span>
+                  {post.is_confirmed ? (
+                    <CheckCircle2 size={16} aria-label="Подтверждена" />
+                  ) : (
+                    <CircleDashed size={16} aria-label="Не подтверждена" />
+                  )}
+                </button>
+                {isAuthenticated && (
+                  <button className="station-row-edit" type="button" onClick={() => handleStartEditStation(post)}>
+                    <Pencil size={14} aria-hidden="true" />
+                    <span>Изменить</span>
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
       {isStationCardOpen && selectedMonitoringPostId !== null && (
         <aside className="station-card">
           <div className="card-header">
@@ -306,8 +614,18 @@ export default function App() {
           <>
             <div className="station-grid">
               <div>
+                <span className="station-grid-label">Название</span>
+                <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
+              </div>
+              <div>
                 <span className="station-grid-label">Серийный номер</span>
                 <span className="station-grid-value">{selectedMonitoringPost?.serial ?? "—"}</span>
+              </div>
+              <div>
+                <span className="station-grid-label">Тип поста</span>
+                <span className="station-grid-value">
+                  {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "—"}
+                </span>
               </div>
               <div>
                 <span className="station-grid-label">Координаты</span>
@@ -315,14 +633,7 @@ export default function App() {
                   {formatCoordinates(selectedMonitoringPost?.latitude, selectedMonitoringPost?.longitude)}
                 </span>
               </div>
-              <div>
-                <span className="station-grid-label">Тип поста</span>
-                <span className="station-grid-value">
-                  {selectedMonitoringPost?.is_stationary ? "Стационарный" : "Мобильный"}
-                </span>
-              </div>
             </div>
-
             <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
 
             {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
@@ -354,9 +665,7 @@ export default function App() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="station-card-hint">
-                    Нет доступных устройств (только BAD ping за весь период).
-                  </p>
+                  <p className="station-card-hint">Нет доступных устройств (только BAD ping за весь период).</p>
                 )}
               </section>
             )}
