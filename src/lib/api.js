@@ -357,3 +357,34 @@ export async function loginByEmailPassword(email, password) {
     isAdmin: Boolean(payload.is_admin),
   };
 }
+
+export async function fetchCurrentUserProfile() {
+  const response = await fetch(buildUrl("/api/v1/auth/me"), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки профиля: ${await readError(response)}`);
+  }
+
+  return response.json();
+}
+
+export async function updateCurrentUserProfile(payload) {
+  const response = await fetch(buildUrl("/api/v1/auth/me"), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка сохранения профиля: ${await readError(response)}`);
+  }
+
+  return response.json();
+}

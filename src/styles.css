@@ -441,6 +441,18 @@ input:focus-visible {
   background: #0f6d58;
 }
 
+.btn-profile {
+  color: #315f9f;
+  border-color: rgba(49, 95, 159, 0.24);
+  background: rgba(49, 95, 159, 0.1);
+}
+
+.btn-profile:hover {
+  color: #284f86;
+  border-color: rgba(49, 95, 159, 0.34);
+  background: rgba(49, 95, 159, 0.15);
+}
+
 .btn-danger {
   color: #9f2f2f;
   border-color: rgba(195, 63, 63, 0.22);

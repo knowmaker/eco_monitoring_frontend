@@ -12,6 +12,7 @@ import {
   RadioTower,
   Save,
   TrendingUp,
+  User,
   UserPlus,
   X,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
 import LatestStationReadings from "./components/LatestStationReadings";
+import ProfileModal from "./components/ProfileModal";
 import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
   AUTH_IS_ADMIN_STORAGE_KEY,
@@ -151,6 +153,7 @@ export default function App() {
   const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(false);
 
   const [modalMode, setModalMode] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -354,6 +357,7 @@ export default function App() {
     localStorage.removeItem(AUTH_IS_ADMIN_STORAGE_KEY);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setIsProfileModalOpen(false);
     setAdminMonitoringPosts([]);
     setEditingStationId(null);
     setStationCardSource(null);
@@ -577,10 +581,16 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           {isAuthenticated ? (
-            <button className="btn btn-danger" type="button" onClick={handleLogout}>
-              <LogOut size={16} aria-hidden="true" />
-              <span className="btn-label">Выход</span>
-            </button>
+            <>
+              <button className="btn btn-profile" type="button" onClick={() => setIsProfileModalOpen(true)}>
+                <User size={16} aria-hidden="true" />
+                <span className="btn-label">Профиль</span>
+              </button>
+              <button className="btn btn-danger" type="button" onClick={handleLogout}>
+                <LogOut size={16} aria-hidden="true" />
+                <span className="btn-label">Выход</span>
+              </button>
+            </>
           ) : (
             <>
               <button className="btn btn-secondary" type="button" onClick={() => setModalMode("login")}>
@@ -716,6 +726,7 @@ export default function App() {
           }}
         />
       )}
+      {isAuthenticated && isProfileModalOpen && <ProfileModal onClose={() => setIsProfileModalOpen(false)} />}
     </div>
   );
 }
