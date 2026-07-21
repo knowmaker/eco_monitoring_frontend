@@ -427,8 +427,8 @@ export default function App() {
   const closeStationDetails = () => {
     setIsStationCardOpen(false);
     setIsReadingsCardOpen(false);
+    setSelectedMonitoringPostId(null);
     if (stationCardSource === "map") {
-      setSelectedMonitoringPostId(null);
       setActiveMenuPanel(null);
     }
     setStationCardSource(null);
@@ -534,27 +534,17 @@ export default function App() {
           />
         </label>
       </div>
-      <div className="station-radio-group" role="radiogroup" aria-label="Статус подтверждения станции">
-        <label>
-          <input
-            type="radio"
-            name="station-confirmed"
-            checked={stationForm.is_confirmed}
-            onChange={() => setStationForm((current) => ({ ...current, is_confirmed: true }))}
-          />
-          <span>Подтверждена</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="station-confirmed"
-            checked={!stationForm.is_confirmed}
-            onChange={() => setStationForm((current) => ({ ...current, is_confirmed: false }))}
-          />
-          <span>Не подтверждена</span>
-        </label>
-      </div>
       {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
+      <label className="station-confirm-check">
+        <input
+          type="checkbox"
+          checked={stationForm.is_confirmed}
+          onChange={(event) =>
+            setStationForm((current) => ({ ...current, is_confirmed: event.target.checked }))
+          }
+        />
+        <span>Станция подтверждена</span>
+      </label>
       <div className="station-form-actions">
         <button className="btn btn-secondary" type="submit" disabled={isSavingStation}>
           <Save size={16} aria-hidden="true" />
