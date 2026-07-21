@@ -1184,14 +1184,35 @@ input:focus-visible {
     width: auto;
     flex-direction: row;
     overflow-x: auto;
+    padding: 3px 22px 8px 0;
+    scroll-snap-type: x proximity;
+    scrollbar-color: rgba(20, 122, 99, 0.42) rgba(255, 255, 255, 0.72);
+    scrollbar-width: thin;
+  }
+
+  .side-menu::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .side-menu::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .side-menu::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(20, 122, 99, 0.42);
   }
 
   .side-menu-button {
-    min-width: 136px;
-    min-height: 34px;
+    width: auto;
+    min-width: max-content;
+    height: 40px;
+    min-height: 40px;
     flex: 0 0 auto;
-    padding: 7px 9px;
+    padding: 7px 12px;
     font-size: 0.72rem;
+    scroll-snap-align: start;
   }
 
   .side-menu-collapsed {
@@ -1199,14 +1220,27 @@ input:focus-visible {
   }
 
   .side-menu-collapsed .side-menu-button {
-    width: 34px;
-    min-width: 34px;
-    flex-basis: 34px;
-    padding: 0;
+    width: auto;
+    min-width: max-content;
+    height: 40px;
+    min-height: 40px;
+    flex-basis: auto;
+    justify-content: flex-start;
+    padding: 7px 12px;
+  }
+
+  .side-menu-collapsed .side-menu-button span {
+    display: inline;
+  }
+
+  .side-menu-collapsed .side-menu-button-active {
+    color: var(--accent-strong);
+    border-color: #8fcfbd;
+    background: #e4f4ef;
   }
 
   .stations-panel {
-    top: 128px;
+    top: 136px;
     left: 10px;
     width: calc(100vw - 20px);
     max-height: calc(100vh - 150px);
