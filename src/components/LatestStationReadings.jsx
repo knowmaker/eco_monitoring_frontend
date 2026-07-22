@@ -97,6 +97,15 @@ function LatestMetric({ label, value, unit, precision, displayValue, limit }) {
   );
 }
 
+function LatestDeviceHeader({ title, bucketMs }) {
+  return (
+    <h4>
+      <span>{title}</span>
+      <time>{formatLatestTime(bucketMs)}</time>
+    </h4>
+  );
+}
+
 export default function LatestStationReadings({ monitoringPostId }) {
   const [latestReadings, setLatestReadings] = useState(null);
   const [isLoadingLatest, setIsLoadingLatest] = useState(false);
@@ -141,7 +150,6 @@ export default function LatestStationReadings({ monitoringPostId }) {
     <section className="latest-readings">
       <div className="latest-readings-header">
         <h3>Последние значения</h3>
-        <span>{formatLatestTime(latestReadings?.bucket_ms)}</span>
       </div>
 
       {isLoadingLatest && <p className="station-card-hint">Загрузка последних показаний...</p>}
@@ -150,7 +158,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
         <div className="latest-readings-grid">
           {latestReadings.gas && (
             <div className="latest-device-block">
-              <h4>Газ</h4>
+              <LatestDeviceHeader title="Газ" bucketMs={latestReadings.gas.bucket_ms} />
               <div className="latest-metrics latest-metrics-gas">
                 {latestReadings.gas.substances.map((item) => (
                   <LatestMetric
@@ -166,7 +174,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
 
           {latestReadings.dust && (
             <div className="latest-device-block">
-              <h4>Пыль</h4>
+              <LatestDeviceHeader title="Пыль" bucketMs={latestReadings.dust.bucket_ms} />
               <div className="latest-metrics">
                 <LatestMetric
                   label="PM1"
@@ -198,7 +206,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
 
           {latestReadings.meteo && (
             <div className="latest-device-block">
-              <h4>Метео</h4>
+              <LatestDeviceHeader title="Метео" bucketMs={latestReadings.meteo.bucket_ms} />
               <div className="latest-metrics">
                 <LatestMetric label="Темп." value={latestReadings.meteo.air_temp} unit="°C" />
                 <LatestMetric label="Влажн." value={latestReadings.meteo.air_hum} unit="%" />
@@ -213,7 +221,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
 
           {latestReadings.ivtm && (
             <div className="latest-device-block">
-              <h4>ИВТМ</h4>
+              <LatestDeviceHeader title="ИВТМ" bucketMs={latestReadings.ivtm.bucket_ms} />
               <div className="latest-metrics">
                 <LatestMetric label="Влажн." value={latestReadings.ivtm.sensor_ivtm_hum} unit="%" />
                 <LatestMetric label="Темп." value={latestReadings.ivtm.sensor_ivtm_temp} unit="°C" />

@@ -769,10 +769,25 @@ input:focus-visible {
 }
 
 .latest-device-block h4 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0 0 7px;
   color: var(--muted-strong);
   font-size: 0.76rem;
   font-weight: 750;
+}
+
+.latest-device-block h4 span {
+  min-width: 0;
+}
+
+.latest-device-block h4 time {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 600;
 }
 
 .latest-metrics {
