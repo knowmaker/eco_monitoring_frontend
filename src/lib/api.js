@@ -123,6 +123,31 @@ export async function fetchAvailableDeviceState(monitoringPostId) {
   return payload.devices;
 }
 
+export async function fetchRawMqttPayload(monitoringPostId, day, limit = 100) {
+  const params = new URLSearchParams({
+    monitoring_post_id: String(monitoringPostId),
+    limit: String(limit),
+  });
+  if (day) {
+    params.set("date", formatDayParam(day));
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/raw_mqtt_payload/admin?${params.toString()}`), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки сырых пакетов: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.records)) {
+    throw new Error("Некорректный формат ответа /api/v1/raw_mqtt_payload/admin");
+  }
+  return payload;
+}
+
 export async function fetchStationLatestHourlyReadings(monitoringPostId) {
   const response = await fetch(
     buildUrl(`/api/v1/station_readings/latest_hourly?monitoring_post_id=${monitoringPostId}`),

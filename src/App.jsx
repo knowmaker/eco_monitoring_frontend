@@ -4,6 +4,7 @@ import {
   Calculator,
   CheckCircle2,
   CircleDashed,
+  Database,
   List,
   LogIn,
   LogOut,
@@ -21,6 +22,7 @@ import maplibregl from "maplibre-gl";
 import AuthModal from "./components/AuthModal";
 import LatestStationReadings from "./components/LatestStationReadings";
 import ProfileModal from "./components/ProfileModal";
+import RawMqttPayloadCard from "./components/RawMqttPayloadCard";
 import SensorReadingsCard from "./components/SensorReadingsCard";
 import {
   AUTH_IS_ADMIN_STORAGE_KEY,
@@ -35,6 +37,7 @@ const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = [38.124629, 55.950523];
 const DEFAULT_ZOOM = 12;
 const POSTS_REFRESH_MS = 30_000;
+const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
 const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 
@@ -100,6 +103,7 @@ function createEmptyStationForm() {
     post_type: "",
     latitude: "",
     longitude: "",
+    notes: "",
     is_confirmed: true,
   };
 }
@@ -151,11 +155,13 @@ export default function App() {
   const [isStationCardOpen, setIsStationCardOpen] = useState(false);
   const [stationCardSource, setStationCardSource] = useState(null);
   const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(false);
+  const [isRawPacketsOpen, setIsRawPacketsOpen] = useState(false);
 
   const [modalMode, setModalMode] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const statusText = useMemo(() => {
     if (isLoadingPosts) {
@@ -178,6 +184,21 @@ export default function App() {
     const storedIsAdmin = localStorage.getItem(AUTH_IS_ADMIN_STORAGE_KEY) === "true";
     setIsAuthenticated(Boolean(token));
     setIsAdmin(Boolean(token) && storedIsAdmin);
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_VIEWPORT_QUERY);
+    const handleChange = () => {
+      const isMobile = mediaQuery.matches;
+      setIsMobileViewport(isMobile);
+      if (isMobile) {
+        setIsRawPacketsOpen(false);
+      }
+    };
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   useEffect(() => {
@@ -296,6 +317,7 @@ export default function App() {
         setStationCardSource("map");
         setEditingStationId(null);
         setIsReadingsCardOpen(false);
+        setIsRawPacketsOpen(false);
         setSelectedMonitoringPostId(post.id);
       });
 
@@ -361,6 +383,7 @@ export default function App() {
     setAdminMonitoringPosts([]);
     setEditingStationId(null);
     setStationCardSource(null);
+    setIsRawPacketsOpen(false);
     setStationForm(createEmptyStationForm());
   };
 
@@ -369,6 +392,7 @@ export default function App() {
     setIsStationCardOpen(true);
     setStationCardSource("list");
     setIsReadingsCardOpen(false);
+    setIsRawPacketsOpen(false);
     if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {
       mapRef.current.flyTo({ center: [post.longitude, post.latitude], zoom: Math.max(mapRef.current.getZoom(), 13) });
     }
@@ -383,6 +407,7 @@ export default function App() {
       post_type: post.post_type || "",
       latitude: formatCoordinateInput(post.latitude),
       longitude: formatCoordinateInput(post.longitude),
+      notes: post.notes || "",
       is_confirmed: Boolean(post.is_confirmed),
     });
   };
@@ -397,6 +422,7 @@ export default function App() {
       post_type: stationForm.post_type || null,
       latitude: toNullableFloat(stationForm.latitude),
       longitude: toNullableFloat(stationForm.longitude),
+      notes: stationForm.notes.trim() || null,
       is_confirmed: stationForm.is_confirmed,
     };
 
@@ -431,6 +457,7 @@ export default function App() {
   const closeStationDetails = () => {
     setIsStationCardOpen(false);
     setIsReadingsCardOpen(false);
+    setIsRawPacketsOpen(false);
     setSelectedMonitoringPostId(null);
     if (stationCardSource === "map") {
       setActiveMenuPanel(null);
@@ -458,6 +485,25 @@ export default function App() {
           </span>
         </div>
       </div>
+      {isAdmin && selectedMonitoringPost?.notes && (
+        <div className="station-notes">
+          <span className="station-grid-label">Заметки</span>
+          <p>{selectedMonitoringPost.notes}</p>
+        </div>
+      )}
+      {isAdmin && !isMobileViewport && (
+        <button
+          type="button"
+          className={`station-raw-action${isRawPacketsOpen ? " station-raw-action-active" : ""}`}
+          onClick={() => {
+            setIsRawPacketsOpen(true);
+            setIsReadingsCardOpen(false);
+          }}
+        >
+          <Database size={15} aria-hidden="true" />
+          <span>Сырые пакеты данных с брокера</span>
+        </button>
+      )}
       <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
 
       {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
@@ -470,21 +516,26 @@ export default function App() {
             <ul className="station-device-list">
               {selectedDevices.map((device) => (
                 <li key={device.device_type} className="station-device-item">
-                  <button
-                    type="button"
-                    className={`station-device-button${
-                      selectedDeviceType === device.device_type ? " station-device-button-active" : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedDeviceType(device.device_type);
-                      setIsReadingsCardOpen(true);
-                    }}
-                  >
-                    <span className="station-device-type">
-                      {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
-                    </span>
-                    <span className="station-device-name">{device.device_name || "Без имени"}</span>
-                  </button>
+                  <div className="station-device-row">
+                    <button
+                      type="button"
+                      className={`station-device-button${
+                        selectedDeviceType === device.device_type && isReadingsCardOpen
+                          ? " station-device-button-active"
+                          : ""
+                        }`}
+                      onClick={() => {
+                        setSelectedDeviceType(device.device_type);
+                        setIsReadingsCardOpen(true);
+                        setIsRawPacketsOpen(false);
+                      }}
+                    >
+                      <span className="station-device-type">
+                        {DEVICE_TYPE_LABELS[device.device_type] ?? device.device_type}
+                      </span>
+                      <span className="station-device-name">{device.device_name || "Без имени"}</span>
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -538,6 +589,14 @@ export default function App() {
           />
         </label>
       </div>
+      <label>
+        <span>Заметки</span>
+        <textarea
+          value={stationForm.notes}
+          onChange={(event) => setStationForm((current) => ({ ...current, notes: event.target.value }))}
+          placeholder="Поле для заметок"
+        />
+      </label>
       {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
       <label className="station-confirm-check">
         <input
@@ -711,6 +770,13 @@ export default function App() {
           monitoringPostId={selectedMonitoringPostId}
           selectedDeviceType={selectedDeviceType}
           onClose={() => setIsReadingsCardOpen(false)}
+        />
+      )}
+
+      {isAdmin && !isMobileViewport && isStationCardOpen && isRawPacketsOpen && selectedMonitoringPostId !== null && (
+        <RawMqttPayloadCard
+          monitoringPostId={selectedMonitoringPostId}
+          onClose={() => setIsRawPacketsOpen(false)}
         />
       )}
 
