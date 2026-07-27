@@ -8,13 +8,24 @@ function formatLatestTime(bucketMs) {
   if (!Number.isFinite(bucketMs)) {
     return "нет данных";
   }
-  return new Intl.DateTimeFormat("ru-RU", {
+
+  const start = new Date(bucketMs);
+  const end = new Date(bucketMs + 59 * 60 * 1000);
+  const startText = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
+    year: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(bucketMs));
+  }).format(start);
+  const endTime = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(end);
+
+  return `${startText}-${endTime}`;
 }
 
 function formatLatestValue(value, unit = "", precision = null) {
@@ -165,6 +176,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
                     key={item.substance_code}
                     label={item.substance_code}
                     value={item.value}
+                    precision={2}
                     limit={item.limit}
                   />
                 ))}
@@ -179,25 +191,25 @@ export default function LatestStationReadings({ monitoringPostId }) {
                 <LatestMetric
                   label="PM1"
                   value={latestReadings.dust.pm1}
-                  precision={3}
+                  precision={4}
                   limit={latestReadings.dust.limits?.pm1}
                 />
                 <LatestMetric
                   label="PM2.5"
                   value={latestReadings.dust.pm2}
-                  precision={3}
+                  precision={4}
                   limit={latestReadings.dust.limits?.pm2}
                 />
                 <LatestMetric
                   label="PM10"
                   value={latestReadings.dust.pm10}
-                  precision={3}
+                  precision={4}
                   limit={latestReadings.dust.limits?.pm10}
                 />
                 <LatestMetric
                   label="TSP"
                   value={latestReadings.dust.tsp}
-                  precision={3}
+                  precision={4}
                   limit={latestReadings.dust.limits?.tsp}
                 />
               </div>
