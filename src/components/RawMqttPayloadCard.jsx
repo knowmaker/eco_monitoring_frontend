@@ -52,12 +52,14 @@ function formatPacketTime(packet) {
 export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
   const [day, setDay] = useState(new Date());
   const [limit, setLimit] = useState(25);
-  const [reloadToken, setReloadToken] = useState(0);
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [records, setRecords] = useState([]);
 
   const dateInputValue = toIsoDay(day);
+  const maxDateInputValue = toIsoDay(new Date());
+  const isNextDayDisabled = dateInputValue >= maxDateInputValue;
 
   useEffect(() => {
     if (!monitoringPostId) {
@@ -92,7 +94,7 @@ export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [monitoringPostId, day, limit, reloadToken]);
+  }, [monitoringPostId, day, limit, refreshCounter]);
 
   const recordCountText = useMemo(() => {
     if (isLoading) {
@@ -103,7 +105,7 @@ export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
 
   const handleDateInputChange = (value) => {
     const nextDay = parseIsoDay(value);
-    if (nextDay) {
+    if (nextDay && toIsoDay(nextDay) <= maxDateInputValue) {
       setDay(nextDay);
     }
   };
@@ -112,9 +114,18 @@ export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
     <aside className="readings-card raw-data-card">
       <div className="card-header">
         <h2>Сырые данные</h2>
-        <button type="button" className="card-close-btn" aria-label="Закрыть сырые данные" onClick={onClose}>
-          <X size={16} aria-hidden="true" />
-        </button>
+        <div className="card-header-actions">
+          <button
+            type="button"
+            className="card-refresh-btn"
+            onClick={() => setRefreshCounter((value) => value + 1)}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+          </button>
+          <button type="button" className="card-close-btn" onClick={onClose}>
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       <div className="readings-toolbar raw-data-toolbar">
@@ -124,22 +135,30 @@ export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
         </div>
         <div className="period-controls">
           <div className="day-switcher">
-            <button type="button" aria-label="Предыдущий день" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
+            <button type="button" onClick={() => setDay((prev) => shiftDay(prev, -1))}>
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <input
               type="date"
-              aria-label="Выбрать дату сырых данных"
               value={dateInputValue}
+              max={maxDateInputValue}
               onChange={(event) => handleDateInputChange(event.target.value)}
             />
-            <button type="button" aria-label="Следующий день" onClick={() => setDay((prev) => shiftDay(prev, 1))}>
+            <button
+              type="button"
+              disabled={isNextDayDisabled}
+              onClick={() =>
+                setDay((prev) => {
+                  const nextDay = shiftDay(prev, 1);
+                  return toIsoDay(nextDay) > maxDateInputValue ? prev : nextDay;
+                })
+              }
+            >
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
           <select
             className="raw-limit-select"
-            aria-label="Лимит сырых записей"
             value={limit}
             onChange={(event) => setLimit(Number(event.target.value))}
           >
@@ -150,14 +169,6 @@ export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
             <option value={500}>500</option>
             <option value={1000}>1000</option>
           </select>
-          <button
-            type="button"
-            className="raw-refresh-btn"
-            aria-label="Обновить сырые данные"
-            onClick={() => setReloadToken((value) => value + 1)}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-          </button>
         </div>
       </div>
 

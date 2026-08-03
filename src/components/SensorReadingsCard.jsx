@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 
 import {
   fetchDustStateHourly,
@@ -135,6 +135,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [series, setSeries] = useState([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const [gasSubstances, setGasSubstances] = useState([]);
   const [selectedGasSubstance, setSelectedGasSubstance] = useState(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState(null);
@@ -244,7 +245,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     return () => {
       cancelled = true;
     };
-  }, [monitoringPostId, selectedDeviceType, day, month, viewMode]);
+  }, [monitoringPostId, selectedDeviceType, day, month, viewMode, refreshCounter]);
 
   useEffect(() => {
     if (selectedDeviceType !== "gas") {
@@ -335,26 +336,34 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const dateInputType = viewMode === "month" ? "month" : "date";
   const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
+  const maxDateInputValue = viewMode === "month" ? toIsoMonth(new Date()) : toIsoDay(new Date());
+  const isNextPeriodDisabled = dateInputValue >= maxDateInputValue;
 
   const shiftPeriod = (delta) => {
     if (viewMode === "month") {
-      setMonth((prev) => shiftMonth(prev, delta));
+      setMonth((prev) => {
+        const nextMonth = shiftMonth(prev, delta);
+        return delta > 0 && toIsoMonth(nextMonth) > maxDateInputValue ? prev : nextMonth;
+      });
       return;
     }
-    setDay((prev) => shiftDay(prev, delta));
+    setDay((prev) => {
+      const nextDay = shiftDay(prev, delta);
+      return delta > 0 && toIsoDay(nextDay) > maxDateInputValue ? prev : nextDay;
+    });
   };
 
   const handleDateInputChange = (value) => {
     if (viewMode === "month") {
       const nextMonth = parseIsoMonth(value);
-      if (nextMonth) {
+      if (nextMonth && toIsoMonth(nextMonth) <= maxDateInputValue) {
         setMonth(nextMonth);
       }
       return;
     }
 
     const nextDay = parseIsoDay(value);
-    if (nextDay) {
+    if (nextDay && toIsoDay(nextDay) <= maxDateInputValue) {
       setDay(nextDay);
     }
   };
@@ -363,9 +372,18 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     <aside className="readings-card">
       <div className="card-header">
         <h2>Исторические наблюдения</h2>
-        <button type="button" className="card-close-btn" aria-label="Закрыть правую карточку" onClick={onClose}>
-          <X size={16} aria-hidden="true" />
-        </button>
+        <div className="card-header-actions">
+          <button
+            type="button"
+            className="card-refresh-btn"
+            onClick={() => setRefreshCounter((value) => value + 1)}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+          </button>
+          <button type="button" className="card-close-btn" onClick={onClose}>
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       {monitoringPostId && selectedDeviceType && (
@@ -373,7 +391,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           <div className="readings-toolbar">
             <div className="readings-type">{DEVICE_TYPE_LABELS[selectedDeviceType] ?? selectedDeviceType}</div>
             <div className="period-controls">
-              <div className="period-switcher" aria-label="Период графика">
+              <div className="period-switcher">
                 <button
                   type="button"
                   className={`period-tab${viewMode === "day" ? " period-tab-active" : ""}`}
@@ -390,16 +408,16 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                 </button>
               </div>
               <div className="day-switcher">
-                <button type="button" aria-label="Предыдущий период" onClick={() => shiftPeriod(-1)}>
+                <button type="button" onClick={() => shiftPeriod(-1)}>
                   <ChevronLeft size={16} aria-hidden="true" />
                 </button>
                 <input
                   type={dateInputType}
-                  aria-label="Выбрать период графика"
                   value={dateInputValue}
+                  max={maxDateInputValue}
                   onChange={(event) => handleDateInputChange(event.target.value)}
                 />
-                <button type="button" aria-label="Следующий период" onClick={() => shiftPeriod(1)}>
+                <button type="button" disabled={isNextPeriodDisabled} onClick={() => shiftPeriod(1)}>
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </div>

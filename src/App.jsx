@@ -11,6 +11,7 @@ import {
   MapPin,
   Pencil,
   RadioTower,
+  RefreshCw,
   Save,
   TrendingUp,
   User,
@@ -156,6 +157,7 @@ export default function App() {
   const [stationCardSource, setStationCardSource] = useState(null);
   const [isReadingsCardOpen, setIsReadingsCardOpen] = useState(false);
   const [isRawPacketsOpen, setIsRawPacketsOpen] = useState(false);
+  const [stationDetailsRefreshCounter, setStationDetailsRefreshCounter] = useState(0);
 
   const [modalMode, setModalMode] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -372,7 +374,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [selectedMonitoringPostId]);
+  }, [selectedMonitoringPostId, stationDetailsRefreshCounter]);
 
   const handleLogout = () => {
     localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
@@ -465,6 +467,13 @@ export default function App() {
     setStationCardSource(null);
   };
 
+  const handleRefreshStationPanel = () => {
+    setPostsReloadToken((value) => value + 1);
+    if (isStationDetailsInPanel) {
+      setStationDetailsRefreshCounter((value) => value + 1);
+    }
+  };
+
   const stationDetailsBody = (
     <>
       <div className="station-grid">
@@ -504,7 +513,10 @@ export default function App() {
           <span>Сырые пакеты данных с брокера</span>
         </button>
       )}
-      <LatestStationReadings monitoringPostId={selectedMonitoringPostId} />
+      <LatestStationReadings
+        monitoringPostId={selectedMonitoringPostId}
+        refreshCounter={stationDetailsRefreshCounter}
+      />
 
       {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
       {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}
@@ -665,7 +677,7 @@ export default function App() {
         </div>
       </header>
 
-      <nav className={`side-menu${activeMenuPanel ? " side-menu-collapsed" : ""}`} aria-label="Разделы системы">
+      <nav className={`side-menu${activeMenuPanel ? " side-menu-collapsed" : ""}`}>
         <button
           type="button"
           className={`side-menu-button${activeMenuPanel === "stations" ? " side-menu-button-active" : ""}`}
@@ -688,26 +700,28 @@ export default function App() {
         <aside className="stations-panel">
           <div className="card-header">
             <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
-            <button
-              type="button"
-              className="card-close-btn"
-              aria-label={
-                isStationDetailsInPanel && stationCardSource === "list"
-                  ? "Вернуться к списку станций"
-                  : isStationDetailsInPanel
-                    ? "Закрыть карточку станции"
-                    : "Закрыть список станций"
-              }
-              onClick={() => {
-                if (isStationDetailsInPanel) {
-                  closeStationDetails();
-                } else {
-                  setActiveMenuPanel(null);
-                }
-              }}
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
+            <div className="card-header-actions">
+              <button
+                type="button"
+                className="card-refresh-btn"
+                onClick={handleRefreshStationPanel}
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="card-close-btn"
+                onClick={() => {
+                  if (isStationDetailsInPanel) {
+                    closeStationDetails();
+                  } else {
+                    setActiveMenuPanel(null);
+                  }
+                }}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           {isStationDetailsInPanel ? (
@@ -736,11 +750,11 @@ export default function App() {
                         </span>
                         {post.is_confirmed ? (
                           <span className="station-status station-status-confirmed" title="Подтверждена">
-                            <CheckCircle2 size={16} aria-label="Подтверждена" />
+                            <CheckCircle2 size={16} />
                           </span>
                         ) : (
                           <span className="station-status station-status-pending" title="Не подтверждена">
-                            <CircleDashed size={16} aria-label="Не подтверждена" />
+                            <CircleDashed size={16} />
                           </span>
                         )}
                       </button>
@@ -748,7 +762,6 @@ export default function App() {
                         <button
                           className="station-row-edit"
                           type="button"
-                          aria-label="Редактировать станцию"
                           title="Редактировать"
                           onClick={() => handleStartEditStation(post)}
                         >

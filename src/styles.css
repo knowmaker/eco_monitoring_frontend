@@ -479,7 +479,8 @@ input:focus-visible {
 }
 
 .icon-btn,
-.card-close-btn {
+.card-close-btn,
+.card-refresh-btn {
   display: grid;
   width: 30px;
   height: 30px;
@@ -492,10 +493,16 @@ input:focus-visible {
 }
 
 .icon-btn:hover,
-.card-close-btn:hover {
+.card-close-btn:hover,
+.card-refresh-btn:hover {
   color: var(--text);
   border-color: var(--border-strong);
   background: #ffffff;
+}
+
+.card-refresh-btn:hover {
+  color: var(--accent-strong);
+  border-color: rgba(20, 122, 99, 0.36);
 }
 
 .station-card,
@@ -535,6 +542,13 @@ input:focus-visible {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.card-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
 }
 
 .card-header h2,
@@ -734,22 +748,6 @@ input:focus-visible {
   font-size: 0.78rem;
 }
 
-.raw-refresh-btn {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.raw-refresh-btn:hover {
-  color: var(--accent-strong);
-  border-color: rgba(20, 122, 99, 0.36);
-}
-
 .raw-records-list {
   display: flex;
   flex-direction: column;
@@ -862,6 +860,15 @@ input:focus-visible {
   color: var(--text);
   border-color: var(--border-strong);
   background: #ffffff;
+}
+
+.day-switcher button:disabled,
+.day-switcher button:disabled:hover {
+  color: var(--muted);
+  border-color: var(--border);
+  background: #ffffff;
+  cursor: default;
+  opacity: 0.45;
 }
 
 .day-switcher input {

@@ -117,7 +117,7 @@ function LatestDeviceHeader({ title, bucketMs }) {
   );
 }
 
-export default function LatestStationReadings({ monitoringPostId }) {
+export default function LatestStationReadings({ monitoringPostId, refreshCounter = 0 }) {
   const [latestReadings, setLatestReadings] = useState(null);
   const [isLoadingLatest, setIsLoadingLatest] = useState(false);
   const [latestErrorText, setLatestErrorText] = useState("");
@@ -155,7 +155,7 @@ export default function LatestStationReadings({ monitoringPostId }) {
     return () => {
       cancelled = true;
     };
-  }, [monitoringPostId]);
+  }, [monitoringPostId, refreshCounter]);
 
   return (
     <section className="latest-readings">

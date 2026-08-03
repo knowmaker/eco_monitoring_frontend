@@ -84,7 +84,7 @@ export default function ProfileModal({ onClose }) {
   return (
     <div className="modal-overlay" role="presentation">
       <div className="modal-card" role="dialog" aria-modal="true">
-        <button className="modal-close icon-btn" type="button" onClick={onClose} aria-label="Закрыть">
+        <button className="modal-close icon-btn" type="button" onClick={onClose}>
           <X size={17} aria-hidden="true" />
         </button>
         <h2>Профиль</h2>
