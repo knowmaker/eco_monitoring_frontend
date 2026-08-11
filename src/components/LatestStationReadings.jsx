@@ -3,6 +3,13 @@
 import { fetchStationLatestHourlyReadings } from "../lib/api";
 
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm"];
+const DEVICE_TYPE_LABELS = {
+  gas: "Газ",
+  dust: "Пыль",
+  meteo: "Метео",
+  ivtm: "ИВТМ",
+};
 
 function formatLatestTime(bucketMs) {
   if (!Number.isFinite(bucketMs)) {
@@ -117,6 +124,74 @@ function LatestDeviceHeader({ title, bucketMs }) {
   );
 }
 
+function renderLatestDeviceBlock(deviceType, latestReadings) {
+  const device = latestReadings?.[deviceType];
+  if (!device) {
+    return null;
+  }
+
+  if (deviceType === "gas") {
+    return (
+      <div key={deviceType} className="latest-device-block">
+        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} bucketMs={device.bucket_ms} />
+        <div className="latest-metrics latest-metrics-gas">
+          {device.substances.map((item) => (
+            <LatestMetric
+              key={item.substance_code}
+              label={item.substance_code}
+              value={item.value}
+              precision={2}
+              limit={item.limit}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (deviceType === "dust") {
+    return (
+      <div key={deviceType} className="latest-device-block">
+        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.dust} bucketMs={device.bucket_ms} />
+        <div className="latest-metrics">
+          <LatestMetric label="PM1" value={device.pm1} precision={4} limit={device.limits?.pm1} />
+          <LatestMetric label="PM2.5" value={device.pm2} precision={4} limit={device.limits?.pm2} />
+          <LatestMetric label="PM10" value={device.pm10} precision={4} limit={device.limits?.pm10} />
+          <LatestMetric label="TSP" value={device.tsp} precision={4} limit={device.limits?.tsp} />
+        </div>
+      </div>
+    );
+  }
+
+  if (deviceType === "meteo") {
+    return (
+      <div key={deviceType} className="latest-device-block">
+        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.meteo} bucketMs={device.bucket_ms} />
+        <div className="latest-metrics">
+          <LatestMetric label="Темп." value={device.air_temp} unit="°C" />
+          <LatestMetric label="Влажн." value={device.air_hum} unit="%" />
+          <LatestMetric label="Давл." value={device.atm_press} />
+          <LatestMetric label="Ветер" displayValue={formatWindValue(device.hor_win_dir, device.hor_win_spd)} />
+        </div>
+      </div>
+    );
+  }
+
+  if (deviceType === "ivtm") {
+    return (
+      <div key={deviceType} className="latest-device-block">
+        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.ivtm} bucketMs={device.bucket_ms} />
+        <div className="latest-metrics">
+          <LatestMetric label="Влажн." value={device.sensor_ivtm_hum} unit="%" />
+          <LatestMetric label="Темп." value={device.sensor_ivtm_temp} unit="°C" />
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function LatestStationReadings({ monitoringPostId, refreshCounter = 0 }) {
   const [latestReadings, setLatestReadings] = useState(null);
   const [isLoadingLatest, setIsLoadingLatest] = useState(false);
@@ -167,79 +242,7 @@ export default function LatestStationReadings({ monitoringPostId, refreshCounter
       {!isLoadingLatest && latestErrorText && <p className="station-card-error">{latestErrorText}</p>}
       {!isLoadingLatest && !latestErrorText && latestReadings?.bucket_ms !== null && latestReadings && (
         <div className="latest-readings-grid">
-          {latestReadings.gas && (
-            <div className="latest-device-block">
-              <LatestDeviceHeader title="Газ" bucketMs={latestReadings.gas.bucket_ms} />
-              <div className="latest-metrics latest-metrics-gas">
-                {latestReadings.gas.substances.map((item) => (
-                  <LatestMetric
-                    key={item.substance_code}
-                    label={item.substance_code}
-                    value={item.value}
-                    precision={2}
-                    limit={item.limit}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {latestReadings.dust && (
-            <div className="latest-device-block">
-              <LatestDeviceHeader title="Пыль" bucketMs={latestReadings.dust.bucket_ms} />
-              <div className="latest-metrics">
-                <LatestMetric
-                  label="PM1"
-                  value={latestReadings.dust.pm1}
-                  precision={4}
-                  limit={latestReadings.dust.limits?.pm1}
-                />
-                <LatestMetric
-                  label="PM2.5"
-                  value={latestReadings.dust.pm2}
-                  precision={4}
-                  limit={latestReadings.dust.limits?.pm2}
-                />
-                <LatestMetric
-                  label="PM10"
-                  value={latestReadings.dust.pm10}
-                  precision={4}
-                  limit={latestReadings.dust.limits?.pm10}
-                />
-                <LatestMetric
-                  label="TSP"
-                  value={latestReadings.dust.tsp}
-                  precision={4}
-                  limit={latestReadings.dust.limits?.tsp}
-                />
-              </div>
-            </div>
-          )}
-
-          {latestReadings.meteo && (
-            <div className="latest-device-block">
-              <LatestDeviceHeader title="Метео" bucketMs={latestReadings.meteo.bucket_ms} />
-              <div className="latest-metrics">
-                <LatestMetric label="Темп." value={latestReadings.meteo.air_temp} unit="°C" />
-                <LatestMetric label="Влажн." value={latestReadings.meteo.air_hum} unit="%" />
-                <LatestMetric label="Давл." value={latestReadings.meteo.atm_press} />
-                <LatestMetric
-                  label="Ветер"
-                  displayValue={formatWindValue(latestReadings.meteo.hor_win_dir, latestReadings.meteo.hor_win_spd)}
-                />
-              </div>
-            </div>
-          )}
-
-          {latestReadings.ivtm && (
-            <div className="latest-device-block">
-              <LatestDeviceHeader title="ИВТМ" bucketMs={latestReadings.ivtm.bucket_ms} />
-              <div className="latest-metrics">
-                <LatestMetric label="Влажн." value={latestReadings.ivtm.sensor_ivtm_hum} unit="%" />
-                <LatestMetric label="Темп." value={latestReadings.ivtm.sensor_ivtm_temp} unit="°C" />
-              </div>
-            </div>
-          )}
+          {DEVICE_TYPE_ORDER.map((deviceType) => renderLatestDeviceBlock(deviceType, latestReadings))}
         </div>
       )}
     </section>

@@ -42,6 +42,7 @@ const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
 const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 
+const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm"];
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
   dust: "Пыль",
@@ -351,7 +352,12 @@ export default function App() {
         if (cancelled) {
           return;
         }
-        setSelectedDevices(devices);
+        setSelectedDevices(
+          [...devices].sort(
+            (left, right) =>
+              DEVICE_TYPE_ORDER.indexOf(left.device_type) - DEVICE_TYPE_ORDER.indexOf(right.device_type)
+          )
+        );
         setSelectedDeviceType((current) => {
           if (current && devices.some((device) => device.device_type === current)) {
             return current;
