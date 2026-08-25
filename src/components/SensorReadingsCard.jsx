@@ -23,7 +23,7 @@ const DEVICE_TYPE_LABELS = {
   ivtm: "ИВТМ",
 };
 
-const GAS_SUBSTANCE_TABS = ["CO", "NO", "NO2", "O3", "SO2"];
+const GAS_SUBSTANCE_TABS = ["NO2", "O3", "NO", "SO2", "CO", "H2S"];
 const DUST_METRIC_TABS = [
   { key: "pm1_concentration", label: "PM1" },
   { key: "pm2_concentration", label: "PM2.5" },
