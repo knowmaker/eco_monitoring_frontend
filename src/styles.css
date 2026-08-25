@@ -1047,6 +1047,28 @@ input:focus-visible {
   height: 300px;
 }
 
+.profile-chart-wrap {
+  margin-top: 8px;
+}
+
+.profile-inversion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  color: var(--muted-strong);
+  border: 1px solid rgba(195, 63, 63, 0.18);
+  border-radius: 8px;
+  background: rgba(195, 63, 63, 0.06);
+  font-size: 0.78rem;
+}
+
+.profile-inversion-summary strong {
+  color: var(--text);
+}
+
 .chart-empty {
   margin-top: 8px;
   padding: 12px;

@@ -336,6 +336,48 @@ export async function fetchIvtmStateMonthly(monitoringPostId, month) {
   return payload;
 }
 
+export async function fetchProfileStateHourly(monitoringPostId, day) {
+  const date = formatDayParam(day);
+  const response = await fetch(
+    buildUrl(`/api/v1/profile_state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки профиля температуры: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.profiles)) {
+    throw new Error("Некорректный формат ответа /api/v1/profile_state/hourly");
+  }
+  return payload;
+}
+
+export async function fetchProfileStateMonthly(monitoringPostId, month) {
+  const monthParam = formatMonthParam(month);
+  const response = await fetch(
+    buildUrl(`/api/v1/profile_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки месячного профиля температуры: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.profiles)) {
+    throw new Error("Некорректный формат ответа /api/v1/profile_state/monthly");
+  }
+  return payload;
+}
+
 export async function registerByEmail(email) {
   const response = await fetch(buildUrl("/api/v1/auth/register"), {
     method: "POST",

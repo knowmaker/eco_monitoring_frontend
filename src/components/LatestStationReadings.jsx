@@ -3,12 +3,13 @@
 import { fetchStationLatestHourlyReadings } from "../lib/api";
 
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm"];
+const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm", "profile"];
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
   dust: "Пыль",
   meteo: "Метео",
   ivtm: "ИВТМ",
+  profile: "Профиль",
 };
 
 function formatLatestTime(bucketMs) {
@@ -184,6 +185,35 @@ function renderLatestDeviceBlock(deviceType, latestReadings) {
         <div className="latest-metrics">
           <LatestMetric label="Влажн." value={device.sensor_ivtm_hum} unit="%" />
           <LatestMetric label="Темп." value={device.sensor_ivtm_temp} unit="°C" />
+        </div>
+      </div>
+    );
+  }
+
+  if (deviceType === "profile") {
+    const heightRange =
+      Number.isFinite(device.min_height) && Number.isFinite(device.max_height)
+        ? `${formatLatestValue(device.min_height, "м", 0)}-${formatLatestValue(device.max_height, "м", 0)}`
+        : "-";
+    const tempRange =
+      Number.isFinite(device.min_temperature) && Number.isFinite(device.max_temperature)
+        ? `${formatLatestValue(device.min_temperature, "°C")}-${formatLatestValue(device.max_temperature, "°C")}`
+        : "-";
+    const inversionRange =
+      Number.isFinite(device.inversion_power) &&
+      Number.isFinite(device.inversion_lower) &&
+      Number.isFinite(device.inversion_upper)
+        ? `${formatLatestValue(device.inversion_lower, "м", 0)}-${formatLatestValue(device.inversion_upper, "м", 0)}`
+        : "-";
+
+    return (
+      <div key={deviceType} className="latest-device-block">
+        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} bucketMs={device.bucket_ms} />
+        <div className="latest-metrics">
+          <LatestMetric label="Уровни" displayValue={device.levels_count ?? "-"} />
+          <LatestMetric label="Высота" displayValue={heightRange} />
+          <LatestMetric label="Темп." displayValue={tempRange} />
+          <LatestMetric label="Инверсия" value={device.inversion_power} displayValue={inversionRange} />
         </div>
       </div>
     );

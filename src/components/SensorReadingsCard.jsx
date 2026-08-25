@@ -10,7 +10,10 @@ import {
   fetchIvtmStateMonthly,
   fetchMeteoStateHourly,
   fetchMeteoStateMonthly,
+  fetchProfileStateHourly,
+  fetchProfileStateMonthly,
 } from "../lib/api";
+import ProfileTemperatureChart from "./ProfileTemperatureChart";
 import SimpleLineChart from "./SimpleLineChart";
 import WindCompassStrip from "./WindCompassStrip";
 
@@ -21,6 +24,7 @@ const DEVICE_TYPE_LABELS = {
   dust: "Пыль",
   meteo: "Метео",
   ivtm: "ИВТМ",
+  profile: "Профиль",
 };
 
 const GAS_SUBSTANCE_TABS = ["NO2", "O3", "NO", "SO2", "CO", "H2S"];
@@ -137,7 +141,9 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   const [series, setSeries] = useState([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [gasSubstances, setGasSubstances] = useState([]);
+  const [profileRecords, setProfileRecords] = useState([]);
   const [selectedGasSubstance, setSelectedGasSubstance] = useState(null);
+  const [selectedProfilePeriod, setSelectedProfilePeriod] = useState(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState(null);
 
   const axis = useMemo(() => {
@@ -167,7 +173,9 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     if (!monitoringPostId || !selectedDeviceType) {
       setSeries([]);
       setGasSubstances([]);
+      setProfileRecords([]);
       setSelectedGasSubstance(null);
+      setSelectedProfilePeriod(null);
       setSelectedMetricKey(null);
       setErrorText("");
       setIsLoading(false);
@@ -179,6 +187,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     setErrorText("");
     setSeries([]);
     setGasSubstances([]);
+    setProfileRecords([]);
 
     const load = async () => {
       const periodValue = viewMode === "month" ? month : day;
@@ -199,6 +208,29 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             return current;
           }
           return GAS_SUBSTANCE_TABS[0];
+        });
+        return;
+      }
+
+      if (selectedDeviceType === "profile") {
+        const profileState =
+          viewMode === "month"
+            ? await fetchProfileStateMonthly(monitoringPostId, periodValue)
+            : await fetchProfileStateHourly(monitoringPostId, periodValue);
+        if (cancelled) {
+          return;
+        }
+
+        const profiles = profileState.profiles || [];
+        setProfileRecords(profiles);
+        setSelectedProfilePeriod((current) => {
+          const recordsWithData = profiles.filter((item) => item.levels?.length);
+          const availableRecords = recordsWithData.length ? recordsWithData : profiles;
+          const keyName = viewMode === "month" ? "day" : "hour";
+          if (current !== null && availableRecords.some((item) => item[keyName] === current)) {
+            return current;
+          }
+          return availableRecords[0]?.[keyName] ?? null;
         });
         return;
       }
@@ -250,14 +282,18 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   useEffect(() => {
     if (selectedDeviceType !== "gas") {
       setSelectedGasSubstance(null);
-      return;
+    } else {
+      setSelectedGasSubstance((current) => {
+        if (current && GAS_SUBSTANCE_TABS.includes(current)) {
+          return current;
+        }
+        return GAS_SUBSTANCE_TABS[0];
+      });
     }
-    setSelectedGasSubstance((current) => {
-      if (current && GAS_SUBSTANCE_TABS.includes(current)) {
-        return current;
-      }
-      return GAS_SUBSTANCE_TABS[0];
-    });
+
+    if (selectedDeviceType !== "profile") {
+      setSelectedProfilePeriod(null);
+    }
   }, [selectedDeviceType]);
 
   const meteoWindDirectionSeries = useMemo(
@@ -271,14 +307,20 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   );
 
   const metricTabs = useMemo(() => {
-    if (selectedDeviceType === "gas") {
+    if (selectedDeviceType === "gas" || selectedDeviceType === "profile") {
       return [];
     }
     return DEVICE_METRIC_TABS[selectedDeviceType] || [];
   }, [selectedDeviceType]);
 
   useEffect(() => {
-    if (!monitoringPostId || !selectedDeviceType || selectedDeviceType === "gas" || selectedDeviceType === "dust") {
+    if (
+      !monitoringPostId ||
+      !selectedDeviceType ||
+      selectedDeviceType === "gas" ||
+      selectedDeviceType === "dust" ||
+      selectedDeviceType === "profile"
+    ) {
       setSelectedMetricKey(null);
       return;
     }
@@ -320,6 +362,10 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       }).filter(Boolean);
     }
 
+    if (selectedDeviceType === "profile") {
+      return [];
+    }
+
     if (!selectedMetricKey || selectedMetricKey === METEO_WIND_KEY) {
       return [];
     }
@@ -332,6 +378,19 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       },
     ];
   }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, axis]);
+
+  const selectedProfileRecord = useMemo(() => {
+    if (selectedDeviceType !== "profile" || selectedProfilePeriod === null) {
+      return null;
+    }
+    const keyName = viewMode === "month" ? "day" : "hour";
+    return profileRecords.find((item) => item[keyName] === selectedProfilePeriod) ?? null;
+  }, [profileRecords, selectedDeviceType, selectedProfilePeriod, viewMode]);
+
+  const selectedProfilePeriodLabel =
+    viewMode === "month"
+      ? `${String(selectedProfilePeriod ?? "").padStart(2, "0")} число`
+      : `${String(selectedProfilePeriod ?? "").padStart(2, "0")}:00`;
 
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const dateInputType = viewMode === "month" ? "month" : "date";
@@ -454,11 +513,39 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           )}
 
+          {selectedDeviceType === "profile" && profileRecords.length > 0 && (
+            <div className="metric-tabs">
+              {profileRecords.map((item) => {
+                const periodValue = viewMode === "month" ? item.day : item.hour;
+                const label =
+                  viewMode === "month"
+                    ? String(periodValue).padStart(2, "0")
+                    : `${String(periodValue).padStart(2, "0")}:00`;
+                return (
+                  <button
+                    key={periodValue}
+                    type="button"
+                    className={`metric-tab${selectedProfilePeriod === periodValue ? " metric-tab-active" : ""}`}
+                    onClick={() => setSelectedProfilePeriod(periodValue)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
             !errorText &&
-            (isWindCompositeMetric ? (
+            (selectedDeviceType === "profile" ? (
+              <ProfileTemperatureChart
+                profile={selectedProfileRecord}
+                periodLabel={selectedProfilePeriodLabel}
+                emptyText={axis.emptyText}
+              />
+            ) : isWindCompositeMetric ? (
               <WindCompassStrip
                 directionPoints={meteoWindDirectionSeries?.points ?? []}
                 speedPoints={meteoWindSpeedSeries?.points ?? []}

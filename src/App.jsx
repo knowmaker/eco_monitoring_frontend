@@ -42,12 +42,13 @@ const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
 const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 
-const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm"];
+const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm", "profile"];
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
   dust: "Пыль",
   meteo: "Метео",
   ivtm: "ИВТМ",
+  profile: "Профиль",
 };
 
 const POST_TYPE_LABELS = {
