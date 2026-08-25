@@ -209,9 +209,8 @@ function renderLatestDeviceBlock(deviceType, latestReadings) {
     return (
       <div key={deviceType} className="latest-device-block">
         <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} bucketMs={device.bucket_ms} />
-        <div className="latest-metrics">
-          <LatestMetric label="Уровни" displayValue={device.levels_count ?? "-"} />
-          <LatestMetric label="Высота" displayValue={heightRange} />
+        <div className="latest-metrics latest-metrics-profile">
+          <LatestMetric label={`Высота (${device.levels_count ?? "-"} ур.)`} displayValue={heightRange} />
           <LatestMetric label="Темп." displayValue={tempRange} />
           <LatestMetric label="Инверсия" value={device.inversion_power} displayValue={inversionRange} />
         </div>

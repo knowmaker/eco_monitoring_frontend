@@ -43,7 +43,7 @@ export default function SimpleLineChart({
     const axisValues = xValues?.length ? xValues : Array.from({ length: 24 }, (_, idx) => idx);
     const categories = xLabels?.length
       ? xLabels
-      : axisValues.map((value) => String(value).padStart(2, "0"));
+      : axisValues.map((value) => (xKey === "hour" ? `${String(value).padStart(2, "0")}:00` : String(value)));
 
     const preparedSeries = series.map((item, index) => {
       const byAxisValue = new Map((item.points || []).map((point) => [point[xKey], point.value]));

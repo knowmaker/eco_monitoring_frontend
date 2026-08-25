@@ -1,65 +1,117 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-function hasProfileValues(profile) {
-  return Boolean(profile?.levels?.some((level) => Number.isFinite(level.temperature) && Number.isFinite(level.height)));
-}
-
-function formatNumber(value, digits = 2) {
-  return Number.isFinite(value) ? value.toFixed(digits).replace(/\.?0+$/, "") : "-";
-}
-
-export default function ProfileTemperatureChart({ profile, periodLabel, emptyText }) {
-  const hasValues = useMemo(() => hasProfileValues(profile), [profile]);
-
+export default function ProfileTemperatureChart({ profiles, viewMode, emptyText }) {
   const option = useMemo(() => {
-    if (!hasValues) {
+    if (!profiles?.length) {
       return null;
     }
 
-    const points = [...(profile.levels || [])]
-      .filter((level) => Number.isFinite(level.temperature) && Number.isFinite(level.height))
-      .sort((a, b) => a.height - b.height);
-    const inversion = profile.inversion;
-    const hasInversion =
-      Number.isFinite(inversion?.power) &&
-      inversion.power > 0 &&
-      Number.isFinite(inversion?.lower) &&
-      Number.isFinite(inversion?.upper) &&
-      inversion.upper > inversion.lower;
+    const periodLabels = profiles.map((profile) =>
+      viewMode === "month"
+        ? String(profile.day ?? "").padStart(2, "0")
+        : `${String(profile.hour ?? "").padStart(2, "0")}:00`
+    );
+    const heights = Array.from(
+      new Set(
+        profiles.flatMap((profile) =>
+          (profile.levels || [])
+            .map((level) => level.height)
+            .filter((height) => Number.isFinite(height))
+        )
+      )
+    ).sort((a, b) => a - b);
+    const heightIndexByValue = new Map(heights.map((height, index) => [height, index]));
+    const heatmapData = [];
+    const lowerInversionData = [];
+    const upperInversionData = [];
+    let minTemperature = Infinity;
+    let maxTemperature = -Infinity;
+
+    profiles.forEach((profile, periodIndex) => {
+      (profile.levels || []).forEach((level) => {
+        if (!Number.isFinite(level.temperature) || !Number.isFinite(level.height)) {
+          return;
+        }
+        minTemperature = Math.min(minTemperature, level.temperature);
+        maxTemperature = Math.max(maxTemperature, level.temperature);
+        heatmapData.push([periodIndex, heightIndexByValue.get(level.height), level.temperature]);
+      });
+
+      const inversion = profile.inversion;
+      if (
+        Number.isFinite(inversion?.power) &&
+        inversion.power > 0 &&
+        Number.isFinite(inversion?.lower) &&
+        Number.isFinite(inversion?.upper)
+      ) {
+        lowerInversionData.push([periodIndex, heightIndexByValue.get(inversion.lower) ?? null]);
+        upperInversionData.push([periodIndex, heightIndexByValue.get(inversion.upper) ?? null]);
+      } else {
+        lowerInversionData.push([periodIndex, null]);
+        upperInversionData.push([periodIndex, null]);
+      }
+    });
+
+    if (heatmapData.length === 0) {
+      return null;
+    }
 
     return {
       backgroundColor: "transparent",
       animation: true,
       grid: {
-        left: 58,
-        right: 28,
-        top: 28,
-        bottom: 42,
+        left: 48,
+        right: 72,
+        top: 24,
+        bottom: 46,
       },
       tooltip: {
-        trigger: "axis",
+        trigger: "item",
         backgroundColor: "rgba(255, 255, 255, 0.98)",
         borderColor: "rgba(15, 23, 42, 0.14)",
         textStyle: { color: "#172033" },
         formatter: (params) => {
-          const point = params?.[0]?.data;
-          if (!point) {
+          if (params.seriesType !== "heatmap") {
             return "";
           }
+          const [periodIndex, heightIndex, temperature] = params.data;
           return [
-            periodLabel,
-            `Высота: ${formatNumber(point[1], 0)} м`,
-            `Температура: ${formatNumber(point[0])} °C`,
+            periodLabels[periodIndex],
+            `Высота: ${heights[heightIndex]} м`,
+            `Температура: ${temperature} °C`,
           ].join("<br />");
         },
       },
+      visualMap: {
+        min: minTemperature,
+        max: maxTemperature,
+        seriesIndex: 0,
+        calculable: true,
+        orient: "vertical",
+        right: 0,
+        top: 28,
+        itemHeight: 180,
+        text: ["°C", ""],
+        textStyle: { color: "#647184", fontSize: 11 },
+        inRange: {
+          color: ["#1749c8", "#1686d9", "#24c6d8", "#b8ecb4", "#f4de55", "#f49a18", "#cf2f24"],
+        },
+      },
       xAxis: {
-        type: "value",
-        scale: true,
-        name: "°C",
-        nameLocation: "end",
+        type: "category",
+        data: periodLabels,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "#647184",
+          interval: viewMode === "month" ? 1 : 2,
+        },
+      },
+      yAxis: {
+        type: "category",
+        data: heights.map((height) => String(height)),
+        axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: "#647184" },
         splitLine: {
@@ -69,62 +121,47 @@ export default function ProfileTemperatureChart({ profile, periodLabel, emptyTex
           },
         },
       },
-      yAxis: {
-        type: "value",
-        scale: true,
-        name: "м",
-        nameLocation: "end",
-        axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
-        axisTick: { show: false },
-        axisLabel: { color: "#647184", formatter: (value) => formatNumber(Number(value), 0) },
-        splitLine: {
-          lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
-          },
-        },
-      },
       series: [
         {
+          type: "heatmap",
+          name: "Температура",
+          data: heatmapData,
+          emphasis: {
+            itemStyle: {
+              borderColor: "rgba(15, 23, 42, 0.28)",
+              borderWidth: 1,
+            },
+          },
+        },
+        {
           type: "line",
-          name: "Профиль",
-          smooth: true,
-          symbol: "circle",
-          symbolSize: 5,
-          lineStyle: { width: 2.4, color: "#16856d" },
-          itemStyle: { color: "#16856d" },
-          data: points.map((level) => [level.temperature, level.height]),
-          markArea: hasInversion
-            ? {
-                silent: true,
-                itemStyle: { color: "rgba(195, 63, 63, 0.1)" },
-                data: [[{ yAxis: inversion.lower }, { yAxis: inversion.upper }]],
-              }
-            : undefined,
+          name: "Низ инверсии",
+          data: lowerInversionData,
+          connectNulls: false,
+          showSymbol: false,
+          silent: true,
+          lineStyle: { width: 1.4, color: "#9f2f2f", type: "dashed" },
+        },
+        {
+          type: "line",
+          name: "Верх инверсии",
+          data: upperInversionData,
+          connectNulls: false,
+          showSymbol: false,
+          silent: true,
+          lineStyle: { width: 1.4, color: "#9f2f2f", type: "dashed" },
         },
       ],
     };
-  }, [hasValues, periodLabel, profile]);
+  }, [profiles, viewMode]);
 
-  if (!hasValues || !option) {
+  if (!option) {
     return <div className="chart-empty">{emptyText}</div>;
   }
 
-  const inversion = profile.inversion;
-  const hasInversion = Number.isFinite(inversion?.power) && inversion.power > 0;
-
   return (
     <div className="profile-chart-wrap">
-      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" />
-      {hasInversion && (
-        <div className="profile-inversion-summary">
-          <span>Инверсия</span>
-          <strong>{formatNumber(inversion.power)}</strong>
-          <span>
-            {formatNumber(inversion.lower, 0)}-{formatNumber(inversion.upper, 0)} м
-          </span>
-        </div>
-      )}
+      <ReactECharts option={option} notMerge lazyUpdate className="profile-heatmap-echarts" />
     </div>
   );
 }
