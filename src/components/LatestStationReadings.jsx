@@ -125,6 +125,61 @@ function LatestDeviceHeader({ title, bucketMs }) {
   );
 }
 
+function LatestProfileDeviceBlock({ device }) {
+  const levels = Array.isArray(device.levels) ? device.levels : [];
+  const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
+  const selectedLevel = levels[selectedLevelIndex] ?? levels[0] ?? null;
+  const canStep = levels.length > 1;
+  const inversionRange =
+    Number.isFinite(device.inversion_power) &&
+    Number.isFinite(device.inversion_lower) &&
+    Number.isFinite(device.inversion_upper)
+      ? `${formatLatestValue(device.inversion_lower, "м", 0)}-${formatLatestValue(device.inversion_upper, "м", 0)}`
+      : "-";
+
+  const shiftLevel = (delta) => {
+    setSelectedLevelIndex((current) => {
+      if (!levels.length) {
+        return 0;
+      }
+      return (current + delta + levels.length) % levels.length;
+    });
+  };
+
+  return (
+    <div className="latest-device-block">
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} bucketMs={device.bucket_ms} />
+      <div className="latest-metrics latest-profile-level-metrics">
+        <LatestMetric label="Высота" value={selectedLevel?.height} unit="м" precision={0} />
+        <LatestMetric label="Темп." value={selectedLevel?.temperature} unit="°C" />
+      </div>
+      <div className="latest-profile-controls">
+        <button
+          type="button"
+          className="latest-profile-step"
+          disabled={!canStep}
+          onClick={() => shiftLevel(-1)}
+          title="Предыдущий уровень"
+        >
+          ниже
+        </button>
+        <button
+          type="button"
+          className="latest-profile-step"
+          disabled={!canStep}
+          onClick={() => shiftLevel(1)}
+          title="Следующий уровень"
+        >
+          выше
+        </button>
+      </div>
+      <div className="latest-metrics latest-profile-inversion-metrics">
+        <LatestMetric label="Инверсия" displayValue={inversionRange} />
+      </div>
+    </div>
+  );
+}
+
 function renderLatestDeviceBlock(deviceType, latestReadings) {
   const device = latestReadings?.[deviceType];
   if (!device) {
@@ -191,31 +246,7 @@ function renderLatestDeviceBlock(deviceType, latestReadings) {
   }
 
   if (deviceType === "profile") {
-    const heightRange =
-      Number.isFinite(device.min_height) && Number.isFinite(device.max_height)
-        ? `${formatLatestValue(device.min_height, "м", 0)}-${formatLatestValue(device.max_height, "м", 0)}`
-        : "-";
-    const tempRange =
-      Number.isFinite(device.min_temperature) && Number.isFinite(device.max_temperature)
-        ? `${formatLatestValue(device.min_temperature, "°C")}-${formatLatestValue(device.max_temperature, "°C")}`
-        : "-";
-    const inversionRange =
-      Number.isFinite(device.inversion_power) &&
-      Number.isFinite(device.inversion_lower) &&
-      Number.isFinite(device.inversion_upper)
-        ? `${formatLatestValue(device.inversion_lower, "м", 0)}-${formatLatestValue(device.inversion_upper, "м", 0)}`
-        : "-";
-
-    return (
-      <div key={deviceType} className="latest-device-block">
-        <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} bucketMs={device.bucket_ms} />
-        <div className="latest-metrics latest-metrics-profile">
-          <LatestMetric label={`Высота (${device.levels_count ?? "-"} ур.)`} displayValue={heightRange} />
-          <LatestMetric label="Темп." displayValue={tempRange} />
-          <LatestMetric label="Инверсия" value={device.inversion_power} displayValue={inversionRange} />
-        </div>
-      </div>
-    );
+    return <LatestProfileDeviceBlock key={deviceType} device={device} />;
   }
 
   return null;
