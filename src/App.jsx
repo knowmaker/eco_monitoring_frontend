@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   CircleDashed,
   Database,
+  Download,
   List,
   LogIn,
   LogOut,
@@ -21,6 +22,7 @@ import {
 import maplibregl from "maplibre-gl";
 
 import AuthModal from "./components/AuthModal";
+import ExportAggregatesCard from "./components/ExportAggregatesCard";
 import LatestStationReadings from "./components/LatestStationReadings";
 import ProfileModal from "./components/ProfileModal";
 import RawMqttPayloadCard from "./components/RawMqttPayloadCard";
@@ -701,6 +703,19 @@ export default function App() {
           <TrendingUp size={18} aria-hidden="true" />
           <span>Прогнозирование</span>
         </button>
+        <button
+          type="button"
+          className={`side-menu-button${activeMenuPanel === "export" ? " side-menu-button-active" : ""}`}
+          onClick={() => {
+            setActiveMenuPanel((current) => (current === "export" ? null : "export"));
+            setIsStationCardOpen(false);
+            setIsReadingsCardOpen(false);
+            setIsRawPacketsOpen(false);
+          }}
+        >
+          <Download size={18} aria-hidden="true" />
+          <span>Экспорт данных</span>
+        </button>
       </nav>
 
       {activeMenuPanel === "stations" && (
@@ -782,6 +797,29 @@ export default function App() {
               </ul>
             </>
           )}
+        </aside>
+      )}
+
+      {activeMenuPanel === "export" && (
+        <aside className="stations-panel export-panel">
+          <div className="card-header">
+            <h2>Экспорт данных</h2>
+            <div className="card-header-actions">
+              <button
+                type="button"
+                className="card-close-btn"
+                onClick={() => setActiveMenuPanel(null)}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <ExportAggregatesCard
+            monitoringPosts={monitoringPosts}
+            isAuthenticated={isAuthenticated}
+            onLoginClick={() => setModalMode("login")}
+          />
         </aside>
       )}
 

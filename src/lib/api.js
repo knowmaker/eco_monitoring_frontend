@@ -378,6 +378,45 @@ export async function fetchProfileStateMonthly(monitoringPostId, month) {
   return payload;
 }
 
+function getDownloadFilename(response, fallback) {
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const encodedMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch) {
+    return decodeURIComponent(encodedMatch[1]);
+  }
+
+  const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1] || fallback;
+}
+
+export async function downloadAggregatesExport(payload) {
+  const response = await fetch(buildUrl("/api/v1/export/aggregates"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка экспорта данных: ${await readError(response)}`);
+  }
+
+  const blob = await response.blob();
+  const filename = getDownloadFilename(response, `eco_export_${payload.aggregation}.xlsx`);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  return filename;
+}
+
 export async function registerByEmail(email) {
   const response = await fetch(buildUrl("/api/v1/auth/register"), {
     method: "POST",
