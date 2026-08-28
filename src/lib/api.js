@@ -389,6 +389,24 @@ function getDownloadFilename(response, fallback) {
   return plainMatch?.[1] || fallback;
 }
 
+function formatExportFilenameDate(value, isEnd) {
+  if (!value) {
+    return "unknown";
+  }
+
+  if (value.length === 10) {
+    return `${value}_${isEnd ? "23-59" : "00-00"}`;
+  }
+
+  return value.slice(0, 16).replace("T", "_").replace(":", "-");
+}
+
+function buildExportFallbackFilename(payload) {
+  const periodPart = `${formatExportFilenameDate(payload.start, false)}_to_${formatExportFilenameDate(payload.end, true)}`;
+
+  return `eco_export_${payload.aggregation}_${periodPart}.xlsx`;
+}
+
 export async function downloadAggregatesExport(payload) {
   const response = await fetch(buildUrl("/api/v1/export/aggregates"), {
     method: "POST",
@@ -405,7 +423,7 @@ export async function downloadAggregatesExport(payload) {
   }
 
   const blob = await response.blob();
-  const filename = getDownloadFilename(response, `eco_export_${payload.aggregation}.xlsx`);
+  const filename = getDownloadFilename(response, buildExportFallbackFilename(payload));
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

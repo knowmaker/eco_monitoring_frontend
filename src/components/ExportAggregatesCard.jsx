@@ -45,7 +45,6 @@ export default function ExportAggregatesCard({ monitoringPosts, isAuthenticated,
   const [endDateTime, setEndDateTime] = useState(toDateTimeInputValue(now));
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState("");
-  const [exportMessage, setExportMessage] = useState("");
 
   const hasStations = monitoringPosts.length > 0;
   const stationIds = monitoringPosts.map((post) => post.id);
@@ -92,7 +91,6 @@ export default function ExportAggregatesCard({ monitoringPosts, isAuthenticated,
 
   const handleExport = async () => {
     setExportError("");
-    setExportMessage("");
     if (!canSubmit) {
       setExportError("Заполните параметры экспорта.");
       return;
@@ -100,14 +98,13 @@ export default function ExportAggregatesCard({ monitoringPosts, isAuthenticated,
 
     setIsExporting(true);
     try {
-      const filename = await downloadAggregatesExport({
+      await downloadAggregatesExport({
         station_ids: selectedStationIds,
         device_types: selectedDeviceTypes,
         aggregation,
         start: aggregation === "hourly" ? startDateTime : startDate,
         end: aggregation === "hourly" ? endDateTime : endDate,
       });
-      setExportMessage(`Файл скачан: ${filename}`);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : "Не удалось экспортировать данные");
     } finally {
@@ -221,7 +218,6 @@ export default function ExportAggregatesCard({ monitoringPosts, isAuthenticated,
       </section>
 
       {exportError && <p className="station-card-error">{exportError}</p>}
-      {exportMessage && <p className="export-success">{exportMessage}</p>}
 
       <button type="button" className="btn btn-secondary export-submit" disabled={!canSubmit || isExporting} onClick={handleExport}>
         <Download size={16} aria-hidden="true" />

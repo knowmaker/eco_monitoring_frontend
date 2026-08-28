@@ -830,17 +830,6 @@ input:focus-visible {
   color-scheme: light;
 }
 
-.export-success {
-  margin: 0;
-  padding: 8px 10px;
-  color: var(--accent-strong);
-  border: 1px solid rgba(20, 122, 99, 0.22);
-  border-radius: 8px;
-  background: var(--accent-soft);
-  font-size: 0.8rem;
-  line-height: 1.35;
-}
-
 .export-inline-action {
   display: inline;
   padding: 0;
