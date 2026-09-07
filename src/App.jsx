@@ -38,12 +38,13 @@ import {
 } from "./lib/api";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
-const DEFAULT_CENTER = [38.124629, 55.950523];
-const DEFAULT_ZOOM = 12;
+const DEFAULT_CENTER = [37.6173, 55.7558];
+const DEFAULT_ZOOM = 9;
 const POSTS_REFRESH_MS = 30_000;
 const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
 const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
+const MAP_FIT_PADDING = { top: 80, right: 80, bottom: 80, left: 80 };
 
 const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm", "profile"];
 const DEVICE_TYPE_LABELS = {
@@ -67,6 +68,31 @@ function createTowerMarkerElement(postType, isActive) {
   const Icon = postType === "mobile" ? Truck : RadioTower;
   root.render(<Icon size={23} strokeWidth={2.2} aria-hidden="true" />);
   return { element, root };
+}
+
+function getPostsWithCoordinates(posts) {
+  return posts.filter((post) => Number.isFinite(post.latitude) && Number.isFinite(post.longitude));
+}
+
+function getPostMapPoint(post) {
+  return [post.longitude, post.latitude];
+}
+
+function getMapPointsKey(points) {
+  return points.map(([longitude, latitude]) => `${longitude},${latitude}`).join("|");
+}
+
+function fitMapToPoints(map, points) {
+  if (points.length === 1) {
+    map.easeTo({ center: points[0], zoom: Math.max(map.getZoom(), 13), duration: 500 });
+    return;
+  }
+
+  const bounds = points.reduce(
+    (currentBounds, point) => currentBounds.extend(point),
+    new maplibregl.LngLatBounds(points[0], points[0])
+  );
+  map.fitBounds(bounds, { padding: MAP_FIT_PADDING, maxZoom: 13, duration: 500 });
 }
 
 function removeTowerMarkers(markerEntries) {
@@ -140,6 +166,7 @@ export default function App() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const fittedMapPointsKeyRef = useRef("");
 
   const [monitoringPosts, setMonitoringPosts] = useState([]);
   const [loadError, setLoadError] = useState("");
@@ -312,11 +339,15 @@ export default function App() {
     removeTowerMarkers(markersRef.current);
     markersRef.current = [];
 
-    const points = monitoringPosts.filter(
-      (post) => Number.isFinite(post.latitude) && Number.isFinite(post.longitude)
-    );
+    const postsWithCoordinates = getPostsWithCoordinates(monitoringPosts);
+    const points = postsWithCoordinates.map(getPostMapPoint);
+    const pointsKey = getMapPointsKey(points);
+    if (pointsKey && pointsKey !== fittedMapPointsKeyRef.current) {
+      fitMapToPoints(mapRef.current, points);
+      fittedMapPointsKeyRef.current = pointsKey;
+    }
 
-    points.forEach((post) => {
+    postsWithCoordinates.forEach((post) => {
       const { element, root } = createTowerMarkerElement(post.post_type, post.id === selectedMonitoringPostId);
       element.title = getPostTitle(post);
       element.addEventListener("click", () => {
