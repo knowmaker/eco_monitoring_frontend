@@ -98,7 +98,7 @@ function fitMapToPoints(map, points) {
 function focusPostOnMap(map, post) {
   map.flyTo({
     center: getPostMapPoint(post),
-    zoom: Math.max(map.getZoom(), 13),
+    zoom: Math.max(map.getZoom(), 15),
   });
 }
 

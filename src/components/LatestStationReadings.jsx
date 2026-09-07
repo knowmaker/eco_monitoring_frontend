@@ -4,6 +4,7 @@ import { fetchStationLatestHourlyReadings } from "../lib/api";
 
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm", "profile"];
+const GAS_SUBSTANCE_ORDER = ["NO2", "O3", "NO", "SO2", "CO", "H2S"];
 const DEVICE_TYPE_LABELS = {
   gas: "Газ",
   dust: "Пыль",
@@ -192,15 +193,19 @@ function renderLatestDeviceBlock(deviceType, latestReadings) {
       <div key={deviceType} className="latest-device-block">
         <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} bucketMs={device.bucket_ms} />
         <div className="latest-metrics latest-metrics-gas">
-          {device.substances.map((item) => (
-            <LatestMetric
-              key={item.substance_code}
-              label={item.substance_code}
-              value={item.value}
-              precision={2}
-              limit={item.limit}
-            />
-          ))}
+          {GAS_SUBSTANCE_ORDER.map((substanceCode) =>
+            device.substances.find((item) => item.substance_code === substanceCode)
+          )
+            .filter(Boolean)
+            .map((item) => (
+              <LatestMetric
+                key={item.substance_code}
+                label={item.substance_code}
+                value={item.value}
+                precision={2}
+                limit={item.limit}
+              />
+            ))}
         </div>
       </div>
     );

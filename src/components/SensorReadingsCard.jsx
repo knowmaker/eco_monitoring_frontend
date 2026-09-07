@@ -167,6 +167,13 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     };
   }, [viewMode, month]);
 
+  const availableGasSubstanceCodes = useMemo(
+    () =>
+      GAS_SUBSTANCE_TABS.filter((substanceCode) =>
+        gasSubstances.some((item) => item.substance_code === substanceCode)
+      ),
+    [gasSubstances]
+  );
 
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType) {
@@ -200,12 +207,15 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         }
 
         const substances = gasSensors.substances || [];
+        const availableSubstanceCodes = GAS_SUBSTANCE_TABS.filter((substanceCode) =>
+          substances.some((item) => item.substance_code === substanceCode)
+        );
         setGasSubstances(substances);
         setSelectedGasSubstance((current) => {
-          if (current && GAS_SUBSTANCE_TABS.includes(current)) {
+          if (current && availableSubstanceCodes.includes(current)) {
             return current;
           }
-          return GAS_SUBSTANCE_TABS[0];
+          return availableSubstanceCodes[0] ?? null;
         });
         return;
       }
@@ -271,13 +281,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   useEffect(() => {
     if (selectedDeviceType !== "gas") {
       setSelectedGasSubstance(null);
-    } else {
-      setSelectedGasSubstance((current) => {
-        if (current && GAS_SUBSTANCE_TABS.includes(current)) {
-          return current;
-        }
-        return GAS_SUBSTANCE_TABS[0];
-      });
     }
   }, [selectedDeviceType]);
 
@@ -457,7 +460,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
 
           {selectedDeviceType === "gas" && (
             <div className="gas-tabs">
-              {GAS_SUBSTANCE_TABS.map((substanceCode) => (
+              {availableGasSubstanceCodes.map((substanceCode) => (
                 <button
                   key={substanceCode}
                   type="button"
