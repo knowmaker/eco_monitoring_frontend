@@ -44,7 +44,7 @@ const POSTS_REFRESH_MS = 30_000;
 const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
 const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
-const MAP_FIT_PADDING = { top: 80, right: 80, bottom: 80, left: 80 };
+const MAP_FIT_PADDING = { top: 120, right: 120, bottom: 120, left: 120 };
 
 const DEVICE_TYPE_ORDER = ["gas", "dust", "meteo", "ivtm", "profile"];
 const DEVICE_TYPE_LABELS = {
@@ -93,6 +93,13 @@ function fitMapToPoints(map, points) {
     new maplibregl.LngLatBounds(points[0], points[0])
   );
   map.fitBounds(bounds, { padding: MAP_FIT_PADDING, maxZoom: 13, duration: 500 });
+}
+
+function focusPostOnMap(map, post) {
+  map.flyTo({
+    center: getPostMapPoint(post),
+    zoom: Math.max(map.getZoom(), 13),
+  });
 }
 
 function removeTowerMarkers(markerEntries) {
@@ -351,6 +358,7 @@ export default function App() {
       const { element, root } = createTowerMarkerElement(post.post_type, post.id === selectedMonitoringPostId);
       element.title = getPostTitle(post);
       element.addEventListener("click", () => {
+        focusPostOnMap(mapRef.current, post);
         setActiveMenuPanel("stations");
         setIsStationCardOpen(true);
         setStationCardSource("map");
@@ -438,7 +446,7 @@ export default function App() {
     setIsReadingsCardOpen(false);
     setIsRawPacketsOpen(false);
     if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {
-      mapRef.current.flyTo({ center: [post.longitude, post.latitude], zoom: Math.max(mapRef.current.getZoom(), 13) });
+      focusPostOnMap(mapRef.current, post);
     }
   };
 
@@ -503,6 +511,12 @@ export default function App() {
     setIsReadingsCardOpen(false);
     setIsRawPacketsOpen(false);
     setSelectedMonitoringPostId(null);
+    if (mapRef.current) {
+      const points = getPostsWithCoordinates(monitoringPosts).map(getPostMapPoint);
+      if (points.length) {
+        fitMapToPoints(mapRef.current, points);
+      }
+    }
     if (stationCardSource === "map") {
       setActiveMenuPanel(null);
     }
@@ -740,8 +754,10 @@ export default function App() {
           type="button"
           className={`side-menu-button${activeMenuPanel === "export" ? " side-menu-button-active" : ""}`}
           onClick={() => {
+            if (isStationCardOpen) {
+              closeStationDetails();
+            }
             setActiveMenuPanel((current) => (current === "export" ? null : "export"));
-            setIsStationCardOpen(false);
             setIsReadingsCardOpen(false);
             setIsRawPacketsOpen(false);
           }}
