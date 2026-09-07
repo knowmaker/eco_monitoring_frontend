@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Save,
   TrendingUp,
+  Truck,
   User,
   UserPlus,
   X,
@@ -59,11 +60,12 @@ const POST_TYPE_LABELS = {
   drone: "Дрон",
 };
 
-function createTowerMarkerElement(isActive) {
+function createTowerMarkerElement(postType, isActive) {
   const element = document.createElement("div");
   element.className = `tower-marker${isActive ? " tower-marker-active" : ""}`;
   const root = createRoot(element);
-  root.render(<RadioTower size={23} strokeWidth={2.2} aria-hidden="true" />);
+  const Icon = postType === "mobile" ? Truck : RadioTower;
+  root.render(<Icon size={23} strokeWidth={2.2} aria-hidden="true" />);
   return { element, root };
 }
 
@@ -315,7 +317,7 @@ export default function App() {
     );
 
     points.forEach((post) => {
-      const { element, root } = createTowerMarkerElement(post.id === selectedMonitoringPostId);
+      const { element, root } = createTowerMarkerElement(post.post_type, post.id === selectedMonitoringPostId);
       element.title = getPostTitle(post);
       element.addEventListener("click", () => {
         setActiveMenuPanel("stations");

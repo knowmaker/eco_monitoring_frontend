@@ -175,7 +175,7 @@ function LatestProfileDeviceBlock({ device }) {
       </div>
       <div className="latest-metrics latest-profile-inversion-metrics">
         <LatestMetric label="Инверсия" displayValue={inversionRange} />
-        <LatestMetric label="deltaT" value={device.inversion_delta_t} unit="°C" />
+        <LatestMetric label="Разница темп." value={device.inversion_delta_t} unit="°C" />
       </div>
     </div>
   );
