@@ -26,6 +26,11 @@ function formatAxisValue(value) {
   return number.toFixed(2);
 }
 
+function normalizeChartValue(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
+}
+
 export default function SimpleLineChart({
   series,
   xKey = "hour",
@@ -64,7 +69,7 @@ export default function SimpleLineChart({
         },
         data: axisValues.map((axisValue) => {
           const value = byAxisValue.get(axisValue);
-          return value === undefined ? null : value;
+          return value === undefined ? null : normalizeChartValue(value);
         }),
       };
     });

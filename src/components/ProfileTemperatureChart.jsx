@@ -1,6 +1,15 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
+function formatTemperatureLegendValue(value) {
+  return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "";
+}
+
+function normalizeChartValue(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
+}
+
 export default function ProfileTemperatureChart({ profiles, viewMode, emptyText }) {
   const option = useMemo(() => {
     if (!profiles?.length) {
@@ -33,9 +42,10 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         if (!Number.isFinite(level.temperature) || !Number.isFinite(level.height)) {
           return;
         }
-        minTemperature = Math.min(minTemperature, level.temperature);
-        maxTemperature = Math.max(maxTemperature, level.temperature);
-        heatmapData.push([periodIndex, heightIndexByValue.get(level.height), level.temperature]);
+        const temperature = normalizeChartValue(level.temperature);
+        minTemperature = Math.min(minTemperature, temperature);
+        maxTemperature = Math.max(maxTemperature, temperature);
+        heatmapData.push([periodIndex, heightIndexByValue.get(level.height), temperature]);
       });
 
       const inversion = profile.inversion;
@@ -92,7 +102,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         right: 0,
         top: 18,
         itemHeight: 190,
-        text: ["°C", ""],
+        text: [`${formatTemperatureLegendValue(maxTemperature)} °C`, formatTemperatureLegendValue(minTemperature)],
         textStyle: { color: "#647184", fontSize: 11 },
         inRange: {
           color: ["#1749c8", "#1686d9", "#24c6d8", "#b8ecb4", "#f4de55", "#f49a18", "#cf2f24"],
