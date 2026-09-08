@@ -27,6 +27,9 @@ function formatAxisValue(value) {
 }
 
 function normalizeChartValue(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
   const number = Number(value);
   return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
 }
