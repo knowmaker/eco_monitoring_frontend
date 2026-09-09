@@ -55,7 +55,7 @@ function formatMonthParam(month) {
 }
 
 export async function fetchMonitoringPosts() {
-  const response = await fetch(buildUrl("/api/v1/monitoring_posts"), {
+  const response = await fetch(buildUrl("/api/v1/monitoring-posts"), {
     method: "GET",
     headers: { Accept: "application/json" },
   });
@@ -66,13 +66,13 @@ export async function fetchMonitoringPosts() {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.monitoring_posts)) {
-    throw new Error("Некорректный формат ответа /api/v1/monitoring_posts");
+    throw new Error("Некорректный формат ответа /api/v1/monitoring-posts");
   }
   return payload.monitoring_posts;
 }
 
 export async function fetchMonitoringPostsAdmin() {
-  const response = await fetch(buildUrl("/api/v1/monitoring_posts/admin"), {
+  const response = await fetch(buildUrl("/api/v1/monitoring-posts/admin"), {
     method: "GET",
     headers: { Accept: "application/json", ...authHeaders() },
   });
@@ -83,13 +83,13 @@ export async function fetchMonitoringPostsAdmin() {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.monitoring_posts)) {
-    throw new Error("Некорректный формат ответа /api/v1/monitoring_posts/admin");
+    throw new Error("Некорректный формат ответа /api/v1/monitoring-posts/admin");
   }
   return payload.monitoring_posts;
 }
 
 export async function updateMonitoringPost(monitoringPostId, payload) {
-  const response = await fetch(buildUrl(`/api/v1/monitoring_posts/${monitoringPostId}`), {
+  const response = await fetch(buildUrl(`/api/v1/monitoring-posts/${monitoringPostId}`), {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -107,7 +107,7 @@ export async function updateMonitoringPost(monitoringPostId, payload) {
 }
 
 export async function fetchAvailableDeviceState(monitoringPostId) {
-  const response = await fetch(buildUrl(`/api/v1/device_state/available?monitoring_post_id=${monitoringPostId}`), {
+  const response = await fetch(buildUrl(`/api/v1/device-state/available?monitoring_post_id=${monitoringPostId}`), {
     method: "GET",
     headers: { Accept: "application/json" },
   });
@@ -118,7 +118,7 @@ export async function fetchAvailableDeviceState(monitoringPostId) {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.devices)) {
-    throw new Error("Некорректный формат ответа /api/v1/device_state/available");
+    throw new Error("Некорректный формат ответа /api/v1/device-state/available");
   }
   return payload.devices;
 }
@@ -132,7 +132,7 @@ export async function fetchRawMqttPayload(monitoringPostId, day, limit = 100) {
     params.set("date", formatDayParam(day));
   }
 
-  const response = await fetch(buildUrl(`/api/v1/raw_mqtt_payload/admin?${params.toString()}`), {
+  const response = await fetch(buildUrl(`/api/v1/raw-mqtt-payload/admin?${params.toString()}`), {
     method: "GET",
     headers: { Accept: "application/json", ...authHeaders() },
   });
@@ -143,14 +143,14 @@ export async function fetchRawMqttPayload(monitoringPostId, day, limit = 100) {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.records)) {
-    throw new Error("Некорректный формат ответа /api/v1/raw_mqtt_payload/admin");
+    throw new Error("Некорректный формат ответа /api/v1/raw-mqtt-payload/admin");
   }
   return payload;
 }
 
 export async function fetchStationLatestHourlyReadings(monitoringPostId) {
   const response = await fetch(
-    buildUrl(`/api/v1/station_readings/latest_hourly?monitoring_post_id=${monitoringPostId}`),
+    buildUrl(`/api/v1/station-readings/latest-hourly?monitoring_post_id=${monitoringPostId}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -163,7 +163,7 @@ export async function fetchStationLatestHourlyReadings(monitoringPostId) {
 
   const payload = await response.json();
   if (!payload || !Object.prototype.hasOwnProperty.call(payload, "bucket_ms")) {
-    throw new Error("Некорректный формат ответа /api/v1/station_readings/latest_hourly");
+    throw new Error("Некорректный формат ответа /api/v1/station-readings/latest-hourly");
   }
   return payload;
 }
@@ -171,7 +171,7 @@ export async function fetchStationLatestHourlyReadings(monitoringPostId) {
 export async function fetchGasSensorsHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
-    buildUrl(`/api/v1/gas_sensors/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    buildUrl(`/api/v1/gas-sensors/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -179,12 +179,12 @@ export async function fetchGasSensorsHourly(monitoringPostId, day) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки графика gas_sensors: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки графика gas-sensors: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.substances)) {
-    throw new Error("Некорректный формат ответа /api/v1/gas_sensors/hourly");
+    throw new Error("Некорректный формат ответа /api/v1/gas-sensors/hourly");
   }
   return payload;
 }
@@ -192,7 +192,7 @@ export async function fetchGasSensorsHourly(monitoringPostId, day) {
 export async function fetchGasSensorsMonthly(monitoringPostId, month) {
   const monthParam = formatMonthParam(month);
   const response = await fetch(
-    buildUrl(`/api/v1/gas_sensors/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    buildUrl(`/api/v1/gas-sensors/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -200,12 +200,12 @@ export async function fetchGasSensorsMonthly(monitoringPostId, month) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки месячного графика gas_sensors: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки месячного графика gas-sensors: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.substances)) {
-    throw new Error("Некорректный формат ответа /api/v1/gas_sensors/monthly");
+    throw new Error("Некорректный формат ответа /api/v1/gas-sensors/monthly");
   }
   return payload;
 }
@@ -213,7 +213,7 @@ export async function fetchGasSensorsMonthly(monitoringPostId, month) {
 export async function fetchDustStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
-    buildUrl(`/api/v1/dust_state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    buildUrl(`/api/v1/dust-state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -221,12 +221,12 @@ export async function fetchDustStateHourly(monitoringPostId, day) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки графика dust_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки графика dust-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/dust_state/hourly");
+    throw new Error("Некорректный формат ответа /api/v1/dust-state/hourly");
   }
   return payload;
 }
@@ -234,7 +234,7 @@ export async function fetchDustStateHourly(monitoringPostId, day) {
 export async function fetchDustStateMonthly(monitoringPostId, month) {
   const monthParam = formatMonthParam(month);
   const response = await fetch(
-    buildUrl(`/api/v1/dust_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    buildUrl(`/api/v1/dust-state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -242,12 +242,12 @@ export async function fetchDustStateMonthly(monitoringPostId, month) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки месячного графика dust_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки месячного графика dust-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/dust_state/monthly");
+    throw new Error("Некорректный формат ответа /api/v1/dust-state/monthly");
   }
   return payload;
 }
@@ -255,7 +255,7 @@ export async function fetchDustStateMonthly(monitoringPostId, month) {
 export async function fetchMeteoStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
-    buildUrl(`/api/v1/meteo_state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    buildUrl(`/api/v1/meteo-state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -263,12 +263,12 @@ export async function fetchMeteoStateHourly(monitoringPostId, day) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки графика meteo_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки графика meteo-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/meteo_state/hourly");
+    throw new Error("Некорректный формат ответа /api/v1/meteo-state/hourly");
   }
   return payload;
 }
@@ -276,7 +276,7 @@ export async function fetchMeteoStateHourly(monitoringPostId, day) {
 export async function fetchMeteoStateMonthly(monitoringPostId, month) {
   const monthParam = formatMonthParam(month);
   const response = await fetch(
-    buildUrl(`/api/v1/meteo_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    buildUrl(`/api/v1/meteo-state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -284,12 +284,12 @@ export async function fetchMeteoStateMonthly(monitoringPostId, month) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки месячного графика meteo_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки месячного графика meteo-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/meteo_state/monthly");
+    throw new Error("Некорректный формат ответа /api/v1/meteo-state/monthly");
   }
   return payload;
 }
@@ -297,7 +297,7 @@ export async function fetchMeteoStateMonthly(monitoringPostId, month) {
 export async function fetchIvtmStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
-    buildUrl(`/api/v1/ivtm_state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    buildUrl(`/api/v1/ivtm-state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -305,12 +305,12 @@ export async function fetchIvtmStateHourly(monitoringPostId, day) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки графика ivtm_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки графика ivtm-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/ivtm_state/hourly");
+    throw new Error("Некорректный формат ответа /api/v1/ivtm-state/hourly");
   }
   return payload;
 }
@@ -318,7 +318,7 @@ export async function fetchIvtmStateHourly(monitoringPostId, day) {
 export async function fetchIvtmStateMonthly(monitoringPostId, month) {
   const monthParam = formatMonthParam(month);
   const response = await fetch(
-    buildUrl(`/api/v1/ivtm_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    buildUrl(`/api/v1/ivtm-state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -326,12 +326,12 @@ export async function fetchIvtmStateMonthly(monitoringPostId, month) {
   );
 
   if (!response.ok) {
-    throw new Error(`Ошибка загрузки месячного графика ivtm_state: ${await readError(response)}`);
+    throw new Error(`Ошибка загрузки месячного графика ivtm-state: ${await readError(response)}`);
   }
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
-    throw new Error("Некорректный формат ответа /api/v1/ivtm_state/monthly");
+    throw new Error("Некорректный формат ответа /api/v1/ivtm-state/monthly");
   }
   return payload;
 }
@@ -339,7 +339,7 @@ export async function fetchIvtmStateMonthly(monitoringPostId, month) {
 export async function fetchProfileStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
-    buildUrl(`/api/v1/profile_state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
+    buildUrl(`/api/v1/profile-state/hourly?monitoring_post_id=${monitoringPostId}&date=${date}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -352,7 +352,7 @@ export async function fetchProfileStateHourly(monitoringPostId, day) {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.profiles)) {
-    throw new Error("Некорректный формат ответа /api/v1/profile_state/hourly");
+    throw new Error("Некорректный формат ответа /api/v1/profile-state/hourly");
   }
   return payload;
 }
@@ -360,7 +360,7 @@ export async function fetchProfileStateHourly(monitoringPostId, day) {
 export async function fetchProfileStateMonthly(monitoringPostId, month) {
   const monthParam = formatMonthParam(month);
   const response = await fetch(
-    buildUrl(`/api/v1/profile_state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
+    buildUrl(`/api/v1/profile-state/monthly?monitoring_post_id=${monitoringPostId}&month=${monthParam}`),
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -373,7 +373,7 @@ export async function fetchProfileStateMonthly(monitoringPostId, month) {
 
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.profiles)) {
-    throw new Error("Некорректный формат ответа /api/v1/profile_state/monthly");
+    throw new Error("Некорректный формат ответа /api/v1/profile-state/monthly");
   }
   return payload;
 }
