@@ -352,6 +352,11 @@ input:focus-visible {
   background: var(--accent-soft);
 }
 
+.station-list-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .station-list-button strong,
 .station-list-button small {
   display: block;

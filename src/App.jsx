@@ -815,8 +815,8 @@ export default function App() {
                         }`}
                         onClick={() => handleSelectMonitoringPost(post)}
                       >
-                        <span>
-                          <strong>{getPostTitle(post)}</strong>
+                        <span className="station-list-text">
+                          <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
                           <small>{POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран"}</small>
                         </span>
                         {post.is_confirmed ? (
