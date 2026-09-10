@@ -34,6 +34,14 @@ function normalizeChartValue(value) {
   return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
 }
 
+function formatHourIntervalAxisLabel(value) {
+  return String(value).replace("-", "-\n");
+}
+
+function formatDayAxisLabel(value) {
+  return String(value).replace(" число", "");
+}
+
 export default function SimpleLineChart({
   series,
   xKey = "hour",
@@ -49,9 +57,7 @@ export default function SimpleLineChart({
     }
 
     const axisValues = xValues?.length ? xValues : Array.from({ length: 24 }, (_, idx) => idx);
-    const categories = xLabels?.length
-      ? xLabels
-      : axisValues.map((value) => (xKey === "hour" ? `${String(value).padStart(2, "0")}:00` : String(value)));
+    const categories = xLabels;
 
     const preparedSeries = series.map((item, index) => {
       const byAxisValue = new Map((item.points || []).map((point) => [point[xKey], point.value]));
@@ -102,7 +108,12 @@ export default function SimpleLineChart({
         data: categories,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
-        axisLabel: { color: "#647184", interval: xKey === "day" ? 1 : 2 },
+        axisLabel: {
+          color: "#647184",
+          interval: xKey === "day" ? 1 : 2,
+          formatter:
+            xKey === "hour" ? formatHourIntervalAxisLabel : xKey === "day" ? formatDayAxisLabel : undefined,
+        },
       },
       yAxis: {
         type: "value",

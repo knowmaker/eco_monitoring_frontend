@@ -13,6 +13,19 @@ function normalizeChartValue(value) {
   return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
 }
 
+function formatHourInterval(hour) {
+  const startHour = String(hour).padStart(2, "0");
+  return `${startHour}:00-${startHour}:59`;
+}
+
+function formatHourIntervalAxisLabel(value) {
+  return String(value).replace("-", "-\n");
+}
+
+function formatDayAxisLabel(value) {
+  return String(value).replace(" число", "");
+}
+
 export default function ProfileTemperatureChart({ profiles, viewMode, emptyText }) {
   const option = useMemo(() => {
     if (!profiles?.length) {
@@ -21,8 +34,8 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
 
     const periodLabels = profiles.map((profile) =>
       viewMode === "month"
-        ? String(profile.day ?? "").padStart(2, "0")
-        : `${String(profile.hour ?? "").padStart(2, "0")}:00`
+        ? `${String(profile.day ?? "").padStart(2, "0")} число`
+        : formatHourInterval(profile.hour ?? "")
     );
     const heights = Array.from(
       new Set(
@@ -119,6 +132,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         axisLabel: {
           color: "#647184",
           interval: viewMode === "month" ? 1 : 2,
+          formatter: viewMode === "day" ? formatHourIntervalAxisLabel : formatDayAxisLabel,
         },
       },
       yAxis: {

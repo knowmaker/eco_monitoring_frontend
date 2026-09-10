@@ -132,6 +132,11 @@ function getDaysInMonth(month) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 }
 
+function formatHourInterval(hour) {
+  const startHour = String(hour).padStart(2, "0");
+  return `${startHour}:00-${startHour}:59`;
+}
+
 export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
   const [viewMode, setViewMode] = useState("day");
   const [day, setDay] = useState(new Date());
@@ -151,7 +156,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       return {
         key: "day",
         values,
-        labels: values.map((value) => String(value).padStart(2, "0")),
+        labels: values.map((value) => `${String(value).padStart(2, "0")} число`),
         windLabelFormatter: (value) => String(value).padStart(2, "0"),
         emptyText: "Нет данных за выбранный месяц.",
       };
@@ -161,7 +166,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     return {
       key: "hour",
       values,
-      labels: values.map((value) => `${String(value).padStart(2, "0")}:00`),
+      labels: values.map(formatHourInterval),
       windLabelFormatter: (value) => `${String(value).padStart(2, "0")}:00`,
       emptyText: "Нет данных за выбранные сутки.",
     };
