@@ -44,8 +44,8 @@ const DEVICE_METRIC_TABS = {
     { key: METEO_WIND_KEY, label: "Ветер" },
   ],
   ivtm: [
-    { key: "sensor_ivtm_hum", label: "IVTM Humidity" },
-    { key: "sensor_ivtm_temp", label: "IVTM Temperature" },
+    { key: "sensor_ivtm_temp", label: "Температура ИВТМ" },
+    { key: "sensor_ivtm_hum", label: "Влажность ИВТМ" },
   ],
 };
 
