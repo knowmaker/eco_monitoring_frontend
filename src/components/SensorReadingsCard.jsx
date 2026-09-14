@@ -422,14 +422,19 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     [profileRecords, viewMode]
   );
 
-  useEffect(() => {
+  const activeProfilePeriod = useMemo(() => {
     if (selectedDeviceType !== "profile" || availableProfilePeriods.length === 0) {
-      return;
+      return selectedProfilePeriod;
     }
-    if (!availableProfilePeriods.includes(selectedProfilePeriod)) {
-      setSelectedProfilePeriod(availableProfilePeriods[0]);
-    }
+    return availableProfilePeriods.includes(selectedProfilePeriod)
+      ? selectedProfilePeriod
+      : availableProfilePeriods[0];
   }, [availableProfilePeriods, selectedDeviceType, selectedProfilePeriod]);
+
+  const activeProfileLegendIndex = useMemo(() => {
+    const index = availableProfilePeriods.findIndex((value) => value === activeProfilePeriod);
+    return index >= 0 ? index : 0;
+  }, [activeProfilePeriod, availableProfilePeriods]);
 
   const profileTemperatureSeries = useMemo(() => {
     if (selectedDeviceType !== "profile") {
@@ -440,7 +445,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       .filter(hasProfileTemperatureData)
       .map((profile) => {
         const periodValue = getProfilePeriodValue(profile, viewMode);
-        const isActive = periodValue === selectedProfilePeriod;
+        const isActive = periodValue === activeProfilePeriod;
         const markLineData = isActive ? getProfileInversionMarkLines(profile.inversion) : [];
 
         return {
@@ -455,11 +460,11 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             temperature: normalizeChartValue(level.temperature),
             height: normalizeChartValue(level.height),
           })),
-          showSymbol: isActive,
-          symbolSize: isActive ? 6 : 3,
+          showSymbol: true,
+          symbolSize: isActive ? 6 : 0,
+          triggerLineEvent: true,
           options: {
             cursor: "pointer",
-            silent: false,
             z: isActive ? 3 : 1,
             lineStyle: {
               width: isActive ? 2.6 : 1.2,
@@ -471,7 +476,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
               opacity: isActive ? 1 : 0.18,
             },
             emphasis: {
-              focus: "series",
               lineStyle: {
                 width: 2.6,
                 opacity: 0.92,
@@ -499,23 +503,47 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           },
         };
       });
-  }, [profileRecords, selectedDeviceType, selectedProfilePeriod, viewMode]);
+  }, [activeProfilePeriod, profileRecords, selectedDeviceType, viewMode]);
 
   const getProfilePeriodByLabel = (label) => {
     return availableProfilePeriods.find((value) => formatProfilePeriodLabel(value, viewMode) === label);
   };
 
+  const getProfilePeriodIndexByLabel = (label) => {
+    return availableProfilePeriods.findIndex((value) => formatProfilePeriodLabel(value, viewMode) === label);
+  };
+
+  const scrollProfileLegendToLabel = (chart, label) => {
+    const index = getProfilePeriodIndexByLabel(label);
+    if (index >= 0) {
+      chart?.dispatchAction({ type: "legendScroll", scrollDataIndex: index });
+    }
+  };
+
   const profileChartEvents = useMemo(
     () => ({
-      click: (params) => {
-        const source = params.componentType === "legend" ? params.name : params.seriesId;
-        const periodValue =
-          params.componentType === "legend"
-            ? getProfilePeriodByLabel(source)
-            : Number(String(source || "").replace(`profile-${viewMode}-`, ""));
+      click: (params, chart) => {
+        if (params.componentType !== "series") {
+          return;
+        }
+        const periodValue = getProfilePeriodByLabel(params.seriesName);
+        if (Number.isFinite(periodValue)) {
+          setSelectedProfilePeriod(periodValue);
+          scrollProfileLegendToLabel(chart, params.seriesName);
+        }
+      },
+      legendselectchanged: (params, chart) => {
+        const periodValue = getProfilePeriodByLabel(params.name);
         if (Number.isFinite(periodValue)) {
           setSelectedProfilePeriod(periodValue);
         }
+        chart?.setOption({
+          legend: {
+            selected: Object.fromEntries(
+              availableProfilePeriods.map((value) => [formatProfilePeriodLabel(value, viewMode), true])
+            ),
+          },
+        });
       },
     }),
     [availableProfilePeriods, viewMode]
@@ -715,6 +743,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                   tooltipFormatter={profileTooltipFormatter}
                   emptyText={axis.emptyText}
                   chartKey={`profile-${viewMode}-${dateInputValue}`}
+                  legendScrollDataIndex={activeProfileLegendIndex}
                 />
               )
             ) : isWindCompositeMetric ? (

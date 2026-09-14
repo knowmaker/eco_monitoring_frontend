@@ -38,6 +38,7 @@ export default function XYLineChart({
   emptyText = "Нет данных за выбранный период.",
   chartClassName = "profile-line-echarts",
   chartKey,
+  legendScrollDataIndex = 0,
 }) {
   const hasValues = useMemo(() => hasNumericValues(series, xKey, yKey), [series, xKey, yKey]);
 
@@ -49,10 +50,11 @@ export default function XYLineChart({
     return {
       backgroundColor: "transparent",
       animation: true,
+      animationDurationUpdate: 0,
       grid: {
         left: 58,
         right: 26,
-        top: showLegend ? 48 : 26,
+        top: showLegend ? 28 : 26,
         bottom: 48,
       },
       tooltip: {
@@ -65,12 +67,13 @@ export default function XYLineChart({
       legend: showLegend
         ? {
             type: "scroll",
-            top: 0,
+            top: 2,
             left: 58,
             right: 10,
+            scrollDataIndex: legendScrollDataIndex,
             itemWidth: 14,
             itemHeight: 8,
-            selectedMode: false,
+            selectedMode: true,
             textStyle: { color: AXIS_TEXT_COLOR, fontSize: 11 },
             data: series.map((item) => ({
               name: item.label,
@@ -120,7 +123,9 @@ export default function XYLineChart({
           data: (item.points || [])
             .filter((point) => Number.isFinite(Number(point[xKey])) && Number.isFinite(Number(point[yKey])))
             .map((point) => [normalizeChartValue(point[xKey]), normalizeChartValue(point[yKey])]),
+          animationDurationUpdate: 0,
           smooth: item.smooth ?? false,
+          triggerLineEvent: item.triggerLineEvent ?? false,
           symbol: "circle",
           symbolSize: item.symbolSize ?? 6,
           showSymbol: item.showSymbol ?? true,
@@ -146,6 +151,7 @@ export default function XYLineChart({
     yAxisInterval,
     showLegend,
     tooltipFormatter,
+    legendScrollDataIndex,
   ]);
 
   if (!series?.length || !hasValues || !option) {
