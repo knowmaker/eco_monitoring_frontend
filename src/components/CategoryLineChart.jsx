@@ -114,6 +114,14 @@ export default function CategoryLineChart({
           formatter:
             xKey === "hour" ? formatHourIntervalAxisLabel : xKey === "day" ? formatDayAxisLabel : undefined,
         },
+        splitLine: {
+          show: true,
+          interval: 0,
+          lineStyle: {
+            color: "rgba(15, 23, 42, 0.08)",
+            type: "dashed",
+          },
+        },
       },
       yAxis: {
         type: "value",
