@@ -858,6 +858,19 @@ input:focus-visible {
   margin-bottom: 10px;
 }
 
+.readings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.readings-period-toolbar {
+  justify-content: flex-end;
+}
+
 .readings-type {
   color: var(--text);
   font-size: 0.88rem;
@@ -1221,17 +1234,40 @@ input:focus-visible {
   background: var(--accent-soft);
 }
 
-.profile-chart-controls {
+.chart-view-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 8px;
+  gap: 16px;
+  min-width: 0;
 }
 
-.profile-view-tabs {
-  min-width: 0;
-  padding-bottom: 0;
-  margin-bottom: 0;
+.chart-view-tab {
+  position: relative;
+  min-height: 32px;
+  padding: 0 0 10px;
+  color: var(--muted-strong);
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.chart-view-tab:hover {
+  color: var(--text);
+}
+
+.chart-view-tab-active,
+.chart-view-tab-active:hover {
+  color: var(--accent-strong);
+}
+
+.chart-view-tab-active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 999px 999px 0 0;
+  background: var(--accent-strong);
+  content: "";
 }
 
 .chart-wrap {

@@ -444,7 +444,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         const markLineData = isActive ? getProfileInversionMarkLines(profile.inversion) : [];
 
         return {
-          key: `profile-${periodValue}`,
+          key: `profile-${viewMode}-${periodValue}`,
           label: formatProfilePeriodLabel(periodValue, viewMode),
           isActive,
           color: "#16856d",
@@ -512,7 +512,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
         const periodValue =
           params.componentType === "legend"
             ? getProfilePeriodByLabel(source)
-            : Number(String(source || "").replace("profile-", ""));
+            : Number(String(source || "").replace(`profile-${viewMode}-`, ""));
         if (Number.isFinite(periodValue)) {
           setSelectedProfilePeriod(periodValue);
         }
@@ -587,8 +587,45 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
 
       {monitoringPostId && selectedDeviceType && (
         <>
-          <div className="readings-toolbar">
+          <div className="readings-heading">
             <div className="readings-type">{DEVICE_TYPE_LABELS[selectedDeviceType] ?? selectedDeviceType}</div>
+
+            <div className="chart-view-tabs" role="tablist" aria-label="Вид графика">
+              {selectedDeviceType === "profile" ? (
+                <>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={profileViewMode === "line"}
+                    className={`chart-view-tab${profileViewMode === "line" ? " chart-view-tab-active" : ""}`}
+                    onClick={() => setProfileViewMode("line")}
+                  >
+                    График
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={profileViewMode === "heatmap"}
+                    className={`chart-view-tab${profileViewMode === "heatmap" ? " chart-view-tab-active" : ""}`}
+                    onClick={() => setProfileViewMode("heatmap")}
+                  >
+                    Тепловая карта
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  className="chart-view-tab chart-view-tab-active"
+                >
+                  График
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="readings-toolbar readings-period-toolbar">
             <div className="period-controls">
               <div className="period-switcher">
                 <button
@@ -653,27 +690,6 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           )}
 
-          {selectedDeviceType === "profile" && (
-            <div className="profile-chart-controls">
-              <div className="metric-tabs profile-view-tabs">
-                <button
-                  type="button"
-                  className={`metric-tab${profileViewMode === "line" ? " metric-tab-active" : ""}`}
-                  onClick={() => setProfileViewMode("line")}
-                >
-                  График
-                </button>
-                <button
-                  type="button"
-                  className={`metric-tab${profileViewMode === "heatmap" ? " metric-tab-active" : ""}`}
-                  onClick={() => setProfileViewMode("heatmap")}
-                >
-                  Тепловая карта
-                </button>
-              </div>
-            </div>
-          )}
-
           {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
@@ -698,6 +714,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                   onEvents={profileChartEvents}
                   tooltipFormatter={profileTooltipFormatter}
                   emptyText={axis.emptyText}
+                  chartKey={`profile-${viewMode}-${dateInputValue}`}
                 />
               )
             ) : isWindCompositeMetric ? (

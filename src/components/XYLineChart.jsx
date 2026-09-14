@@ -37,6 +37,7 @@ export default function XYLineChart({
   tooltipFormatter,
   emptyText = "Нет данных за выбранный период.",
   chartClassName = "profile-line-echarts",
+  chartKey,
 }) {
   const hasValues = useMemo(() => hasNumericValues(series, xKey, yKey), [series, xKey, yKey]);
 
@@ -153,7 +154,7 @@ export default function XYLineChart({
 
   return (
     <div className="profile-chart-wrap">
-      <ReactECharts option={option} notMerge lazyUpdate className={chartClassName} onEvents={onEvents} />
+      <ReactECharts key={chartKey} option={option} notMerge lazyUpdate className={chartClassName} onEvents={onEvents} />
     </div>
   );
 }
