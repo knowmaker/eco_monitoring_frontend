@@ -67,8 +67,8 @@ export default function CategoryLineChart({
         smooth: true,
         connectNulls: false,
         symbol: "circle",
-        symbolSize: 5,
-        showSymbol: false,
+        symbolSize: 6,
+        showSymbol: true,
         lineStyle: {
           width: 2.4,
           color: PALETTE[index % PALETTE.length],
