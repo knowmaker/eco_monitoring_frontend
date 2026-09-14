@@ -1221,6 +1221,19 @@ input:focus-visible {
   background: var(--accent-soft);
 }
 
+.profile-chart-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.profile-view-tabs {
+  min-width: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .chart-wrap {
   margin-top: 8px;
 }
@@ -1238,6 +1251,12 @@ input:focus-visible {
   width: 100%;
   height: 360px;
 }
+
+.profile-line-echarts {
+  width: 100%;
+  height: 360px;
+}
+
 
 .chart-empty {
   margin-top: 8px;

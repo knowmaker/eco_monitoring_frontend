@@ -42,7 +42,7 @@ function formatDayAxisLabel(value) {
   return String(value).replace(" число", "");
 }
 
-export default function SimpleLineChart({
+export default function CategoryLineChart({
   series,
   xKey = "hour",
   xValues,

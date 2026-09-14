@@ -13,9 +13,10 @@ import {
   fetchProfileStateHourly,
   fetchProfileStateMonthly,
 } from "../lib/api";
+import CategoryLineChart from "./CategoryLineChart";
 import ProfileTemperatureChart from "./ProfileTemperatureChart";
-import SimpleLineChart from "./SimpleLineChart";
 import WindCompassStrip from "./WindCompassStrip";
+import XYLineChart from "./XYLineChart";
 
 const METEO_WIND_KEY = "__meteo_wind__";
 
@@ -137,8 +138,52 @@ function formatHourInterval(hour) {
   return `${startHour}:00-${startHour}:59`;
 }
 
+function normalizeChartValue(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
+}
+
+function getProfilePeriodValue(profile, viewMode) {
+  return viewMode === "month" ? profile.day : profile.hour;
+}
+
+function hasProfileTemperatureData(profile) {
+  return Boolean(
+    (profile?.levels || []).some((level) => Number.isFinite(level.height) && Number.isFinite(level.temperature))
+  );
+}
+
+function formatProfilePeriodLabel(value, viewMode) {
+  return viewMode === "month" ? `${String(value).padStart(2, "0")} число` : formatHourInterval(value);
+}
+
+function formatProfileTooltipValue(value, unit) {
+  return Number.isFinite(value) ? `${value} ${unit}` : "-";
+}
+
+function getProfileInversionMarkLines(inversion) {
+  if (
+    !Number.isFinite(inversion?.power) ||
+    inversion.power <= 0 ||
+    !Number.isFinite(inversion?.lower) ||
+    !Number.isFinite(inversion?.upper)
+  ) {
+    return [];
+  }
+
+  return [
+    { name: "Низ инверсии", yAxis: normalizeChartValue(inversion.lower) },
+    { name: "Верх инверсии", yAxis: normalizeChartValue(inversion.upper) },
+  ];
+}
+
 export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
   const [viewMode, setViewMode] = useState("day");
+  const [profileViewMode, setProfileViewMode] = useState("line");
+  const [selectedProfilePeriod, setSelectedProfilePeriod] = useState(0);
   const [day, setDay] = useState(new Date());
   const [month, setMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -372,6 +417,121 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     ];
   }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, axis]);
 
+  const availableProfilePeriods = useMemo(
+    () => profileRecords.filter(hasProfileTemperatureData).map((profile) => getProfilePeriodValue(profile, viewMode)),
+    [profileRecords, viewMode]
+  );
+
+  useEffect(() => {
+    if (selectedDeviceType !== "profile" || availableProfilePeriods.length === 0) {
+      return;
+    }
+    if (!availableProfilePeriods.includes(selectedProfilePeriod)) {
+      setSelectedProfilePeriod(availableProfilePeriods[0]);
+    }
+  }, [availableProfilePeriods, selectedDeviceType, selectedProfilePeriod]);
+
+  const profileTemperatureSeries = useMemo(() => {
+    if (selectedDeviceType !== "profile") {
+      return [];
+    }
+
+    return profileRecords
+      .filter(hasProfileTemperatureData)
+      .map((profile) => {
+        const periodValue = getProfilePeriodValue(profile, viewMode);
+        const isActive = periodValue === selectedProfilePeriod;
+        const markLineData = isActive ? getProfileInversionMarkLines(profile.inversion) : [];
+
+        return {
+          key: `profile-${periodValue}`,
+          label: formatProfilePeriodLabel(periodValue, viewMode),
+          isActive,
+          color: "#16856d",
+          points: (profile.levels || [])
+          .filter((level) => Number.isFinite(level.height) && Number.isFinite(level.temperature))
+          .sort((a, b) => a.height - b.height)
+          .map((level) => ({
+            temperature: normalizeChartValue(level.temperature),
+            height: normalizeChartValue(level.height),
+          })),
+          showSymbol: isActive,
+          symbolSize: isActive ? 6 : 3,
+          options: {
+            cursor: "pointer",
+            silent: false,
+            z: isActive ? 3 : 1,
+            lineStyle: {
+              width: isActive ? 2.6 : 1.2,
+              color: "#16856d",
+              opacity: isActive ? 1 : 0.16,
+            },
+            itemStyle: {
+              color: "#16856d",
+              opacity: isActive ? 1 : 0.18,
+            },
+            emphasis: {
+              focus: "series",
+              lineStyle: {
+                width: 2.6,
+                opacity: 0.92,
+              },
+              itemStyle: {
+                opacity: 1,
+              },
+            },
+            markLine: markLineData.length
+              ? {
+                  symbol: "none",
+                  label: {
+                    color: "#9f2f2f",
+                    fontSize: 11,
+                    formatter: "{b}",
+                  },
+                  lineStyle: {
+                    color: "#9f2f2f",
+                    type: "dashed",
+                    width: 1.2,
+                  },
+                  data: markLineData,
+                }
+              : undefined,
+          },
+        };
+      });
+  }, [profileRecords, selectedDeviceType, selectedProfilePeriod, viewMode]);
+
+  const getProfilePeriodByLabel = (label) => {
+    return availableProfilePeriods.find((value) => formatProfilePeriodLabel(value, viewMode) === label);
+  };
+
+  const profileChartEvents = useMemo(
+    () => ({
+      click: (params) => {
+        const source = params.componentType === "legend" ? params.name : params.seriesId;
+        const periodValue =
+          params.componentType === "legend"
+            ? getProfilePeriodByLabel(source)
+            : Number(String(source || "").replace("profile-", ""));
+        if (Number.isFinite(periodValue)) {
+          setSelectedProfilePeriod(periodValue);
+        }
+      },
+    }),
+    [availableProfilePeriods, viewMode]
+  );
+
+  const profileTooltipFormatter = useMemo(() => {
+    return (params) => {
+      const [temperature, height] = params.data || [];
+      return [
+        params.seriesName,
+        `Высота: ${formatProfileTooltipValue(height, "м")}`,
+        `Температура: ${formatProfileTooltipValue(temperature, "°C")}`,
+      ].join("<br />");
+    };
+  }, []);
+
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const dateInputType = viewMode === "month" ? "month" : "date";
   const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
@@ -493,16 +653,53 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           )}
 
+          {selectedDeviceType === "profile" && (
+            <div className="profile-chart-controls">
+              <div className="metric-tabs profile-view-tabs">
+                <button
+                  type="button"
+                  className={`metric-tab${profileViewMode === "line" ? " metric-tab-active" : ""}`}
+                  onClick={() => setProfileViewMode("line")}
+                >
+                  График
+                </button>
+                <button
+                  type="button"
+                  className={`metric-tab${profileViewMode === "heatmap" ? " metric-tab-active" : ""}`}
+                  onClick={() => setProfileViewMode("heatmap")}
+                >
+                  Тепловая карта
+                </button>
+              </div>
+            </div>
+          )}
+
           {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
             !errorText &&
             (selectedDeviceType === "profile" ? (
-              <ProfileTemperatureChart
-                profiles={profileRecords}
-                viewMode={viewMode}
-                emptyText={axis.emptyText}
-              />
+              profileViewMode === "heatmap" ? (
+                <ProfileTemperatureChart
+                  profiles={profileRecords}
+                  viewMode={viewMode}
+                  emptyText={axis.emptyText}
+                />
+              ) : (
+                <XYLineChart
+                  series={profileTemperatureSeries}
+                  xKey="temperature"
+                  yKey="height"
+                  xAxisName="Температура, °C"
+                  yAxisName="Высота, м"
+                  xAxisSplitNumber={8}
+                  yAxisInterval={100}
+                  showLegend
+                  onEvents={profileChartEvents}
+                  tooltipFormatter={profileTooltipFormatter}
+                  emptyText={axis.emptyText}
+                />
+              )
             ) : isWindCompositeMetric ? (
               <WindCompassStrip
                 directionPoints={meteoWindDirectionSeries?.points ?? []}
@@ -513,7 +710,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                 emptyText={axis.emptyText}
               />
             ) : (
-              <SimpleLineChart
+              <CategoryLineChart
                 series={effectiveSeries}
                 xKey={axis.key}
                 xValues={axis.values}
