@@ -460,8 +460,8 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             temperature: normalizeChartValue(level.temperature),
             height: normalizeChartValue(level.height),
           })),
-          showSymbol: true,
-          symbolSize: isActive ? 6 : 0,
+          showSymbol: isActive,
+          symbolSize: 6,
           triggerLineEvent: true,
           options: {
             cursor: "pointer",
