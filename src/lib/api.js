@@ -54,6 +54,31 @@ function formatMonthParam(month) {
   return `${y}-${m}`;
 }
 
+function formatDateTimeParam(value) {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Некорректный интервал запроса сырых данных");
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  const ss = String(date.getSeconds()).padStart(2, "0");
+  return `${y}-${m}-${d}T${hh}:${mm}:${ss}`;
+}
+
+function buildRawParams(monitoringPostId, start, end) {
+  return new URLSearchParams({
+    monitoring_post_id: String(monitoringPostId),
+    from: formatDateTimeParam(start),
+    to: formatDateTimeParam(end),
+  });
+}
+
 export async function fetchMonitoringPosts() {
   const response = await fetch(buildUrl("/api/v1/monitoring-posts"), {
     method: "GET",
@@ -210,6 +235,24 @@ export async function fetchGasSensorsMonthly(monitoringPostId, month) {
   return payload;
 }
 
+export async function fetchGasSensorsRaw(monitoringPostId, start, end) {
+  const params = buildRawParams(monitoringPostId, start, end);
+  const response = await fetch(buildUrl(`/api/v1/gas-sensors/raw?${params.toString()}`), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки сырых данных gas-sensors: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.substances)) {
+    throw new Error("Некорректный формат ответа /api/v1/gas-sensors/raw");
+  }
+  return payload;
+}
+
 export async function fetchDustStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
@@ -248,6 +291,24 @@ export async function fetchDustStateMonthly(monitoringPostId, month) {
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
     throw new Error("Некорректный формат ответа /api/v1/dust-state/monthly");
+  }
+  return payload;
+}
+
+export async function fetchDustStateRaw(monitoringPostId, start, end) {
+  const params = buildRawParams(monitoringPostId, start, end);
+  const response = await fetch(buildUrl(`/api/v1/dust-state/raw?${params.toString()}`), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки сырых данных dust-state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/dust-state/raw");
   }
   return payload;
 }
@@ -294,6 +355,24 @@ export async function fetchMeteoStateMonthly(monitoringPostId, month) {
   return payload;
 }
 
+export async function fetchMeteoStateRaw(monitoringPostId, start, end) {
+  const params = buildRawParams(monitoringPostId, start, end);
+  const response = await fetch(buildUrl(`/api/v1/meteo-state/raw?${params.toString()}`), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки сырых данных meteo-state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/meteo-state/raw");
+  }
+  return payload;
+}
+
 export async function fetchIvtmStateHourly(monitoringPostId, day) {
   const date = formatDayParam(day);
   const response = await fetch(
@@ -332,6 +411,24 @@ export async function fetchIvtmStateMonthly(monitoringPostId, month) {
   const payload = await response.json();
   if (!payload || !Array.isArray(payload.series)) {
     throw new Error("Некорректный формат ответа /api/v1/ivtm-state/monthly");
+  }
+  return payload;
+}
+
+export async function fetchIvtmStateRaw(monitoringPostId, start, end) {
+  const params = buildRawParams(monitoringPostId, start, end);
+  const response = await fetch(buildUrl(`/api/v1/ivtm-state/raw?${params.toString()}`), {
+    method: "GET",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки сырых данных ivtm-state: ${await readError(response)}`);
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.series)) {
+    throw new Error("Некорректный формат ответа /api/v1/ivtm-state/raw");
   }
   return payload;
 }

@@ -2,19 +2,24 @@
 import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 
 import {
+  fetchDustStateRaw,
   fetchDustStateHourly,
   fetchDustStateMonthly,
   fetchGasSensorsHourly,
   fetchGasSensorsMonthly,
+  fetchGasSensorsRaw,
   fetchIvtmStateHourly,
   fetchIvtmStateMonthly,
+  fetchIvtmStateRaw,
   fetchMeteoStateHourly,
   fetchMeteoStateMonthly,
+  fetchMeteoStateRaw,
   fetchProfileStateHourly,
   fetchProfileStateMonthly,
 } from "../lib/api";
 import CategoryLineChart from "./CategoryLineChart";
 import ProfileTemperatureChart from "./ProfileTemperatureChart";
+import TimeLineChart from "./TimeLineChart";
 import WindCompassStrip from "./WindCompassStrip";
 import XYLineChart from "./XYLineChart";
 
@@ -138,6 +143,41 @@ function formatHourInterval(hour) {
   return `${startHour}:00-${startHour}:59`;
 }
 
+function formatTimeOfDay(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function toLocalDateTimeParam(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  const ss = String(date.getSeconds()).padStart(2, "0");
+  return `${y}-${m}-${d}T${hh}:${mm}:${ss}`;
+}
+
+function getHourBounds(day, hour) {
+  const start = new Date(day);
+  start.setHours(hour, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 1);
+  return {
+    start,
+    end,
+    startParam: toLocalDateTimeParam(start),
+    endParam: toLocalDateTimeParam(end),
+  };
+}
+
 function normalizeChartValue(value) {
   if (value === null || value === undefined) {
     return null;
@@ -180,15 +220,19 @@ function getProfileInversionMarkLines(inversion) {
   ];
 }
 
-export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, onClose }) {
+export default function SensorReadingsCard({ monitoringPostId, selectedDeviceType, isAuthenticated = false, onClose }) {
   const [viewMode, setViewMode] = useState("day");
   const [profileViewMode, setProfileViewMode] = useState("line");
   const [selectedProfilePeriod, setSelectedProfilePeriod] = useState(0);
   const [day, setDay] = useState(new Date());
   const [month, setMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
+  const [isRawLoading, setIsRawLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
+  const [rawErrorText, setRawErrorText] = useState("");
   const [series, setSeries] = useState([]);
+  const [rawSeries, setRawSeries] = useState([]);
+  const [rawDrilldown, setRawDrilldown] = useState(null);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [gasSubstances, setGasSubstances] = useState([]);
   const [profileRecords, setProfileRecords] = useState([]);
@@ -228,12 +272,16 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   useEffect(() => {
     if (!monitoringPostId || !selectedDeviceType) {
       setSeries([]);
+      setRawSeries([]);
+      setRawDrilldown(null);
       setGasSubstances([]);
       setProfileRecords([]);
       setSelectedGasSubstance(null);
       setSelectedMetricKey(null);
       setErrorText("");
+      setRawErrorText("");
       setIsLoading(false);
+      setIsRawLoading(false);
       return;
     }
 
@@ -329,6 +377,13 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   }, [monitoringPostId, selectedDeviceType, day, month, viewMode, refreshCounter]);
 
   useEffect(() => {
+    setRawDrilldown(null);
+    setRawSeries([]);
+    setRawErrorText("");
+    setIsRawLoading(false);
+  }, [monitoringPostId, selectedDeviceType, day, month, viewMode, selectedGasSubstance, selectedMetricKey, isAuthenticated]);
+
+  useEffect(() => {
     if (selectedDeviceType !== "gas") {
       setSelectedGasSubstance(null);
     }
@@ -343,6 +398,28 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
     () => (selectedDeviceType === "meteo" ? series.find((item) => isWindSpeedSeries(item)) ?? null : null),
     [selectedDeviceType, series]
   );
+
+  const rawWindDirectionSeries = useMemo(
+    () => rawSeries.find((item) => isWindDirectionSeries(item)) ?? null,
+    [rawSeries]
+  );
+
+  const rawWindSpeedSeries = useMemo(
+    () => rawSeries.find((item) => isWindSpeedSeries(item)) ?? null,
+    [rawSeries]
+  );
+
+  const rawWindTimestamps = useMemo(() => {
+    const timestamps = new Set();
+    [rawWindDirectionSeries, rawWindSpeedSeries].forEach((item) => {
+      (item?.points || []).forEach((point) => {
+        if (point.timestamp) {
+          timestamps.add(point.timestamp);
+        }
+      });
+    });
+    return Array.from(timestamps).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  }, [rawWindDirectionSeries, rawWindSpeedSeries]);
 
   const metricTabs = useMemo(() => {
     if (selectedDeviceType === "gas" || selectedDeviceType === "profile") {
@@ -416,6 +493,106 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
       },
     ];
   }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, axis]);
+
+  useEffect(() => {
+    if (!rawDrilldown || !monitoringPostId || !isAuthenticated) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsRawLoading(true);
+    setRawErrorText("");
+    setRawSeries([]);
+
+    const loadRaw = async () => {
+      if (selectedDeviceType === "gas") {
+        const payload = await fetchGasSensorsRaw(monitoringPostId, rawDrilldown.start, rawDrilldown.end);
+        if (cancelled) {
+          return;
+        }
+        const substance = (payload.substances || []).find((item) => item.substance_code === selectedGasSubstance);
+        setRawSeries(
+          substance
+            ? [{ key: selectedGasSubstance, label: selectedGasSubstance, points: substance.points || [] }]
+            : []
+        );
+        return;
+      }
+
+      let payload;
+      if (selectedDeviceType === "dust") {
+        payload = await fetchDustStateRaw(monitoringPostId, rawDrilldown.start, rawDrilldown.end);
+      } else if (selectedDeviceType === "meteo") {
+        payload = await fetchMeteoStateRaw(monitoringPostId, rawDrilldown.start, rawDrilldown.end);
+      } else if (selectedDeviceType === "ivtm") {
+        payload = await fetchIvtmStateRaw(monitoringPostId, rawDrilldown.start, rawDrilldown.end);
+      } else {
+        payload = { series: [] };
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      if (selectedDeviceType === "dust") {
+        setRawSeries(
+          DUST_METRIC_KEYS.map((key) => {
+            const item = (payload.series || []).find((candidate) => candidate.key === key);
+            return item ? { key: item.key, label: getMetricLabel(item.key), points: item.points || [] } : null;
+          }).filter(Boolean)
+        );
+        return;
+      }
+
+      if (selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY) {
+        const speed = (payload.series || []).find((item) => isWindSpeedSeries(item));
+        const direction = (payload.series || []).find((item) => isWindDirectionSeries(item));
+        setRawSeries(
+          [
+            speed
+              ? { key: speed.key, label: "Скорость ветра", points: speed.points || [], yAxisIndex: 0 }
+              : null,
+            direction
+              ? { key: direction.key, label: "Направление ветра", points: direction.points || [], yAxisIndex: 1 }
+              : null,
+          ].filter(Boolean)
+        );
+        return;
+      }
+
+      if (!selectedMetricKey || selectedMetricKey === METEO_WIND_KEY) {
+        setRawSeries([]);
+        return;
+      }
+
+      const item = (payload.series || []).find((candidate) => candidate.key === selectedMetricKey);
+      setRawSeries(item ? [{ key: item.key, label: getMetricLabel(item.key), points: item.points || [] }] : []);
+    };
+
+    loadRaw()
+      .catch((error) => {
+        if (!cancelled) {
+          setRawErrorText(error instanceof Error ? error.message : "Не удалось загрузить сырые данные");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsRawLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    monitoringPostId,
+    rawDrilldown,
+    refreshCounter,
+    isAuthenticated,
+    selectedDeviceType,
+    selectedGasSubstance,
+    selectedMetricKey,
+  ]);
 
   const availableProfilePeriods = useMemo(
     () => profileRecords.filter(hasProfileTemperatureData).map((profile) => getProfilePeriodValue(profile, viewMode)),
@@ -561,10 +738,33 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
   }, []);
 
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
+  const canOpenRawDrilldown = isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";
   const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
   const maxDateInputValue = viewMode === "month" ? toIsoMonth(new Date()) : toIsoDay(new Date());
   const isNextPeriodDisabled = dateInputValue >= maxDateInputValue;
+
+  const aggregateChartEvents = useMemo(
+    () => ({
+      click: (params) => {
+        if (!canOpenRawDrilldown) {
+          return;
+        }
+        const hour = axis.values[params.dataIndex];
+        if (!Number.isInteger(hour)) {
+          return;
+        }
+        const bounds = getHourBounds(day, hour);
+        setRawDrilldown({
+          hour,
+          start: bounds.startParam,
+          end: bounds.endParam,
+          label: formatHourInterval(hour),
+        });
+      },
+    }),
+    [axis.values, canOpenRawDrilldown, day]
+  );
 
   const shiftPeriod = (delta) => {
     if (viewMode === "month") {
@@ -653,68 +853,90 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
             </div>
           </div>
 
-          <div className="readings-toolbar readings-period-toolbar">
-            <div className="period-controls">
-              <div className="period-switcher">
-                <button
-                  type="button"
-                  className={`period-tab${viewMode === "day" ? " period-tab-active" : ""}`}
-                  onClick={() => setViewMode("day")}
-                >
-                  День
-                </button>
-                <button
-                  type="button"
-                  className={`period-tab${viewMode === "month" ? " period-tab-active" : ""}`}
-                  onClick={() => setViewMode("month")}
-                >
-                  Месяц
-                </button>
+          {!rawDrilldown && (
+            <>
+              <div className="readings-toolbar readings-period-toolbar">
+                <div className="period-controls">
+                  <div className="period-switcher">
+                    <button
+                      type="button"
+                      className={`period-tab${viewMode === "day" ? " period-tab-active" : ""}`}
+                      onClick={() => setViewMode("day")}
+                    >
+                      День
+                    </button>
+                    <button
+                      type="button"
+                      className={`period-tab${viewMode === "month" ? " period-tab-active" : ""}`}
+                      onClick={() => setViewMode("month")}
+                    >
+                      Месяц
+                    </button>
+                  </div>
+                  <div className="day-switcher">
+                    <button type="button" onClick={() => shiftPeriod(-1)}>
+                      <ChevronLeft size={16} aria-hidden="true" />
+                    </button>
+                    <input
+                      type={dateInputType}
+                      value={dateInputValue}
+                      max={maxDateInputValue}
+                      onChange={(event) => handleDateInputChange(event.target.value)}
+                    />
+                    <button type="button" disabled={isNextPeriodDisabled} onClick={() => shiftPeriod(1)}>
+                      <ChevronRight size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="day-switcher">
-                <button type="button" onClick={() => shiftPeriod(-1)}>
-                  <ChevronLeft size={16} aria-hidden="true" />
-                </button>
-                <input
-                  type={dateInputType}
-                  value={dateInputValue}
-                  max={maxDateInputValue}
-                  onChange={(event) => handleDateInputChange(event.target.value)}
-                />
-                <button type="button" disabled={isNextPeriodDisabled} onClick={() => shiftPeriod(1)}>
-                  <ChevronRight size={16} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {selectedDeviceType === "gas" && (
-            <div className="gas-tabs">
-              {availableGasSubstanceCodes.map((substanceCode) => (
-                <button
-                  key={substanceCode}
-                  type="button"
-                  className={`gas-tab${selectedGasSubstance === substanceCode ? " gas-tab-active" : ""}`}
-                  onClick={() => setSelectedGasSubstance(substanceCode)}
-                >
-                  {substanceCode}
-                </button>
-              ))}
-            </div>
+              {selectedDeviceType === "gas" && (
+                <div className="gas-tabs">
+                  {availableGasSubstanceCodes.map((substanceCode) => (
+                    <button
+                      key={substanceCode}
+                      type="button"
+                      className={`gas-tab${selectedGasSubstance === substanceCode ? " gas-tab-active" : ""}`}
+                      onClick={() => setSelectedGasSubstance(substanceCode)}
+                    >
+                      {substanceCode}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {selectedDeviceType !== "gas" && metricTabs.length > 1 && (
+                <div className="metric-tabs">
+                  {metricTabs.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={`metric-tab${selectedMetricKey === item.key ? " metric-tab-active" : ""}`}
+                      onClick={() => setSelectedMetricKey(item.key)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          {selectedDeviceType !== "gas" && metricTabs.length > 1 && (
-            <div className="metric-tabs">
-              {metricTabs.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={`metric-tab${selectedMetricKey === item.key ? " metric-tab-active" : ""}`}
-                  onClick={() => setSelectedMetricKey(item.key)}
-                >
-                  {item.label}
-                </button>
-              ))}
+          {rawDrilldown && (
+            <div className="chart-drilldown-bar">
+              <button
+                type="button"
+                className="chart-drilldown-back"
+                onClick={() => {
+                  setRawDrilldown(null);
+                  setRawSeries([]);
+                  setRawErrorText("");
+                }}
+              >
+                <ChevronLeft size={16} aria-hidden="true" />
+                К суткам
+              </button>
+              <span className="chart-drilldown-label">Сырые данные: {rawDrilldown.label}</span>
             </div>
           )}
 
@@ -722,7 +944,29 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
           {!isLoading &&
             !errorText &&
-            (selectedDeviceType === "profile" ? (
+            (rawDrilldown ? (
+              isRawLoading ? (
+                <p className="station-card-hint">Загрузка сырых данных...</p>
+              ) : rawErrorText ? (
+                <p className="station-card-error">{rawErrorText}</p>
+              ) : selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY ? (
+                <WindCompassStrip
+                  directionPoints={rawWindDirectionSeries?.points ?? []}
+                  speedPoints={rawWindSpeedSeries?.points ?? []}
+                  xKey="timestamp"
+                  xValues={rawWindTimestamps}
+                  labelFormatter={formatTimeOfDay}
+                  emptyText="Нет сырых данных за выбранный час."
+                />
+              ) : (
+                <TimeLineChart
+                  series={rawSeries}
+                  start={rawDrilldown.start}
+                  end={rawDrilldown.end}
+                  emptyText="Нет сырых данных за выбранный час."
+                />
+              )
+            ) : selectedDeviceType === "profile" ? (
               profileViewMode === "heatmap" ? (
                 <ProfileTemperatureChart
                   profiles={profileRecords}
@@ -753,6 +997,22 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                 xKey={axis.key}
                 xValues={axis.values}
                 labelFormatter={axis.windLabelFormatter}
+                onItemClick={
+                  canOpenRawDrilldown
+                    ? (hour) => {
+                        if (!Number.isInteger(hour)) {
+                          return;
+                        }
+                        const bounds = getHourBounds(day, hour);
+                        setRawDrilldown({
+                          hour,
+                          start: bounds.startParam,
+                          end: bounds.endParam,
+                          label: formatHourInterval(hour),
+                        });
+                      }
+                    : undefined
+                }
                 emptyText={axis.emptyText}
               />
             ) : (
@@ -761,9 +1021,15 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
                 xKey={axis.key}
                 xValues={axis.values}
                 xLabels={axis.labels}
+                onEvents={canOpenRawDrilldown ? aggregateChartEvents : undefined}
                 emptyText={axis.emptyText}
               />
             ))}
+          {!isLoading && !errorText && !rawDrilldown && canOpenRawDrilldown && (
+            <div className="chart-raw-access-note">
+              Для просмотра сырых измерений за час, нажмите на нужное значение.
+            </div>
+          )}
         </>
       )}
     </aside>

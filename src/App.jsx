@@ -876,6 +876,7 @@ export default function App() {
         <SensorReadingsCard
           monitoringPostId={selectedMonitoringPostId}
           selectedDeviceType={selectedDeviceType}
+          isAuthenticated={isAuthenticated}
           onClose={() => setIsReadingsCardOpen(false)}
         />
       )}

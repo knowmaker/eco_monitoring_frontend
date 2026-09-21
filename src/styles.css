@@ -1274,6 +1274,51 @@ input:focus-visible {
   margin-top: 8px;
 }
 
+.chart-drilldown-bar {
+  display: flex;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 7px;
+  padding-top: 6px;
+  margin-bottom: 8px;
+  color: var(--muted-strong);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.chart-drilldown-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 10px 0 8px;
+  color: var(--accent-strong);
+  border: 1px solid rgba(20, 122, 99, 0.32);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.chart-drilldown-back:hover {
+  border-color: rgba(20, 122, 99, 0.48);
+  background: rgba(20, 122, 99, 0.12);
+}
+
+.chart-drilldown-label {
+  line-height: 1.25;
+}
+
+.chart-raw-access-note {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .chart-echarts {
   width: 100%;
   height: 300px;
@@ -1350,10 +1395,20 @@ input:focus-visible {
 .wind-strip-cell {
   min-width: 62px;
   padding: 6px 6px 7px;
+  color: inherit;
+  font: inherit;
   text-align: center;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #ffffff;
+}
+
+.wind-strip-cell-clickable {
+  cursor: pointer;
+}
+
+.wind-strip-cell-clickable:hover {
+  border-color: rgba(20, 122, 99, 0.36);
 }
 
 .wind-strip-hour {

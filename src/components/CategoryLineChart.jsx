@@ -47,6 +47,7 @@ export default function CategoryLineChart({
   xKey = "hour",
   xValues,
   xLabels,
+  onEvents,
   emptyText = "Нет данных за выбранный период.",
 }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
@@ -66,6 +67,8 @@ export default function CategoryLineChart({
         name: item.label,
         smooth: true,
         connectNulls: false,
+        cursor: onEvents?.click ? "pointer" : "default",
+        triggerLineEvent: Boolean(onEvents?.click),
         symbol: "circle",
         symbolSize: 6,
         showSymbol: true,
@@ -140,7 +143,7 @@ export default function CategoryLineChart({
       },
       series: preparedSeries,
     };
-  }, [series, hasValues, xKey, xValues, xLabels]);
+  }, [series, hasValues, xKey, xValues, xLabels, onEvents]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;
@@ -148,7 +151,7 @@ export default function CategoryLineChart({
 
   return (
     <div className="chart-wrap">
-      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" />
+      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" onEvents={onEvents} />
     </div>
   );
 }

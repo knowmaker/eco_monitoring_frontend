@@ -37,6 +37,7 @@ export default function WindCompassStrip({
   xKey = "hour",
   xValues,
   labelFormatter,
+  onItemClick,
   emptyText = "Нет данных за выбранный период.",
 }) {
   const directionByAxisValue = useMemo(
@@ -74,6 +75,7 @@ export default function WindCompassStrip({
 
   const maxSpeed = items.reduce((max, item) => (item.speed !== null && item.speed > max ? item.speed : max), 0);
   const hasValues = items.some((item) => item.direction !== null || item.speed !== null);
+  const isClickable = Boolean(onItemClick);
 
   if (!hasValues) {
     return <div className="chart-empty">{emptyText}</div>;
@@ -82,8 +84,16 @@ export default function WindCompassStrip({
   return (
     <div className="wind-strip-wrap">
       <div className="wind-strip">
-        {items.map((item) => (
-          <div className="wind-strip-cell" key={item.axisValue}>
+        {items.map((item) => {
+          const isItemClickable = isClickable && (item.direction !== null || item.speed !== null);
+          const CellTag = isItemClickable ? "button" : "div";
+          return (
+          <CellTag
+            className={`wind-strip-cell${isItemClickable ? " wind-strip-cell-clickable" : ""}`}
+            key={item.axisValue}
+            type={isItemClickable ? "button" : undefined}
+            onClick={isItemClickable ? () => onItemClick(item.axisValue) : undefined}
+          >
             <div className="wind-strip-hour">{item.label}</div>
             <div className="wind-strip-arrow-box">
               {item.direction === null ? (
@@ -106,8 +116,9 @@ export default function WindCompassStrip({
               />
             </div>
             <div className="wind-strip-speed-value">{item.speedText}</div>
-          </div>
-        ))}
+          </CellTag>
+          );
+        })}
       </div>
     </div>
   );
