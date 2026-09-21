@@ -856,6 +856,7 @@ export default function SensorReadingsCard({ monitoringPostId, selectedDeviceTyp
           {!rawDrilldown && (
             <>
               <div className="readings-toolbar readings-period-toolbar">
+                <div className="readings-period-label">Период агрегации</div>
                 <div className="period-controls">
                   <div className="period-switcher">
                     <button
