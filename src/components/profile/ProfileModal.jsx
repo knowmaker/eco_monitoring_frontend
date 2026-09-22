@@ -9,7 +9,11 @@ const emptyProfile = {
   middle_name: "",
 };
 
-export default function ProfileModal({ onClose }) {
+export default function ProfileModal({
+  onClose,
+  isGasValueCorrectionDisabled = false,
+  onGasValueCorrectionDisabledChange,
+}) {
   const [profile, setProfile] = useState(emptyProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -50,6 +54,10 @@ export default function ProfileModal({ onClose }) {
 
   const handleChange = (field) => (event) => {
     setProfile((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const handleGasValueCorrectionChange = (event) => {
+    onGasValueCorrectionDisabledChange?.(event.target.checked);
   };
 
   const handleSubmit = async (event) => {
@@ -119,6 +127,18 @@ export default function ProfileModal({ onClose }) {
               disabled={isLoading}
             />
           </label>
+
+          <label className="profile-setting-checkbox">
+            <input
+              type="checkbox"
+              checked={isGasValueCorrectionDisabled}
+              onChange={handleGasValueCorrectionChange}
+            />
+            <span>Отключить коррекцию значений газа по модулю</span>
+          </label>
+          <div className="profile-setting-hint">
+            По умолчанию значения газа на графиках и панелях показываются по модулю.
+          </div>
 
           {errorText ? <div className="form-message form-message-error">{errorText}</div> : null}
           {successText ? <div className="form-message form-message-success">{successText}</div> : null}

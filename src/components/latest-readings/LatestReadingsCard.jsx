@@ -2,7 +2,11 @@ import { DEVICE_TYPE_ORDER } from "../../domain/devices";
 import { renderLatestDeviceBlock } from "./LatestDeviceBlocks";
 import useLatestReadings from "./useLatestReadings";
 
-export default function LatestReadingsCard({ monitoringPostId, refreshCounter = 0 }) {
+export default function LatestReadingsCard({
+  monitoringPostId,
+  refreshCounter = 0,
+  useGasAbsoluteValues = true,
+}) {
   const {
     latestReadings,
     isLoadingLatest,
@@ -19,7 +23,9 @@ export default function LatestReadingsCard({ monitoringPostId, refreshCounter = 
       {!isLoadingLatest && latestErrorText && <p className="station-card-error">{latestErrorText}</p>}
       {!isLoadingLatest && !latestErrorText && latestReadings?.bucket_ms !== null && latestReadings && (
         <div className="latest-readings-grid">
-          {DEVICE_TYPE_ORDER.map((deviceType) => renderLatestDeviceBlock(deviceType, latestReadings))}
+          {DEVICE_TYPE_ORDER.map((deviceType) =>
+            renderLatestDeviceBlock(deviceType, latestReadings, { useGasAbsoluteValues })
+          )}
         </div>
       )}
     </section>

@@ -32,7 +32,13 @@ import TimeLineChart from "../charts/TimeLineChart";
 import WindCompassStrip from "../charts/WindCompassStrip";
 import XYLineChart from "../charts/XYLineChart";
 
-export default function ReadingsHistoryPanel({ monitoringPostId, selectedDeviceType, isAuthenticated = false, onClose }) {
+export default function ReadingsHistoryPanel({
+  monitoringPostId,
+  selectedDeviceType,
+  isAuthenticated = false,
+  useGasAbsoluteValues = true,
+  onClose,
+}) {
   const [viewMode, setViewMode] = useState("day");
   const [profileViewMode, setProfileViewMode] = useState("line");
   const [selectedProfilePeriod, setSelectedProfilePeriod] = useState(0);
@@ -62,6 +68,7 @@ export default function ReadingsHistoryPanel({ monitoringPostId, selectedDeviceT
     viewMode,
     refreshCounter,
     axis,
+    useGasAbsoluteValues,
   });
 
   const meteoWindDirectionSeries = useMemo(
@@ -93,6 +100,7 @@ export default function ReadingsHistoryPanel({ monitoringPostId, selectedDeviceT
     day,
     month,
     viewMode,
+    useGasAbsoluteValues,
   });
 
   const {

@@ -16,6 +16,7 @@ export default function StationDetails({
   isLoadingDetails,
   detailsError,
   refreshCounter,
+  useGasAbsoluteValues = true,
   onOpenRawPackets,
   onSelectDeviceType,
 }) {
@@ -55,7 +56,11 @@ export default function StationDetails({
           <span>Сырые пакеты данных с брокера</span>
         </button>
       )}
-      <LatestReadingsCard monitoringPostId={selectedMonitoringPostId} refreshCounter={refreshCounter} />
+      <LatestReadingsCard
+        monitoringPostId={selectedMonitoringPostId}
+        refreshCounter={refreshCounter}
+        useGasAbsoluteValues={useGasAbsoluteValues}
+      />
 
       {isLoadingDetails && <p className="station-card-hint">Загрузка данных станции...</p>}
       {!isLoadingDetails && detailsError && <p className="station-card-error">{detailsError}</p>}

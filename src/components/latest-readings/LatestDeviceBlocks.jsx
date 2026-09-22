@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { DEVICE_TYPE_LABELS, GAS_SUBSTANCE_ORDER } from "../../domain/devices";
+import { applyGasValueCorrection } from "../../lib/gasValues";
 import LatestDeviceHeader from "./LatestDeviceHeader";
 import LatestMetric from "./LatestMetric";
 import { formatLatestValue, formatWindValue } from "./latestReadingsFormatters";
@@ -61,7 +62,7 @@ function LatestProfileDeviceBlock({ device }) {
   );
 }
 
-function LatestGasDeviceBlock({ device }) {
+function LatestGasDeviceBlock({ device, useGasAbsoluteValues = true }) {
   return (
     <div className="latest-device-block">
       <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} bucketMs={device.bucket_ms} />
@@ -74,7 +75,7 @@ function LatestGasDeviceBlock({ device }) {
             <LatestMetric
               key={item.substance_code}
               label={item.substance_code}
-              value={item.value}
+              value={applyGasValueCorrection(item.value, useGasAbsoluteValues)}
               precision={2}
               limit={item.limit}
             />
@@ -132,7 +133,7 @@ const DEVICE_BLOCKS = {
   profile: LatestProfileDeviceBlock,
 };
 
-export function renderLatestDeviceBlock(deviceType, latestReadings) {
+export function renderLatestDeviceBlock(deviceType, latestReadings, options = {}) {
   const device = latestReadings?.[deviceType];
   const DeviceBlock = DEVICE_BLOCKS[deviceType];
 
@@ -140,5 +141,11 @@ export function renderLatestDeviceBlock(deviceType, latestReadings) {
     return null;
   }
 
-  return <DeviceBlock key={deviceType} device={device} />;
+  return (
+    <DeviceBlock
+      key={deviceType}
+      device={device}
+      useGasAbsoluteValues={options.useGasAbsoluteValues}
+    />
+  );
 }

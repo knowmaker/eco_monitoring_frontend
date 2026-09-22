@@ -12,6 +12,7 @@ import useMonitoringPosts from "./hooks/useMonitoringPosts";
 import useResponsiveViewport from "./hooks/useResponsiveViewport";
 import useStationDevices from "./hooks/useStationDevices";
 import { updateMonitoringPost } from "./api";
+import { GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY } from "./lib/gasValues";
 
 const ProfileModal = lazy(() => import("./components/profile/ProfileModal"));
 const RawMqttPayloadPanel = lazy(() => import("./components/raw-mqtt/RawMqttPayloadPanel"));
@@ -61,6 +62,9 @@ export default function App() {
 
   const [modalMode, setModalMode] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isGasValueCorrectionDisabled, setIsGasValueCorrectionDisabled] = useState(
+    () => localStorage.getItem(GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY) === "true"
+  );
   const { isAuthenticated, isAdmin, applyAuthSuccess, clearAuth } = useAuthState();
   const isMobileViewport = useResponsiveViewport(MOBILE_VIEWPORT_QUERY);
   const { monitoringPosts, loadError, isLoadingPosts } = useMonitoringPosts({
@@ -89,6 +93,7 @@ export default function App() {
     return `Станций на карте: ${monitoringPosts.length}`;
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
   const statusKind = loadError ? "error" : isLoadingPosts ? "loading" : "ready";
+  const useGasAbsoluteValues = !isAuthenticated || !isGasValueCorrectionDisabled;
 
   const stationPanelPosts = isAdmin ? adminMonitoringPosts : monitoringPosts;
   const knownMonitoringPosts = isAdmin && adminMonitoringPosts.length ? adminMonitoringPosts : monitoringPosts;
@@ -142,6 +147,15 @@ export default function App() {
     setStationCardSource(null);
     setIsRawPacketsOpen(false);
     setStationForm(createEmptyStationForm());
+  };
+
+  const handleGasValueCorrectionDisabledChange = (isDisabled) => {
+    setIsGasValueCorrectionDisabled(isDisabled);
+    if (isDisabled) {
+      localStorage.setItem(GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY, "true");
+    } else {
+      localStorage.removeItem(GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY);
+    }
   };
 
   const handleSelectMonitoringPost = (post) => {
@@ -294,6 +308,7 @@ export default function App() {
             isLoadingDetails={isLoadingDetails}
             detailsError={detailsError}
             refreshCounter={stationDetailsRefreshCounter}
+            useGasAbsoluteValues={useGasAbsoluteValues}
             onOpenRawPackets={() => {
               setIsRawPacketsOpen(true);
               setIsReadingsCardOpen(false);
@@ -322,6 +337,7 @@ export default function App() {
             monitoringPostId={selectedMonitoringPostId}
             selectedDeviceType={selectedDeviceType}
             isAuthenticated={isAuthenticated}
+            useGasAbsoluteValues={useGasAbsoluteValues}
             onClose={() => setIsReadingsCardOpen(false)}
           />
         </Suspense>
@@ -347,7 +363,11 @@ export default function App() {
       )}
       {isAuthenticated && isProfileModalOpen && (
         <Suspense fallback={null}>
-          <ProfileModal onClose={() => setIsProfileModalOpen(false)} />
+          <ProfileModal
+            isGasValueCorrectionDisabled={isGasValueCorrectionDisabled}
+            onGasValueCorrectionDisabledChange={handleGasValueCorrectionDisabledChange}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
         </Suspense>
       )}
     </div>

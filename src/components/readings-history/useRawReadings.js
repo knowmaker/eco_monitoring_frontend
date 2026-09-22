@@ -7,6 +7,7 @@ import {
   fetchIvtmStateRaw,
   fetchMeteoStateRaw,
 } from "../../api";
+import { applyGasPointValueCorrection } from "../../lib/gasValues";
 import { isWindDirectionSeries, isWindSpeedSeries } from "./readingsUtils";
 
 export default function useRawReadings({
@@ -20,6 +21,7 @@ export default function useRawReadings({
   day,
   month,
   viewMode,
+  useGasAbsoluteValues = true,
 }) {
   const [rawSeries, setRawSeries] = useState([]);
   const [isRawLoading, setIsRawLoading] = useState(false);
@@ -50,7 +52,13 @@ export default function useRawReadings({
         const substance = (payload.substances || []).find((item) => item.substance_code === selectedGasSubstance);
         setRawSeries(
           substance
-            ? [{ key: selectedGasSubstance, label: selectedGasSubstance, points: substance.points || [] }]
+            ? [
+                {
+                  key: selectedGasSubstance,
+                  label: selectedGasSubstance,
+                  points: applyGasPointValueCorrection(substance.points || [], useGasAbsoluteValues),
+                },
+              ]
             : []
         );
         return;
@@ -127,6 +135,7 @@ export default function useRawReadings({
     selectedDeviceType,
     selectedGasSubstance,
     selectedMetricKey,
+    useGasAbsoluteValues,
   ]);
 
   const rawWindDirectionSeries = useMemo(

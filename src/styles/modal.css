@@ -54,6 +54,33 @@
   border-color: rgba(20, 122, 99, 0.42);
 }
 
+.modal-card .profile-setting-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.modal-card .profile-setting-checkbox input {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.profile-setting-hint {
+  margin-top: -6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .modal-submit {
   width: 100%;
   margin-top: 2px;

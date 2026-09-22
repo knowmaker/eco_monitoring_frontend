@@ -19,6 +19,7 @@ import {
   fetchProfileStateHourly,
   fetchProfileStateMonthly,
 } from "../../api";
+import { applyGasPointValueCorrection } from "../../lib/gasValues";
 import { createEmptyPoints } from "./readingsUtils";
 
 export default function useReadingsData({
@@ -29,6 +30,7 @@ export default function useReadingsData({
   viewMode,
   refreshCounter,
   axis,
+  useGasAbsoluteValues = true,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
@@ -190,7 +192,10 @@ export default function useReadingsData({
         {
           key: selectedGasSubstance,
           label: selectedGasSubstance,
-          points: substance?.points || createEmptyPoints(axis.values, axis.key),
+          points: applyGasPointValueCorrection(
+            substance?.points || createEmptyPoints(axis.values, axis.key),
+            useGasAbsoluteValues
+          ),
         },
       ];
     }
@@ -223,7 +228,15 @@ export default function useReadingsData({
         points: selectedSeries?.points || createEmptyPoints(axis.values, axis.key),
       },
     ];
-  }, [selectedDeviceType, selectedGasSubstance, gasSubstances, selectedMetricKey, series, axis]);
+  }, [
+    selectedDeviceType,
+    selectedGasSubstance,
+    gasSubstances,
+    selectedMetricKey,
+    series,
+    axis,
+    useGasAbsoluteValues,
+  ]);
 
   return {
     isLoading,
