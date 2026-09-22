@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Save, User, X } from "lucide-react";
 
-import { fetchCurrentUserProfile, updateCurrentUserProfile } from "../lib/api";
+import { fetchCurrentUserProfile, updateCurrentUserProfile } from "../../api";
 
 const emptyProfile = {
   last_name: "",

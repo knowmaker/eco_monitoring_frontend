@@ -1,7 +1,20 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-const PALETTE = ["#16856d", "#4f6db8", "#d4872d", "#8b5fbf", "#c5536f", "#2f8aa6"];
+import {
+  formatAxisValue,
+  formatDayAxisLabel,
+  formatHourIntervalAxisLabel,
+  normalizeChartValue,
+} from "./chartFormatters";
+import {
+  AXIS_TEXT_COLOR,
+  CHART_PALETTE,
+  GRID_LINE_STYLE,
+  TOOLTIP_BACKGROUND_COLOR,
+  TOOLTIP_BORDER_COLOR,
+  TOOLTIP_TEXT_STYLE,
+} from "./chartTheme";
 
 function hasNumericValues(series) {
   return Boolean(
@@ -9,37 +22,6 @@ function hasNumericValues(series) {
       (item.points || []).some((point) => Number.isFinite(point.value))
     )
   );
-}
-
-function formatAxisValue(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return "";
-  }
-  const abs = Math.abs(number);
-  if (abs > 0 && abs < 0.01) {
-    return number.toFixed(4);
-  }
-  if (abs > 0 && abs < 1) {
-    return number.toFixed(3);
-  }
-  return number.toFixed(2);
-}
-
-function normalizeChartValue(value) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const number = Number(value);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
-}
-
-function formatHourIntervalAxisLabel(value) {
-  return String(value).replace("-", "-\n");
-}
-
-function formatDayAxisLabel(value) {
-  return String(value).replace(" число", "");
 }
 
 export default function CategoryLineChart({
@@ -74,10 +56,10 @@ export default function CategoryLineChart({
         showSymbol: true,
         lineStyle: {
           width: 2.4,
-          color: PALETTE[index % PALETTE.length],
+          color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
         itemStyle: {
-          color: PALETTE[index % PALETTE.length],
+          color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
         data: axisValues.map((axisValue) => {
           const value = byAxisValue.get(axisValue);
@@ -97,14 +79,14 @@ export default function CategoryLineChart({
       },
       tooltip: {
         trigger: "axis",
-        backgroundColor: "rgba(255, 255, 255, 0.98)",
-        borderColor: "rgba(15, 23, 42, 0.14)",
-        textStyle: { color: "#172033" },
+        backgroundColor: TOOLTIP_BACKGROUND_COLOR,
+        borderColor: TOOLTIP_BORDER_COLOR,
+        textStyle: TOOLTIP_TEXT_STYLE,
       },
       legend: {
         top: 0,
         right: 10,
-        textStyle: { color: "#647184", fontSize: 11 },
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 11 },
       },
       xAxis: {
         type: "category",
@@ -112,7 +94,7 @@ export default function CategoryLineChart({
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#647184",
+          color: AXIS_TEXT_COLOR,
           interval: xKey === "day" ? 1 : 2,
           formatter:
             xKey === "hour" ? formatHourIntervalAxisLabel : xKey === "day" ? formatDayAxisLabel : undefined,
@@ -121,8 +103,7 @@ export default function CategoryLineChart({
           show: true,
           interval: 0,
           lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
+            ...GRID_LINE_STYLE,
           },
         },
       },
@@ -131,13 +112,12 @@ export default function CategoryLineChart({
         scale: true,
         splitLine: {
           lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
+            ...GRID_LINE_STYLE,
           },
         },
         axisLine: { show: false },
         axisLabel: {
-          color: "#647184",
+          color: AXIS_TEXT_COLOR,
           formatter: formatAxisValue,
         },
       },

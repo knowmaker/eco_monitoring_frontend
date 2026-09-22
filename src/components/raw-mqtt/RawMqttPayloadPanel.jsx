@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 
-import { fetchRawMqttPayload } from "../lib/api";
+import { fetchRawMqttPayload } from "../../api";
 
 function toIsoDay(day) {
   const date = day instanceof Date ? day : new Date(day);
@@ -49,7 +49,7 @@ function formatPacketTime(packet) {
   }).format(new Date(timestamp));
 }
 
-export default function RawMqttPayloadCard({ monitoringPostId, onClose }) {
+export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
   const [day, setDay] = useState(new Date());
   const [limit, setLimit] = useState(25);
   const [refreshCounter, setRefreshCounter] = useState(0);

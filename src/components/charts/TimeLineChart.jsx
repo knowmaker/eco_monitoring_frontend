@@ -1,7 +1,15 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-const PALETTE = ["#16856d", "#4f6db8", "#d4872d", "#8b5fbf", "#c5536f", "#2f8aa6"];
+import { formatAxisValue, normalizeChartValue } from "./chartFormatters";
+import {
+  AXIS_TEXT_COLOR,
+  CHART_PALETTE,
+  GRID_LINE_STYLE,
+  TOOLTIP_BACKGROUND_COLOR,
+  TOOLTIP_BORDER_COLOR,
+  TOOLTIP_TEXT_STYLE,
+} from "./chartTheme";
 
 function hasNumericValues(series) {
   return Boolean(
@@ -9,29 +17,6 @@ function hasNumericValues(series) {
       (item.points || []).some((point) => Number.isFinite(Number(point.value)) && point.timestamp)
     )
   );
-}
-
-function normalizeChartValue(value) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const number = Number(value);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
-}
-
-function formatAxisValue(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return "";
-  }
-  const abs = Math.abs(number);
-  if (abs > 0 && abs < 0.01) {
-    return number.toFixed(4);
-  }
-  if (abs > 0 && abs < 1) {
-    return number.toFixed(3);
-  }
-  return number.toFixed(2);
 }
 
 function formatTimeLabel(value, { withSeconds = false } = {}) {
@@ -65,14 +50,13 @@ function createYAxis({ position = "left", showSplitLine = true } = {}) {
     splitLine: showSplitLine
       ? {
           lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
+            ...GRID_LINE_STYLE,
           },
         }
       : { show: false },
     axisLine: { show: false },
     axisLabel: {
-      color: "#647184",
+      color: AXIS_TEXT_COLOR,
       formatter: formatAxisValue,
     },
   };
@@ -104,9 +88,9 @@ export default function TimeLineChart({
       },
       tooltip: {
         trigger: "axis",
-        backgroundColor: "rgba(255, 255, 255, 0.98)",
-        borderColor: "rgba(15, 23, 42, 0.14)",
-        textStyle: { color: "#172033" },
+        backgroundColor: TOOLTIP_BACKGROUND_COLOR,
+        borderColor: TOOLTIP_BORDER_COLOR,
+        textStyle: TOOLTIP_TEXT_STYLE,
         formatter: (params) => {
           const items = Array.isArray(params) ? params : [params];
           return [
@@ -121,7 +105,7 @@ export default function TimeLineChart({
       legend: {
         top: 0,
         right: 10,
-        textStyle: { color: "#647184", fontSize: 11 },
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 11 },
       },
       xAxis: {
         type: "time",
@@ -131,15 +115,14 @@ export default function TimeLineChart({
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#647184",
+          color: AXIS_TEXT_COLOR,
           showMaxLabel: true,
           formatter: formatTimeLabel,
         },
         splitLine: {
           show: true,
           lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
+            ...GRID_LINE_STYLE,
           },
         },
       },
@@ -157,10 +140,10 @@ export default function TimeLineChart({
         showSymbol: true,
         lineStyle: {
           width: 2.4,
-          color: PALETTE[index % PALETTE.length],
+          color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
         itemStyle: {
-          color: PALETTE[index % PALETTE.length],
+          color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
         data: (item.points || [])
           .filter((point) => point.timestamp && Number.isFinite(Number(point.value)))

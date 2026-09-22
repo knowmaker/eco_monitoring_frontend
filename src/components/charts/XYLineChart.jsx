@@ -1,12 +1,15 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-const DEFAULT_COLOR = "#16856d";
-const AXIS_TEXT_COLOR = "#647184";
-const GRID_LINE_STYLE = {
-  color: "rgba(15, 23, 42, 0.08)",
-  type: "dashed",
-};
+import { normalizeChartValue } from "./chartFormatters";
+import {
+  AXIS_TEXT_COLOR,
+  DEFAULT_CHART_COLOR,
+  GRID_LINE_STYLE,
+  TOOLTIP_BACKGROUND_COLOR,
+  TOOLTIP_BORDER_COLOR,
+  TOOLTIP_TEXT_STYLE,
+} from "./chartTheme";
 
 function hasNumericValues(series, xKey, yKey) {
   return Boolean(
@@ -14,14 +17,6 @@ function hasNumericValues(series, xKey, yKey) {
       (item.points || []).some((point) => Number.isFinite(Number(point[xKey])) && Number.isFinite(Number(point[yKey])))
     )
   );
-}
-
-function normalizeChartValue(value) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const number = Number(value);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
 }
 
 export default function XYLineChart({
@@ -59,9 +54,9 @@ export default function XYLineChart({
       },
       tooltip: {
         trigger: "item",
-        backgroundColor: "rgba(255, 255, 255, 0.98)",
-        borderColor: "rgba(15, 23, 42, 0.14)",
-        textStyle: { color: "#172033" },
+        backgroundColor: TOOLTIP_BACKGROUND_COLOR,
+        borderColor: TOOLTIP_BORDER_COLOR,
+        textStyle: TOOLTIP_TEXT_STYLE,
         formatter: tooltipFormatter,
       },
       legend: showLegend
@@ -115,7 +110,7 @@ export default function XYLineChart({
         },
       },
       series: series.map((item) => {
-        const color = item.color || DEFAULT_COLOR;
+        const color = item.color || DEFAULT_CHART_COLOR;
         return {
           type: "line",
           id: String(item.key),

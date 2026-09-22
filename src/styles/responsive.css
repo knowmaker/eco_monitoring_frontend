@@ -1,0 +1,166 @@
+﻿@media (max-width: 760px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 3px;
+    padding: 10px;
+  }
+
+  .brand-block {
+    display: contents;
+  }
+
+  .brand-logo {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .brand-block h1 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    font-size: 0.94rem;
+  }
+
+  .topbar-actions {
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .topbar-actions button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    flex: 0 0 34px;
+    padding: 0;
+  }
+
+  .topbar-actions .btn-label {
+    display: none;
+  }
+
+  .topbar-status {
+    grid-column: 2;
+    grid-row: 2;
+    width: auto;
+    justify-self: start;
+    justify-content: flex-start;
+    gap: 5px;
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+  }
+
+  .topbar-status svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .side-menu {
+    top: 82px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 3px 22px 8px 0;
+    scroll-snap-type: x proximity;
+    scrollbar-color: rgba(20, 122, 99, 0.42) rgba(255, 255, 255, 0.72);
+    scrollbar-width: thin;
+  }
+
+  .side-menu::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .side-menu::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .side-menu::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(20, 122, 99, 0.42);
+  }
+
+  .side-menu-button {
+    width: auto;
+    min-width: max-content;
+    height: 40px;
+    min-height: 40px;
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    font-size: 0.72rem;
+    scroll-snap-align: start;
+  }
+
+  .side-menu-collapsed {
+    width: auto;
+  }
+
+  .side-menu-collapsed .side-menu-button {
+    width: auto;
+    min-width: max-content;
+    height: 40px;
+    min-height: 40px;
+    flex-basis: auto;
+    justify-content: flex-start;
+    padding: 7px 12px;
+  }
+
+  .side-menu-collapsed .side-menu-button span {
+    display: inline;
+  }
+
+  .side-menu-collapsed .side-menu-button-active {
+    color: var(--accent-strong);
+    border-color: #8fcfbd;
+    background: #e4f4ef;
+  }
+
+  .stations-panel {
+    top: 136px;
+    left: 10px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 150px);
+    padding: 10px;
+  }
+
+  .station-card {
+    top: 128px;
+    left: 10px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 150px);
+    padding: 10px;
+  }
+
+  .station-devices-section,
+  .station-raw-action,
+  .readings-card {
+    display: none;
+  }
+
+  .readings-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .period-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .day-switcher input {
+    width: 130px;
+  }
+
+  .latest-readings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

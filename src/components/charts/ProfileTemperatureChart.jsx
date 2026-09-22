@@ -1,29 +1,22 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
+import {
+  formatDayAxisLabel,
+  formatHourInterval,
+  formatHourIntervalAxisLabel,
+  normalizeChartValue,
+} from "./chartFormatters";
+import {
+  AXIS_TEXT_COLOR,
+  GRID_LINE_STYLE,
+  TOOLTIP_BACKGROUND_COLOR,
+  TOOLTIP_BORDER_COLOR,
+  TOOLTIP_TEXT_STYLE,
+} from "./chartTheme";
+
 function formatTemperatureLegendValue(value) {
   return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "";
-}
-
-function normalizeChartValue(value) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const number = Number(value);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
-}
-
-function formatHourInterval(hour) {
-  const startHour = String(hour).padStart(2, "0");
-  return `${startHour}:00-${startHour}:59`;
-}
-
-function formatHourIntervalAxisLabel(value) {
-  return String(value).replace("-", "-\n");
-}
-
-function formatDayAxisLabel(value) {
-  return String(value).replace(" число", "");
 }
 
 export default function ProfileTemperatureChart({ profiles, viewMode, emptyText }) {
@@ -94,9 +87,9 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       },
       tooltip: {
         trigger: "item",
-        backgroundColor: "rgba(255, 255, 255, 0.98)",
-        borderColor: "rgba(15, 23, 42, 0.14)",
-        textStyle: { color: "#172033" },
+        backgroundColor: TOOLTIP_BACKGROUND_COLOR,
+        borderColor: TOOLTIP_BORDER_COLOR,
+        textStyle: TOOLTIP_TEXT_STYLE,
         formatter: (params) => {
           if (params.seriesType !== "heatmap") {
             return "";
@@ -119,7 +112,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         top: 18,
         itemHeight: 190,
         text: [`${formatTemperatureLegendValue(maxTemperature)} °C`, formatTemperatureLegendValue(minTemperature)],
-        textStyle: { color: "#647184", fontSize: 11 },
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 11 },
         inRange: {
           color: ["#1749c8", "#1686d9", "#24c6d8", "#b8ecb4", "#f4de55", "#f49a18", "#cf2f24"],
         },
@@ -130,7 +123,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#647184",
+          color: AXIS_TEXT_COLOR,
           interval: viewMode === "month" ? 1 : 2,
           formatter: viewMode === "day" ? formatHourIntervalAxisLabel : formatDayAxisLabel,
         },
@@ -140,12 +133,9 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         data: heights.map((height) => String(height)),
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: "#647184" },
+        axisLabel: { color: AXIS_TEXT_COLOR },
         splitLine: {
-          lineStyle: {
-            color: "rgba(15, 23, 42, 0.08)",
-            type: "dashed",
-          },
+          lineStyle: GRID_LINE_STYLE,
         },
       },
       series: [

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 
-import { downloadAggregatesExport } from "../lib/api";
+import { downloadAggregatesExport } from "../../api";
 
 const DEVICE_TYPE_OPTIONS = [
   { key: "gas", label: "Газ" },
@@ -28,7 +28,7 @@ function getPostTitle(post) {
   return post.name || post.serial;
 }
 
-export default function ExportAggregatesCard({ monitoringPosts, isAuthenticated, onLoginClick }) {
+export default function ExportAggregatesPanel({ monitoringPosts, isAuthenticated, onLoginClick }) {
   const now = useMemo(() => new Date(), []);
   const startOfDay = useMemo(() => {
     const value = new Date(now);

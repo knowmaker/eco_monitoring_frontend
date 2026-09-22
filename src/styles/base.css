@@ -1,0 +1,59 @@
+﻿:root {
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-soft: #ffffff;
+  --border: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.22);
+  --text: #172033;
+  --muted: #647184;
+  --muted-strong: #3f4b5d;
+  --accent: #16856d;
+  --accent-soft: rgba(22, 133, 109, 0.1);
+  --accent-strong: #147a63;
+  --warning: #b77719;
+  --danger: #c33f3f;
+  --danger-soft: rgba(195, 63, 63, 0.1);
+  --shadow-panel: 0 16px 38px rgba(15, 23, 42, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  color: var(--text);
+  background: #ffffff;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(20, 122, 99, 0.42);
+  outline-offset: 2px;
+}
+

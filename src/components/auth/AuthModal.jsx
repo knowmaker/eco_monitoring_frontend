@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { LogIn, Send, UserPlus, X } from "lucide-react";
 
-import { AUTH_IS_ADMIN_STORAGE_KEY, AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../lib/api";
+import { AUTH_IS_ADMIN_STORAGE_KEY, AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../../api";
 
 export default function AuthModal({ mode, onClose, onAuthSuccess }) {
   const [email, setEmail] = useState("");
