@@ -3,6 +3,29 @@ import { Database } from "lucide-react";
 import { DEVICE_TYPE_LABELS } from "../../domain/devices";
 import { formatCoordinates, getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
 import LatestReadingsCard from "../latest-readings/LatestReadingsCard";
+import useLatestReadings from "../latest-readings/useLatestReadings";
+
+const PASSIVE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
+function getPlacementBadge(post, latestReadings, isLoadingLatest, latestErrorText) {
+  if (post?.active_to) {
+    return { label: "В архиве", className: "station-placement-badge-archive" };
+  }
+
+  if (isLoadingLatest || latestErrorText) {
+    return null;
+  }
+
+  const latestBucketMs = Number(latestReadings?.bucket_ms);
+  const isPassive =
+    !Number.isFinite(latestBucketMs) || Date.now() - latestBucketMs > PASSIVE_THRESHOLD_MS;
+
+  if (isPassive) {
+    return { label: "Пассивна", className: "station-placement-badge-passive" };
+  }
+
+  return { label: "Активна", className: "station-placement-badge-active" };
+}
 
 export default function StationDetails({
   selectedMonitoringPost,
@@ -20,17 +43,36 @@ export default function StationDetails({
   onOpenRawPackets,
   onSelectDeviceType,
 }) {
+  const {
+    latestReadings,
+    isLoadingLatest,
+    latestErrorText,
+  } = useLatestReadings({ monitoringPostId: selectedMonitoringPostId, refreshCounter });
+  const placementBadge = getPlacementBadge(
+    selectedMonitoringPost,
+    latestReadings,
+    isLoadingLatest,
+    latestErrorText
+  );
+
   return (
     <>
       <div className="station-grid">
         <div>
           <span className="station-grid-label">Название</span>
-          <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
+          <span className="station-title-row">
+            <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
+            {isAdmin && placementBadge && (
+              <span className={`station-placement-badge ${placementBadge.className}`}>
+                {placementBadge.label}
+              </span>
+            )}
+          </span>
         </div>
         <div>
           <span className="station-grid-label">Тип поста</span>
           <span className="station-grid-value">
-            {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "—"}
+            {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "-"}
           </span>
         </div>
         <div>
@@ -57,8 +99,9 @@ export default function StationDetails({
         </button>
       )}
       <LatestReadingsCard
-        monitoringPostId={selectedMonitoringPostId}
-        refreshCounter={refreshCounter}
+        latestReadings={latestReadings}
+        isLoadingLatest={isLoadingLatest}
+        latestErrorText={latestErrorText}
         useGasAbsoluteValues={useGasAbsoluteValues}
       />
 

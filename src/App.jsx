@@ -4,6 +4,7 @@ import ExportPanel from "./components/export-aggregates/ExportPanel";
 import SideMenu from "./components/layout/SideMenu";
 import Topbar from "./components/layout/Topbar";
 import StationDetails from "./components/stations/StationDetails";
+import StationManagementPanel from "./components/stations/StationManagementPanel";
 import StationsPanel from "./components/stations/StationsPanel";
 import useAdminMonitoringPosts from "./hooks/useAdminMonitoringPosts";
 import useAuthState from "./hooks/useAuthState";
@@ -11,7 +12,7 @@ import useMonitoringMap from "./components/map/useMonitoringMap";
 import useMonitoringPosts from "./hooks/useMonitoringPosts";
 import useResponsiveViewport from "./hooks/useResponsiveViewport";
 import useStationDevices from "./hooks/useStationDevices";
-import { updateMonitoringPost } from "./api";
+import { transferMonitoringPost, updateMonitoringPost } from "./api";
 import { GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY } from "./lib/gasValues";
 
 const ProfileModal = lazy(() => import("./components/profile/ProfileModal"));
@@ -46,6 +47,18 @@ function createEmptyStationForm() {
   };
 }
 
+function createStationTransferForm(post = {}) {
+  return {
+    serial: post.serial || "",
+    name: "",
+    post_type: post.post_type || "",
+    latitude: "",
+    longitude: "",
+    notes: post.notes || "",
+    is_confirmed: true,
+  };
+}
+
 export default function App() {
   const [postsReloadToken, setPostsReloadToken] = useState(0);
   const [activeMenuPanel, setActiveMenuPanel] = useState(null);
@@ -53,6 +66,10 @@ export default function App() {
   const [stationForm, setStationForm] = useState(createEmptyStationForm);
   const [isSavingStation, setIsSavingStation] = useState(false);
   const [stationSaveError, setStationSaveError] = useState("");
+  const [transferringStationId, setTransferringStationId] = useState(null);
+  const [stationTransferForm, setStationTransferForm] = useState(createStationTransferForm);
+  const [isTransferringStation, setIsTransferringStation] = useState(false);
+  const [stationTransferError, setStationTransferError] = useState("");
 
   const [selectedMonitoringPostId, setSelectedMonitoringPostId] = useState(null);
   const [isStationCardOpen, setIsStationCardOpen] = useState(false);
@@ -99,6 +116,10 @@ export default function App() {
   const knownMonitoringPosts = isAdmin && adminMonitoringPosts.length ? adminMonitoringPosts : monitoringPosts;
   const selectedMonitoringPost =
     knownMonitoringPosts.find((post) => post.id === selectedMonitoringPostId) ?? null;
+  const managedMonitoringPostId = transferringStationId ?? editingStationId;
+  const managedMonitoringPost =
+    knownMonitoringPosts.find((post) => post.id === managedMonitoringPostId) ?? selectedMonitoringPost;
+  const stationManagementMode = transferringStationId !== null ? "transfer" : editingStationId !== null ? "edit" : null;
   const {
     selectedDevices,
     selectedDeviceType,
@@ -114,6 +135,9 @@ export default function App() {
     setIsStationCardOpen(true);
     setStationCardSource("map");
     setEditingStationId(null);
+    setTransferringStationId(null);
+    setStationSaveError("");
+    setStationTransferError("");
     setIsReadingsCardOpen(false);
     setIsRawPacketsOpen(false);
     setSelectedMonitoringPostId(post.id);
@@ -144,9 +168,13 @@ export default function App() {
     clearAuth();
     setIsProfileModalOpen(false);
     setEditingStationId(null);
+    setTransferringStationId(null);
+    setStationSaveError("");
+    setStationTransferError("");
     setStationCardSource(null);
     setIsRawPacketsOpen(false);
     setStationForm(createEmptyStationForm());
+    setStationTransferForm(createStationTransferForm());
   };
 
   const handleGasValueCorrectionDisabledChange = (isDisabled) => {
@@ -162,6 +190,10 @@ export default function App() {
     setSelectedMonitoringPostId(post.id);
     setIsStationCardOpen(true);
     setStationCardSource("list");
+    setEditingStationId(null);
+    setTransferringStationId(null);
+    setStationSaveError("");
+    setStationTransferError("");
     setIsReadingsCardOpen(false);
     setIsRawPacketsOpen(false);
     focusPost(post);
@@ -169,6 +201,7 @@ export default function App() {
 
   const handleStartEditStation = (post) => {
     setEditingStationId(post.id);
+    setTransferringStationId(null);
     setStationSaveError("");
     setStationForm({
       serial: post.serial,
@@ -179,6 +212,8 @@ export default function App() {
       notes: post.notes || "",
       is_confirmed: Boolean(post.is_confirmed),
     });
+    setIsReadingsCardOpen(false);
+    setIsRawPacketsOpen(false);
   };
 
   const handleSaveStation = async (event) => {
@@ -218,6 +253,84 @@ export default function App() {
     }
   };
 
+  const handleStartTransferStation = (post) => {
+    setEditingStationId(null);
+    setStationTransferError("");
+    setTransferringStationId(post.id);
+    setStationTransferForm(createStationTransferForm(post));
+    setIsReadingsCardOpen(false);
+    setIsRawPacketsOpen(false);
+  };
+
+  const handleCancelTransferStation = () => {
+    const post = knownMonitoringPosts.find((candidate) => candidate.id === transferringStationId) ?? selectedMonitoringPost;
+    setTransferringStationId(null);
+    setStationTransferError("");
+    setStationTransferForm(createStationTransferForm());
+    if (post) {
+      handleStartEditStation(post);
+    }
+  };
+
+  const closeStationManagementPanel = () => {
+    setEditingStationId(null);
+    setTransferringStationId(null);
+    setStationSaveError("");
+    setStationTransferError("");
+    setStationForm(createEmptyStationForm());
+    setStationTransferForm(createStationTransferForm());
+  };
+
+  const handleTransferStation = async (event) => {
+    event.preventDefault();
+    if (transferringStationId === null) {
+      return;
+    }
+
+    const latitude = toNullableFloat(stationTransferForm.latitude);
+    const longitude = toNullableFloat(stationTransferForm.longitude);
+    const payload = {
+      name: stationTransferForm.name.trim() || null,
+      post_type: stationTransferForm.post_type || null,
+      latitude,
+      longitude,
+      notes: stationTransferForm.notes.trim() || null,
+      is_confirmed: stationTransferForm.is_confirmed,
+    };
+
+    if (latitude === null || longitude === null) {
+      setStationTransferError("Укажите новые координаты станции.");
+      return;
+    }
+    if (
+      payload.is_confirmed &&
+      (!payload.name || !payload.post_type)
+    ) {
+      setStationTransferError("Для подтверждения нового места укажите название и тип поста.");
+      return;
+    }
+
+    setIsTransferringStation(true);
+    setStationTransferError("");
+
+    try {
+      const transferResult = await transferMonitoringPost(transferringStationId, payload);
+      const nextPost = transferResult.monitoring_post;
+      setTransferringStationId(null);
+      setStationTransferForm(createStationTransferForm());
+      setSelectedMonitoringPostId(nextPost.id);
+      setIsReadingsCardOpen(false);
+      setIsRawPacketsOpen(false);
+      setPostsReloadToken((value) => value + 1);
+      await loadAdminMonitoringPosts();
+      focusPost(nextPost);
+    } catch (error) {
+      setStationTransferError(error instanceof Error ? error.message : "Не удалось перенести станцию");
+    } finally {
+      setIsTransferringStation(false);
+    }
+  };
+
   const isStationDetailsInPanel =
     activeMenuPanel === "stations" &&
     isStationCardOpen &&
@@ -227,6 +340,7 @@ export default function App() {
     setIsStationCardOpen(false);
     setIsReadingsCardOpen(false);
     setIsRawPacketsOpen(false);
+    closeStationManagementPanel();
     setSelectedMonitoringPostId(null);
     fitToPosts(monitoringPosts);
     if (stationCardSource === "map") {
@@ -275,10 +389,6 @@ export default function App() {
           adminPostsError={adminPostsError}
           stationPanelPosts={stationPanelPosts}
           selectedMonitoringPostId={selectedMonitoringPostId}
-          editingStationId={editingStationId}
-          stationForm={stationForm}
-          stationSaveError={stationSaveError}
-          isSavingStation={isSavingStation}
           onRefresh={handleRefreshStationPanel}
           onClose={() => {
             if (isStationDetailsInPanel) {
@@ -288,12 +398,10 @@ export default function App() {
             }
           }}
           onSelectPost={handleSelectMonitoringPost}
-          onStartEdit={handleStartEditStation}
-          onSaveStation={handleSaveStation}
-          onStationFormChange={setStationForm}
-          onCancelEdit={() => {
-            setEditingStationId(null);
-            setStationSaveError("");
+          onEditSelectedPost={() => {
+            if (selectedMonitoringPost) {
+              handleStartEditStation(selectedMonitoringPost);
+            }
           }}
         >
           <StationDetails
@@ -310,10 +418,14 @@ export default function App() {
             refreshCounter={stationDetailsRefreshCounter}
             useGasAbsoluteValues={useGasAbsoluteValues}
             onOpenRawPackets={() => {
+              setEditingStationId(null);
+              setTransferringStationId(null);
               setIsRawPacketsOpen(true);
               setIsReadingsCardOpen(false);
             }}
             onSelectDeviceType={(deviceType) => {
+              setEditingStationId(null);
+              setTransferringStationId(null);
               setSelectedDeviceType(deviceType);
               setIsReadingsCardOpen(true);
               setIsRawPacketsOpen(false);
@@ -328,6 +440,26 @@ export default function App() {
           isAuthenticated={isAuthenticated}
           onLoginClick={() => setModalMode("login")}
           onClose={() => setActiveMenuPanel(null)}
+        />
+      )}
+
+      {stationManagementMode && managedMonitoringPost && (
+        <StationManagementPanel
+          mode={stationManagementMode}
+          stationForm={stationForm}
+          stationSaveError={stationSaveError}
+          isSavingStation={isSavingStation}
+          transferForm={stationTransferForm}
+          transferError={stationTransferError}
+          isTransferringStation={isTransferringStation}
+          canTransferStation={isAdmin && !managedMonitoringPost.active_to}
+          onSaveStation={handleSaveStation}
+          onStationFormChange={setStationForm}
+          onStartTransfer={() => handleStartTransferStation(managedMonitoringPost)}
+          onSubmitTransfer={handleTransferStation}
+          onTransferFormChange={setStationTransferForm}
+          onCancelTransfer={handleCancelTransferStation}
+          onClose={closeStationManagementPanel}
         />
       )}
 

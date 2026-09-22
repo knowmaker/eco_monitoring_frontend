@@ -1,18 +1,12 @@
 import { DEVICE_TYPE_ORDER } from "../../domain/devices";
 import { renderLatestDeviceBlock } from "./LatestDeviceBlocks";
-import useLatestReadings from "./useLatestReadings";
 
 export default function LatestReadingsCard({
-  monitoringPostId,
-  refreshCounter = 0,
+  latestReadings,
+  isLoadingLatest = false,
+  latestErrorText = "",
   useGasAbsoluteValues = true,
 }) {
-  const {
-    latestReadings,
-    isLoadingLatest,
-    latestErrorText,
-  } = useLatestReadings({ monitoringPostId, refreshCounter });
-
   return (
     <section className="latest-readings">
       <div className="latest-readings-header">

@@ -1,7 +1,11 @@
 import { CheckCircle2, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
 
 import { getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
-import StationEditForm from "./StationEditForm";
+
+function getPostTypeLabel(post) {
+  const typeLabel = POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран";
+  return post.active_to ? `Архивная - ${typeLabel}` : typeLabel;
+}
 
 export default function StationsPanel({
   isStationDetailsInPanel,
@@ -10,24 +14,27 @@ export default function StationsPanel({
   adminPostsError,
   stationPanelPosts,
   selectedMonitoringPostId,
-  editingStationId,
-  stationForm,
-  stationSaveError,
-  isSavingStation,
   children,
   onRefresh,
   onClose,
   onSelectPost,
-  onStartEdit,
-  onSaveStation,
-  onStationFormChange,
-  onCancelEdit,
+  onEditSelectedPost,
 }) {
   return (
     <aside className="stations-panel">
       <div className="card-header">
         <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
         <div className="card-header-actions">
+          {isAdmin && isStationDetailsInPanel && (
+            <button
+              type="button"
+              className="card-edit-btn"
+              title="Редактировать"
+              onClick={onEditSelectedPost}
+            >
+              <Pencil size={15} aria-hidden="true" />
+            </button>
+          )}
           <button type="button" className="card-refresh-btn" onClick={onRefresh}>
             <RefreshCw size={16} aria-hidden="true" />
           </button>
@@ -57,7 +64,7 @@ export default function StationsPanel({
                   >
                     <span className="station-list-text">
                       <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
-                      <small>{POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран"}</small>
+                      <small>{getPostTypeLabel(post)}</small>
                     </span>
                     {post.is_confirmed ? (
                       <span className="station-status station-status-confirmed" title="Подтверждена">
@@ -69,27 +76,7 @@ export default function StationsPanel({
                       </span>
                     )}
                   </button>
-                  {isAdmin && (
-                    <button
-                      className="station-row-edit"
-                      type="button"
-                      title="Редактировать"
-                      onClick={() => onStartEdit(post)}
-                    >
-                      <Pencil size={14} aria-hidden="true" />
-                    </button>
-                  )}
                 </div>
-                {editingStationId === post.id && (
-                  <StationEditForm
-                    stationForm={stationForm}
-                    stationSaveError={stationSaveError}
-                    isSavingStation={isSavingStation}
-                    onSubmit={onSaveStation}
-                    onFormChange={onStationFormChange}
-                    onCancel={onCancelEdit}
-                  />
-                )}
               </li>
             ))}
           </ul>

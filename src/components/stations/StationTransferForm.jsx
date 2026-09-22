@@ -1,34 +1,32 @@
-import { MapPinned, Save } from "lucide-react";
+import { MapPinned } from "lucide-react";
 
-export default function StationEditForm({
-  stationForm,
-  stationSaveError,
-  isSavingStation,
-  canTransferStation = false,
+export default function StationTransferForm({
+  transferForm,
+  transferError,
+  isTransferringStation,
   onSubmit,
   onFormChange,
-  onTransfer,
   onCancel,
 }) {
   const updateField = (field, value) => onFormChange((current) => ({ ...current, [field]: value }));
 
   return (
-    <form className="station-edit-form station-edit-form-inline" onSubmit={onSubmit}>
+    <form className="station-edit-form station-transfer-form" onSubmit={onSubmit}>
       <label>
         <span>Серийный номер</span>
-        <strong className="station-readonly-value">{stationForm.serial}</strong>
+        <strong className="station-readonly-value">{transferForm.serial}</strong>
       </label>
       <label>
-        <span>Название</span>
+        <span>Название на новом месте</span>
         <input
-          value={stationForm.name}
+          value={transferForm.name}
           onChange={(event) => updateField("name", event.target.value)}
           placeholder="Например, Пост у главного корпуса"
         />
       </label>
       <label>
         <span>Тип поста</span>
-        <select value={stationForm.post_type} onChange={(event) => updateField("post_type", event.target.value)}>
+        <select value={transferForm.post_type} onChange={(event) => updateField("post_type", event.target.value)}>
           <option value="">Выберите тип</option>
           <option value="stationary">Стационарный</option>
           <option value="mobile">Мобильный</option>
@@ -37,50 +35,46 @@ export default function StationEditForm({
       </label>
       <div className="station-edit-grid">
         <label>
-          <span>Широта</span>
+          <span>Новая широта</span>
           <input
-            value={stationForm.latitude}
+            value={transferForm.latitude}
             onChange={(event) => updateField("latitude", event.target.value)}
             inputMode="decimal"
+            required
           />
         </label>
         <label>
-          <span>Долгота</span>
+          <span>Новая долгота</span>
           <input
-            value={stationForm.longitude}
+            value={transferForm.longitude}
             onChange={(event) => updateField("longitude", event.target.value)}
             inputMode="decimal"
+            required
           />
         </label>
       </div>
       <label>
         <span>Заметки</span>
         <textarea
-          value={stationForm.notes}
+          value={transferForm.notes}
           onChange={(event) => updateField("notes", event.target.value)}
           placeholder="Поле для заметок"
         />
       </label>
-      {stationSaveError && <p className="station-card-error">{stationSaveError}</p>}
+      {transferError && <p className="station-card-error">{transferError}</p>}
       <label className="station-confirm-check">
         <input
           type="checkbox"
-          checked={stationForm.is_confirmed}
+          checked={transferForm.is_confirmed}
           onChange={(event) => updateField("is_confirmed", event.target.checked)}
         />
-        <span>Станция подтверждена</span>
+        <span>Новая точка подтверждена</span>
       </label>
       <div className="station-form-actions">
-        <button className="btn btn-secondary" type="submit" disabled={isSavingStation}>
-          <Save size={16} aria-hidden="true" />
-          <span>{isSavingStation ? "Сохранение..." : "Сохранить"}</span>
+        <button className="btn btn-secondary" type="submit" disabled={isTransferringStation}>
+          <MapPinned size={16} aria-hidden="true" />
+          <span>{isTransferringStation ? "Перенос..." : "Перенести"}</span>
         </button>
-        {canTransferStation && (
-          <button className="btn btn-profile" type="button" onClick={onTransfer} disabled={isSavingStation}>
-            <MapPinned size={16} aria-hidden="true" />
-            <span>Перенести</span>
-          </button>
-        )}
         <button className="btn" type="button" onClick={onCancel}>
           Отмена
         </button>

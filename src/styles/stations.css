@@ -17,8 +17,14 @@
 .stations-panel-actions,
 .station-form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 10px;
+}
+
+.station-management-card .station-form-actions {
+  padding-top: 2px;
+  margin-bottom: 0;
 }
 
 .station-edit-form {
@@ -32,6 +38,15 @@
   background: #ffffff;
 }
 
+.station-management-card .station-edit-form {
+  gap: 8px;
+  padding: 0;
+  margin-bottom: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .station-edit-form label {
   display: flex;
   flex-direction: column;
@@ -39,6 +54,12 @@
   color: var(--muted-strong);
   font-size: 0.76rem;
   font-weight: 650;
+}
+
+.station-management-card .station-edit-form label {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
 }
 
 .station-edit-form input:not([type="checkbox"]):not([type="radio"]),
@@ -53,9 +74,21 @@
   outline: none;
 }
 
+.station-management-card .station-edit-form input:not([type="checkbox"]):not([type="radio"]),
+.station-management-card .station-edit-form select,
+.station-management-card .station-edit-form textarea {
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
 .station-edit-form input:not([type="checkbox"]):not([type="radio"]),
 .station-edit-form select {
   height: 32px;
+}
+
+.station-management-card .station-edit-form input:not([type="checkbox"]):not([type="radio"]),
+.station-management-card .station-edit-form select {
+  height: 36px;
 }
 
 .station-edit-form textarea {
@@ -72,6 +105,15 @@
   font-weight: 500;
   line-height: 1.35;
   word-break: break-word;
+}
+
+.station-management-card .station-edit-form textarea {
+  min-height: 74px;
+}
+
+.station-management-card .station-readonly-value {
+  font-size: 0.88rem;
+  font-weight: 500;
 }
 
 .station-edit-grid {
@@ -98,6 +140,10 @@
 
 .station-confirm-check:has(input:checked) {
   color: var(--accent-strong);
+}
+
+.station-management-card .station-confirm-check {
+  font-weight: 600;
 }
 
 .stations-list {
@@ -188,23 +234,6 @@
   flex: 0 0 auto;
 }
 
-.station-row-edit {
-  display: grid;
-  width: 34px;
-  min-width: 34px;
-  place-items: center;
-  padding: 0;
-  color: var(--muted-strong);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.station-row-edit:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-
 .btn {
   display: inline-flex;
   min-height: 36px;
@@ -275,6 +304,7 @@
 
 .icon-btn,
 .card-close-btn,
+.card-edit-btn,
 .card-refresh-btn {
   display: grid;
   width: 30px;
@@ -289,6 +319,7 @@
 
 .icon-btn:hover,
 .card-close-btn:hover,
+.card-edit-btn:hover,
 .card-refresh-btn:hover {
   color: var(--text);
   border-color: var(--border-strong);
@@ -298,6 +329,12 @@
 .card-refresh-btn:hover {
   color: var(--accent-strong);
   border-color: rgba(20, 122, 99, 0.36);
+}
+
+.card-edit-btn:hover {
+  color: #315f9f;
+  border-color: rgba(49, 95, 159, 0.34);
+  background: rgba(49, 95, 159, 0.1);
 }
 
 .station-card,
@@ -411,6 +448,51 @@
   word-break: break-word;
 }
 
+.station-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.station-title-row .station-grid-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.station-placement-badge {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  transform: translateY(-2px);
+  padding: 3px 7px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.station-placement-badge-active {
+  color: var(--accent-strong);
+  border-color: rgba(20, 122, 99, 0.22);
+  background: var(--accent-soft);
+}
+
+.station-placement-badge-passive {
+  color: #8a5a12;
+  border-color: rgba(183, 119, 25, 0.24);
+  background: rgba(183, 119, 25, 0.1);
+}
+
+.station-placement-badge-archive {
+  color: var(--muted-strong);
+  border-color: var(--border);
+  background: #f8fafc;
+}
+
 .station-notes {
   padding-top: 8px;
 }
@@ -441,7 +523,8 @@
   display: block;
 }
 
-.station-raw-action {
+.station-raw-action,
+.station-transfer-action {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -457,10 +540,20 @@
 }
 
 .station-raw-action:hover,
-.station-raw-action-active {
+.station-raw-action-active,
+.station-transfer-action:hover,
+.station-transfer-action-active {
   color: var(--accent-strong);
   border-color: rgba(20, 122, 99, 0.38);
   background: var(--accent-soft);
+}
+
+.station-transfer-action {
+  margin-top: 10px;
+}
+
+.station-transfer-form {
+  margin-top: 10px;
 }
 
 .station-device-button {

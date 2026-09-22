@@ -29,3 +29,12 @@ export async function updateMonitoringPost(monitoringPostId, payload) {
     errorMessage: "Ошибка сохранения станции",
   });
 }
+
+export async function transferMonitoringPost(monitoringPostId, payload) {
+  return requestJson(`/api/v1/monitoring-posts/${monitoringPostId}/transfer`, {
+    method: "POST",
+    body: payload,
+    auth: true,
+    errorMessage: "Ошибка переноса станции",
+  });
+}

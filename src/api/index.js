@@ -6,7 +6,12 @@ export {
 export { registerByEmail, loginByEmailPassword, fetchCurrentUserProfile, updateCurrentUserProfile } from "./auth";
 export { fetchAvailableDeviceState } from "./deviceState";
 export { downloadAggregatesExport } from "./exportAggregates";
-export { fetchMonitoringPosts, fetchMonitoringPostsAdmin, updateMonitoringPost } from "./monitoringPosts";
+export {
+  fetchMonitoringPosts,
+  fetchMonitoringPostsAdmin,
+  transferMonitoringPost,
+  updateMonitoringPost,
+} from "./monitoringPosts";
 export { fetchRawMqttPayload } from "./rawMqttPayload";
 export {
   fetchDustStateHourly,
