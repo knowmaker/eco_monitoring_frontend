@@ -1,13 +1,15 @@
-import { MapPinned, Save } from "lucide-react";
+import { Archive, MapPinned, Save } from "lucide-react";
 
 export default function StationEditForm({
   stationForm,
   stationSaveError,
   isSavingStation,
   canTransferStation = false,
+  canArchiveStation = false,
   onSubmit,
   onFormChange,
   onTransfer,
+  onArchive,
   onCancel,
 }) {
   const updateField = (field, value) => onFormChange((current) => ({ ...current, [field]: value }));
@@ -79,6 +81,12 @@ export default function StationEditForm({
           <button className="btn btn-profile" type="button" onClick={onTransfer} disabled={isSavingStation}>
             <MapPinned size={16} aria-hidden="true" />
             <span>Перенести</span>
+          </button>
+        )}
+        {canArchiveStation && (
+          <button className="btn btn-danger" type="button" onClick={onArchive} disabled={isSavingStation}>
+            <Archive size={16} aria-hidden="true" />
+            <span>В архив</span>
           </button>
         )}
         <button className="btn" type="button" onClick={onCancel}>

@@ -7,6 +7,7 @@ export { registerByEmail, loginByEmailPassword, fetchCurrentUserProfile, updateC
 export { fetchAvailableDeviceState } from "./deviceState";
 export { downloadAggregatesExport } from "./exportAggregates";
 export {
+  archiveMonitoringPost,
   fetchMonitoringPosts,
   fetchMonitoringPostsAdmin,
   transferMonitoringPost,

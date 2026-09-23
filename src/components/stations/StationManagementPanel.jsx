@@ -12,9 +12,11 @@ export default function StationManagementPanel({
   transferError,
   isTransferringStation,
   canTransferStation,
+  canArchiveStation,
   onSaveStation,
   onStationFormChange,
   onStartTransfer,
+  onArchiveStation,
   onSubmitTransfer,
   onTransferFormChange,
   onCancelTransfer,
@@ -48,9 +50,11 @@ export default function StationManagementPanel({
           stationSaveError={stationSaveError}
           isSavingStation={isSavingStation}
           canTransferStation={canTransferStation}
+          canArchiveStation={canArchiveStation}
           onSubmit={onSaveStation}
           onFormChange={onStationFormChange}
           onTransfer={onStartTransfer}
+          onArchive={onArchiveStation}
           onCancel={onClose}
         />
       )}

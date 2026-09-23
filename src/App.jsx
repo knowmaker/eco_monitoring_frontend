@@ -12,7 +12,7 @@ import useMonitoringMap from "./components/map/useMonitoringMap";
 import useMonitoringPosts from "./hooks/useMonitoringPosts";
 import useResponsiveViewport from "./hooks/useResponsiveViewport";
 import useStationDevices from "./hooks/useStationDevices";
-import { transferMonitoringPost, updateMonitoringPost } from "./api";
+import { archiveMonitoringPost, transferMonitoringPost, updateMonitoringPost } from "./api";
 import { GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY } from "./lib/gasValues";
 
 const ProfileModal = lazy(() => import("./components/profile/ProfileModal"));
@@ -279,6 +279,32 @@ export default function App() {
     setIsRawPacketsOpen(false);
   };
 
+  const handleArchiveStation = async () => {
+    if (editingStationId === null) {
+      return;
+    }
+    const confirmed = window.confirm("Отправить станцию в архив? Новые измерения для этого места больше не будут добавляться.");
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSavingStation(true);
+    setStationSaveError("");
+
+    try {
+      const archivedPost = await archiveMonitoringPost(editingStationId);
+      setEditingStationId(null);
+      setStationForm(createEmptyStationForm());
+      setSelectedMonitoringPostId(archivedPost.id);
+      setPostsReloadToken((value) => value + 1);
+      await loadAdminMonitoringPosts();
+    } catch (error) {
+      setStationSaveError(error instanceof Error ? error.message : "Не удалось отправить станцию в архив");
+    } finally {
+      setIsSavingStation(false);
+    }
+  };
+
   const handleCancelTransferStation = () => {
     const post = knownMonitoringPosts.find((candidate) => candidate.id === transferringStationId) ?? selectedMonitoringPost;
     setTransferringStationId(null);
@@ -471,9 +497,11 @@ export default function App() {
           transferError={stationTransferError}
           isTransferringStation={isTransferringStation}
           canTransferStation={isAdmin && !managedMonitoringPost.active_to}
+          canArchiveStation={isAdmin && !managedMonitoringPost.active_to}
           onSaveStation={handleSaveStation}
           onStationFormChange={setStationForm}
           onStartTransfer={() => handleStartTransferStation(managedMonitoringPost)}
+          onArchiveStation={handleArchiveStation}
           onSubmitTransfer={handleTransferStation}
           onTransferFormChange={setStationTransferForm}
           onCancelTransfer={handleCancelTransferStation}

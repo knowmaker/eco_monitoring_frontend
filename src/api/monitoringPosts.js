@@ -38,3 +38,11 @@ export async function transferMonitoringPost(monitoringPostId, payload) {
     errorMessage: "Ошибка переноса станции",
   });
 }
+
+export async function archiveMonitoringPost(monitoringPostId) {
+  return requestJson(`/api/v1/monitoring-posts/${monitoringPostId}/archive`, {
+    method: "POST",
+    auth: true,
+    errorMessage: "Ошибка отправки станции в архив",
+  });
+}
