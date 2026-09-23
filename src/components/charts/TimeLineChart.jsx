@@ -10,6 +10,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
 } from "./chartTheme";
+import { withResponsiveChartOption } from "./responsiveChartOption";
 
 function hasNumericValues(series) {
   return Boolean(
@@ -77,7 +78,7 @@ export default function TimeLineChart({
 
     const hasSecondaryAxis = series.some((item) => item.yAxisIndex === 1);
 
-    return {
+    const baseOption = {
       backgroundColor: "transparent",
       animation: true,
       grid: {
@@ -88,6 +89,7 @@ export default function TimeLineChart({
       },
       tooltip: {
         trigger: "axis",
+        confine: true,
         backgroundColor: TOOLTIP_BACKGROUND_COLOR,
         borderColor: TOOLTIP_BORDER_COLOR,
         textStyle: TOOLTIP_TEXT_STYLE,
@@ -150,6 +152,28 @@ export default function TimeLineChart({
           .map((point) => [point.timestamp, normalizeChartValue(point.value)]),
       })),
     };
+
+    const compactYAxis = hasSecondaryAxis
+      ? [{ axisLabel: { fontSize: 9 } }, { axisLabel: { fontSize: 9 } }]
+      : { axisLabel: { fontSize: 9 } };
+
+    return withResponsiveChartOption(baseOption, {
+      grid: { left: 36, right: hasSecondaryAxis ? 36 : 8, top: 22, bottom: 38 },
+      legend: {
+        right: 0,
+        itemWidth: 12,
+        itemHeight: 7,
+        itemGap: 6,
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
+      },
+      xAxis: {
+        axisLabel: {
+          fontSize: 9,
+          hideOverlap: true,
+        },
+      },
+      yAxis: compactYAxis,
+    });
   }, [series, hasValues, start, end]);
 
   if (!series?.length || !hasValues || !option) {

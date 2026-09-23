@@ -1,10 +1,11 @@
 import { X } from "lucide-react";
 
+import ScrollablePanel from "../layout/ScrollablePanel";
 import ExportAggregatesPanel from "./ExportAggregatesPanel";
 
 export default function ExportPanel({ monitoringPosts, isAuthenticated, onLoginClick, onClose }) {
   return (
-    <aside className="stations-panel export-panel">
+    <ScrollablePanel className="stations-panel export-panel">
       <div className="card-header">
         <h2>Экспорт данных</h2>
         <div className="card-header-actions">
@@ -19,6 +20,6 @@ export default function ExportPanel({ monitoringPosts, isAuthenticated, onLoginC
         isAuthenticated={isAuthenticated}
         onLoginClick={onLoginClick}
       />
-    </aside>
+    </ScrollablePanel>
   );
 }

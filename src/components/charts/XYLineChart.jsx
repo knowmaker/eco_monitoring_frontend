@@ -10,6 +10,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
 } from "./chartTheme";
+import { withResponsiveChartOption } from "./responsiveChartOption";
 
 function hasNumericValues(series, xKey, yKey) {
   return Boolean(
@@ -42,7 +43,7 @@ export default function XYLineChart({
       return null;
     }
 
-    return {
+    const baseOption = {
       backgroundColor: "transparent",
       animation: true,
       animationDurationUpdate: 0,
@@ -54,6 +55,7 @@ export default function XYLineChart({
       },
       tooltip: {
         trigger: "item",
+        confine: true,
         backgroundColor: TOOLTIP_BACKGROUND_COLOR,
         borderColor: TOOLTIP_BORDER_COLOR,
         textStyle: TOOLTIP_TEXT_STYLE,
@@ -135,6 +137,35 @@ export default function XYLineChart({
         };
       }),
     };
+
+    return withResponsiveChartOption(baseOption, {
+      grid: {
+        left: 42,
+        right: 8,
+        top: showLegend ? 26 : 18,
+        bottom: 42,
+      },
+      legend: showLegend
+        ? {
+            left: 42,
+            right: 4,
+            itemWidth: 12,
+            itemHeight: 7,
+            itemGap: 6,
+            textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
+          }
+        : undefined,
+      xAxis: {
+        nameGap: xAxisName ? 25 : undefined,
+        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 10, fontWeight: 600 },
+        axisLabel: { fontSize: 9, hideOverlap: true },
+      },
+      yAxis: {
+        nameGap: yAxisName ? 32 : undefined,
+        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 10, fontWeight: 600 },
+        axisLabel: { fontSize: 9 },
+      },
+    });
   }, [
     series,
     hasValues,

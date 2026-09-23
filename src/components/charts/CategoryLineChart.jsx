@@ -15,6 +15,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
 } from "./chartTheme";
+import { withResponsiveChartOption } from "./responsiveChartOption";
 
 function hasNumericValues(series) {
   return Boolean(
@@ -68,7 +69,7 @@ export default function CategoryLineChart({
       };
     });
 
-    return {
+    const baseOption = {
       backgroundColor: "transparent",
       animation: true,
       grid: {
@@ -79,6 +80,7 @@ export default function CategoryLineChart({
       },
       tooltip: {
         trigger: "axis",
+        confine: true,
         backgroundColor: TOOLTIP_BACKGROUND_COLOR,
         borderColor: TOOLTIP_BORDER_COLOR,
         textStyle: TOOLTIP_TEXT_STYLE,
@@ -123,6 +125,24 @@ export default function CategoryLineChart({
       },
       series: preparedSeries,
     };
+
+    return withResponsiveChartOption(baseOption, {
+      grid: { left: 36, right: 8, top: 22, bottom: 38 },
+      legend: {
+        right: 0,
+        itemWidth: 12,
+        itemHeight: 7,
+        itemGap: 6,
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
+      },
+      xAxis: {
+        axisLabel: {
+          fontSize: 9,
+          interval: xKey === "day" ? 2 : 3,
+        },
+      },
+      yAxis: { axisLabel: { fontSize: 9 } },
+    });
   }, [series, hasValues, xKey, xValues, xLabels, onEvents]);
 
   if (!series?.length || !hasValues || !option) {

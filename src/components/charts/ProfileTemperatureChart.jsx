@@ -14,6 +14,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
 } from "./chartTheme";
+import { withResponsiveChartOption } from "./responsiveChartOption";
 
 function formatTemperatureLegendValue(value) {
   return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "";
@@ -76,7 +77,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       return null;
     }
 
-    return {
+    const baseOption = {
       backgroundColor: "transparent",
       animation: true,
       grid: {
@@ -87,6 +88,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       },
       tooltip: {
         trigger: "item",
+        confine: true,
         backgroundColor: TOOLTIP_BACKGROUND_COLOR,
         borderColor: TOOLTIP_BORDER_COLOR,
         textStyle: TOOLTIP_TEXT_STYLE,
@@ -170,6 +172,24 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         },
       ],
     };
+
+    return withResponsiveChartOption(baseOption, {
+      grid: { left: 36, right: 50, top: 20, bottom: 40 },
+      visualMap: {
+        right: 0,
+        top: 16,
+        itemHeight: 130,
+        textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
+      },
+      xAxis: {
+        axisLabel: {
+          fontSize: 9,
+          interval: viewMode === "month" ? 2 : 3,
+          hideOverlap: true,
+        },
+      },
+      yAxis: { axisLabel: { fontSize: 9 } },
+    });
   }, [profiles, viewMode]);
 
   if (!option) {

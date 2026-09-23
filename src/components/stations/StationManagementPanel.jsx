@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 
 import StationEditForm from "./StationEditForm";
 import StationTransferForm from "./StationTransferForm";
+import ScrollablePanel from "../layout/ScrollablePanel";
 
 export default function StationManagementPanel({
   mode,
@@ -25,7 +26,7 @@ export default function StationManagementPanel({
   const isTransferMode = mode === "transfer";
 
   return (
-    <aside className="readings-card station-management-card">
+    <ScrollablePanel className="readings-card station-management-card">
       <div className="card-header">
         <h2>{isTransferMode ? "Перенос станции" : "Редактирование станции"}</h2>
         <div className="card-header-actions">
@@ -58,6 +59,6 @@ export default function StationManagementPanel({
           onCancel={onClose}
         />
       )}
-    </aside>
+    </ScrollablePanel>
   );
 }

@@ -167,12 +167,6 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (isMobileViewport) {
-      setIsRawPacketsOpen(false);
-    }
-  }, [isMobileViewport]);
-
-  useEffect(() => {
     setSelectedMonitoringPostId((current) => {
       if (current === null || isAdmin) {
         return current;
@@ -378,6 +372,16 @@ export default function App() {
     activeMenuPanel === "stations" &&
     isStationCardOpen &&
     selectedMonitoringPostId !== null;
+  const isStationManagementPanelOpen = Boolean(stationManagementMode && managedMonitoringPost);
+  const isReadingsPanelOpen = Boolean(
+    isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && selectedDeviceType
+  );
+  const isRawPacketsPanelOpen = Boolean(
+    isAdmin && isStationCardOpen && isRawPacketsOpen && selectedMonitoringPostId !== null
+  );
+  const isStationsPanelCovered =
+    isMobileViewport &&
+    (isStationManagementPanelOpen || isReadingsPanelOpen || isRawPacketsPanelOpen);
 
   const closeStationDetails = () => {
     setIsStationCardOpen(false);
@@ -427,6 +431,7 @@ export default function App() {
 
       {activeMenuPanel === "stations" && (
         <StationsPanel
+          isCovered={isStationsPanelCovered}
           isStationDetailsInPanel={isStationDetailsInPanel}
           isAdmin={isAdmin}
           isLoadingAdminPosts={isLoadingAdminPosts}
@@ -452,7 +457,6 @@ export default function App() {
             selectedMonitoringPost={selectedMonitoringPost}
             selectedMonitoringPostId={selectedMonitoringPostId}
             isAdmin={isAdmin}
-            isMobileViewport={isMobileViewport}
             isRawPacketsOpen={isRawPacketsOpen}
             selectedDevices={selectedDevices}
             selectedDeviceType={selectedDeviceType}
@@ -487,7 +491,7 @@ export default function App() {
         />
       )}
 
-      {stationManagementMode && managedMonitoringPost && (
+      {isStationManagementPanelOpen && (
         <StationManagementPanel
           mode={stationManagementMode}
           stationForm={stationForm}
@@ -509,7 +513,7 @@ export default function App() {
         />
       )}
 
-      {isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && selectedDeviceType && (
+      {isReadingsPanelOpen && (
         <Suspense fallback={null}>
           <ReadingsHistoryPanel
             monitoringPostId={selectedMonitoringPostId}
@@ -521,7 +525,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {isAdmin && !isMobileViewport && isStationCardOpen && isRawPacketsOpen && selectedMonitoringPostId !== null && (
+      {isRawPacketsPanelOpen && (
         <Suspense fallback={null}>
           <RawMqttPayloadPanel
             monitoringPostId={selectedMonitoringPostId}

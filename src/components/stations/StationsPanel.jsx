@@ -1,6 +1,7 @@
 import { CheckCircle2, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
 
 import { getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
+import ScrollablePanel from "../layout/ScrollablePanel";
 
 function getPostTypeLabel(post) {
   const typeLabel = POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран";
@@ -18,6 +19,7 @@ function getPostStatusBadge(post) {
 }
 
 export default function StationsPanel({
+  isCovered = false,
   isStationDetailsInPanel,
   isAdmin,
   isLoadingAdminPosts,
@@ -31,7 +33,10 @@ export default function StationsPanel({
   onEditSelectedPost,
 }) {
   return (
-    <aside className="stations-panel">
+    <ScrollablePanel
+      className={`stations-panel${isCovered ? " stations-panel-covered" : ""}`}
+      aria-hidden={isCovered || undefined}
+    >
       <div className="card-header">
         <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
         <div className="card-header-actions">
@@ -103,6 +108,6 @@ export default function StationsPanel({
           </ul>
         </>
       )}
-    </aside>
+    </ScrollablePanel>
   );
 }

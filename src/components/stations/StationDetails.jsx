@@ -19,7 +19,6 @@ export default function StationDetails({
   selectedMonitoringPost,
   selectedMonitoringPostId,
   isAdmin,
-  isMobileViewport,
   isRawPacketsOpen,
   selectedDevices,
   selectedDeviceType,
@@ -71,7 +70,7 @@ export default function StationDetails({
           <p>{selectedMonitoringPost.notes}</p>
         </div>
       )}
-      {isAdmin && !isMobileViewport && (
+      {isAdmin && (
         <button
           type="button"
           className={`station-raw-action${isRawPacketsOpen ? " station-raw-action-active" : ""}`}

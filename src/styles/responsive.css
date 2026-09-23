@@ -113,8 +113,9 @@
     width: auto;
     flex-direction: row;
     overflow-x: auto;
-    padding: 3px 22px 8px 0;
-    scroll-snap-type: x proximity;
+    overflow-y: hidden;
+    padding: 3px 0 8px;
+    -webkit-overflow-scrolling: touch;
     scrollbar-color: rgba(20, 122, 99, 0.42) rgba(255, 255, 255, 0.72);
     scrollbar-width: thin;
   }
@@ -141,7 +142,10 @@
     flex: 0 0 auto;
     padding: 7px 12px;
     font-size: 0.72rem;
-    scroll-snap-align: start;
+  }
+
+  .side-menu-button-disabled {
+    pointer-events: none;
   }
 
   .side-menu-collapsed {
@@ -172,22 +176,35 @@
     top: 136px;
     left: 10px;
     width: calc(100vw - 20px);
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 146px);
+    max-height: calc(100dvh - 146px);
     padding: 10px;
   }
 
-  .station-card {
-    top: 128px;
+  .stations-panel-covered {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .station-card,
+  .readings-card {
+    top: 136px;
+    right: auto;
     left: 10px;
     width: calc(100vw - 20px);
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 146px);
+    max-height: calc(100dvh - 146px);
     padding: 10px;
   }
 
-  .station-devices-section,
-  .station-raw-action,
   .readings-card {
-    display: none;
+    z-index: 11;
+  }
+
+  .readings-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .readings-toolbar {
@@ -207,5 +224,26 @@
 
   .latest-readings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-wrap,
+  .profile-chart-wrap {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .chart-echarts {
+    height: clamp(230px, 68vw, 300px);
+  }
+
+  .profile-line-echarts,
+  .profile-heatmap-echarts {
+    height: clamp(260px, 82vw, 340px);
+  }
+}
+
+@media (max-width: 460px) {
+  .export-check-list-compact {
+    grid-template-columns: 1fr;
   }
 }

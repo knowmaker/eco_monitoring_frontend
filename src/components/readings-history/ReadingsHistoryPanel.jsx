@@ -15,6 +15,7 @@ import {
 } from "../../lib/date";
 import CategoryLineChart from "../charts/CategoryLineChart";
 import ProfileTemperatureChart from "../charts/ProfileTemperatureChart";
+import ScrollablePanel from "../layout/ScrollablePanel";
 import ReadingsMetricTabs from "./ReadingsMetricTabs";
 import ReadingsPeriodToolbar from "./ReadingsPeriodToolbar";
 import {
@@ -175,7 +176,7 @@ export default function ReadingsHistoryPanel({
   };
 
   return (
-    <aside className="readings-card">
+    <ScrollablePanel className="readings-card">
       <div className="card-header">
         <h2>Исторические наблюдения</h2>
         <div className="card-header-actions">
@@ -366,6 +367,6 @@ export default function ReadingsHistoryPanel({
           )}
         </>
       )}
-    </aside>
+    </ScrollablePanel>
   );
 }

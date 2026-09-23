@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 
 import { fetchRawMqttPayload } from "../../api";
+import ScrollablePanel from "../layout/ScrollablePanel";
 
 function toIsoDay(day) {
   const date = day instanceof Date ? day : new Date(day);
@@ -111,7 +112,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
   };
 
   return (
-    <aside className="readings-card raw-data-card">
+    <ScrollablePanel className="readings-card raw-data-card">
       <div className="card-header">
         <h2>Сырые данные</h2>
         <div className="card-header-actions">
@@ -190,6 +191,6 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
           ))}
         </div>
       )}
-    </aside>
+    </ScrollablePanel>
   );
 }
