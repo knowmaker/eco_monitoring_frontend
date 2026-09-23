@@ -2,7 +2,7 @@
   .topbar {
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto 24px;
     align-items: center;
     column-gap: 10px;
     row-gap: 3px;
@@ -47,6 +47,7 @@
   .topbar-status {
     grid-column: 2;
     grid-row: 2;
+    height: 24px;
     width: auto;
     justify-self: start;
     justify-content: flex-start;
@@ -56,9 +57,53 @@
     font-size: 0.7rem;
   }
 
+  .topbar-status-mobile-hidden {
+    display: none;
+  }
+
   .topbar-status svg {
     width: 13px;
     height: 13px;
+  }
+
+  .topbar-status-toggle {
+    display: grid;
+    margin-right: -3px;
+  }
+
+  .topbar-station-stats {
+    display: none;
+  }
+
+  .topbar-station-stats-mobile-open {
+    display: flex;
+    grid-column: 2 / 4;
+    grid-row: 2;
+    height: 24px;
+    flex-wrap: nowrap;
+    gap: 5px;
+    justify-self: start;
+  }
+
+  .topbar-station-stat {
+    height: 24px;
+    gap: 4px;
+    padding: 4px 6px;
+    font-size: 0.68rem;
+  }
+
+  .topbar-station-stat strong {
+    font-size: 0.7rem;
+  }
+
+  .topbar-stats-toggle {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    color: var(--muted-strong);
+    border: 1px solid var(--border);
+    background: #ffffff;
   }
 
   .side-menu {

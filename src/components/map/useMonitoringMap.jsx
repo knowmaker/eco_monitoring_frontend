@@ -12,9 +12,20 @@ const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 const MAP_FIT_PADDING = { top: 120, right: 120, bottom: 120, left: 120 };
 
-function createTowerMarkerElement(postType, isActive) {
+function getMarkerStatusClass(activityStatus) {
+  if (activityStatus === "active" || activityStatus === "archived") {
+    return `tower-marker-${activityStatus}`;
+  }
+  return "tower-marker-passive";
+}
+
+function createTowerMarkerElement(postType, activityStatus, isSelected) {
   const element = document.createElement("div");
-  element.className = `tower-marker${isActive ? " tower-marker-active" : ""}`;
+  element.className = [
+    "tower-marker",
+    getMarkerStatusClass(activityStatus),
+    isSelected ? "tower-marker-selected" : "",
+  ].filter(Boolean).join(" ");
   const root = createRoot(element);
   const Icon = postType === "mobile" ? Truck : RadioTower;
   root.render(<Icon size={23} strokeWidth={2.2} aria-hidden="true" />);
@@ -137,7 +148,11 @@ export default function useMonitoringMap({ monitoringPosts, selectedMonitoringPo
     }
 
     postsWithCoordinates.forEach((post) => {
-      const { element, root } = createTowerMarkerElement(post.post_type, post.id === selectedMonitoringPostId);
+      const { element, root } = createTowerMarkerElement(
+        post.post_type,
+        post.activity_status,
+        post.id === selectedMonitoringPostId
+      );
       element.title = getPostTitle(post);
       element.addEventListener("click", () => {
         focusPostOnMap(mapRef.current, post);

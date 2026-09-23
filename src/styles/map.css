@@ -8,11 +8,35 @@
   width: 38px;
   height: 38px;
   place-items: center;
-  color: var(--warning);
-  border: 1px solid rgba(183, 119, 25, 0.34);
+  color: var(--marker-color);
+  border: 1px solid var(--marker-border);
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--marker-bg);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.tower-marker-active {
+  --marker-color: var(--accent-strong);
+  --marker-border: rgba(20, 122, 99, 0.34);
+  --marker-bg: #ffffff;
+  --marker-selected-border: rgba(15, 111, 95, 0.5);
+  --marker-selected-ring: rgba(20, 122, 99, 0.18);
+}
+
+.tower-marker-passive {
+  --marker-color: var(--warning);
+  --marker-border: rgba(183, 119, 25, 0.34);
+  --marker-bg: #ffffff;
+  --marker-selected-border: rgba(154, 91, 0, 0.5);
+  --marker-selected-ring: rgba(183, 119, 25, 0.18);
+}
+
+.tower-marker-archived {
+  --marker-color: #6b7280;
+  --marker-border: rgba(100, 116, 139, 0.34);
+  --marker-bg: #ffffff;
+  --marker-selected-border: rgba(71, 85, 105, 0.5);
+  --marker-selected-ring: rgba(100, 116, 139, 0.18);
 }
 
 .tower-marker svg {
@@ -20,11 +44,11 @@
   height: 23px;
 }
 
-.tower-marker-active {
-  color: var(--accent-strong);
-  border-color: rgba(20, 122, 99, 0.48);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(20, 122, 99, 0.14), 0 12px 28px rgba(15, 23, 42, 0.2);
+.tower-marker-selected {
+  color: #ffffff;
+  border-color: var(--marker-selected-border);
+  background: var(--marker-color);
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--marker-selected-ring), 0 12px 28px rgba(15, 23, 42, 0.24);
 }
 
 .maplibregl-popup-content {

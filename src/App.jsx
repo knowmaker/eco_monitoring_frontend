@@ -110,6 +110,23 @@ export default function App() {
     return `Станций на карте: ${monitoringPosts.length}`;
   }, [monitoringPosts.length, isLoadingPosts, loadError]);
   const statusKind = loadError ? "error" : isLoadingPosts ? "loading" : "ready";
+  const stationStatusCounts = useMemo(
+    () =>
+      monitoringPosts.reduce(
+        (counts, post) => {
+          if (post.activity_status === "active") {
+            counts.active += 1;
+          } else if (post.activity_status === "archived") {
+            counts.archived += 1;
+          } else {
+            counts.passive += 1;
+          }
+          return counts;
+        },
+        { active: 0, passive: 0, archived: 0 }
+      ),
+    [monitoringPosts]
+  );
   const useGasAbsoluteValues = !isAuthenticated || !isGasValueCorrectionDisabled;
 
   const stationPanelPosts = isAdmin ? adminMonitoringPosts : monitoringPosts;
@@ -361,6 +378,7 @@ export default function App() {
       <Topbar
         statusKind={statusKind}
         statusText={statusText}
+        stationStatusCounts={stationStatusCounts}
         isAuthenticated={isAuthenticated}
         onProfileClick={() => setIsProfileModalOpen(true)}
         onLogout={handleLogout}

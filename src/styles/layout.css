@@ -68,10 +68,29 @@
   text-overflow: ellipsis;
 }
 
+.topbar-status-toggle,
+.topbar-stats-toggle {
+  display: none;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.topbar-status-toggle:hover,
+.topbar-stats-toggle:hover {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .topbar-status-ready {
-  color: var(--accent-strong);
-  border-color: rgba(20, 122, 99, 0.24);
-  background: var(--accent-soft);
+  color: #315f9f;
+  border-color: rgba(49, 95, 159, 0.24);
+  background: rgba(49, 95, 159, 0.09);
 }
 
 .topbar-status-loading {
@@ -82,6 +101,51 @@
   color: #9f2f2f;
   border-color: rgba(195, 63, 63, 0.24);
   background: var(--danger-soft);
+}
+
+.topbar-station-stats {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-station-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.topbar-station-stat strong {
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.topbar-station-stat-active {
+  color: var(--accent-strong);
+  border-color: rgba(20, 122, 99, 0.24);
+  background: var(--accent-soft);
+}
+
+.topbar-station-stat-passive {
+  color: #8a5a12;
+  border-color: rgba(183, 119, 25, 0.24);
+  background: rgba(183, 119, 25, 0.1);
+}
+
+.topbar-station-stat-archived {
+  color: var(--muted-strong);
+  border-color: var(--border);
+  background: #f8fafc;
 }
 
 .side-menu {
