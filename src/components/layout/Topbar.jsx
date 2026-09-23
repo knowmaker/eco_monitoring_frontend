@@ -82,13 +82,13 @@ export default function Topbar({
           </>
         ) : (
           <>
-            <button className="btn btn-secondary" type="button" onClick={onLoginClick}>
-              <LogIn size={16} aria-hidden="true" />
-              <span className="btn-label">Вход</span>
-            </button>
             <button className="btn btn-primary" type="button" onClick={onRegisterClick}>
               <UserPlus size={16} aria-hidden="true" />
               <span className="btn-label">Регистрация</span>
+            </button>
+            <button className="btn btn-secondary" type="button" onClick={onLoginClick}>
+              <LogIn size={16} aria-hidden="true" />
+              <span className="btn-label">Вход</span>
             </button>
           </>
         )}
