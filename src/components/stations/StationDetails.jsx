@@ -5,26 +5,14 @@ import { formatCoordinates, getPostTitle, POST_TYPE_LABELS } from "../../domain/
 import LatestReadingsCard from "../latest-readings/LatestReadingsCard";
 import useLatestReadings from "../latest-readings/useLatestReadings";
 
-const PASSIVE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+const PLACEMENT_BADGES = {
+  active: { label: "Активна", className: "station-placement-badge-active" },
+  passive: { label: "Пассивна", className: "station-placement-badge-passive" },
+  archived: { label: "В архиве", className: "station-placement-badge-archive" },
+};
 
-function getPlacementBadge(post, latestReadings, isLoadingLatest, latestErrorText) {
-  if (post?.active_to) {
-    return { label: "В архиве", className: "station-placement-badge-archive" };
-  }
-
-  if (isLoadingLatest || latestErrorText) {
-    return null;
-  }
-
-  const latestBucketMs = Number(latestReadings?.bucket_ms);
-  const isPassive =
-    !Number.isFinite(latestBucketMs) || Date.now() - latestBucketMs > PASSIVE_THRESHOLD_MS;
-
-  if (isPassive) {
-    return { label: "Пассивна", className: "station-placement-badge-passive" };
-  }
-
-  return { label: "Активна", className: "station-placement-badge-active" };
+function getPlacementBadge(post) {
+  return PLACEMENT_BADGES[post?.activity_status] ?? null;
 }
 
 export default function StationDetails({
@@ -48,12 +36,7 @@ export default function StationDetails({
     isLoadingLatest,
     latestErrorText,
   } = useLatestReadings({ monitoringPostId: selectedMonitoringPostId, refreshCounter });
-  const placementBadge = getPlacementBadge(
-    selectedMonitoringPost,
-    latestReadings,
-    isLoadingLatest,
-    latestErrorText
-  );
+  const placementBadge = getPlacementBadge(selectedMonitoringPost);
 
   return (
     <>
