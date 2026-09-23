@@ -173,7 +173,7 @@
   min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 10px;
   color: var(--text);
   text-align: left;
@@ -209,6 +209,35 @@
   margin-top: 2px;
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+.station-list-status-badge {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.station-list-status-badge-active {
+  color: var(--accent-strong);
+  border-color: rgba(20, 122, 99, 0.22);
+  background: var(--accent-soft);
+}
+
+.station-list-status-badge-passive {
+  color: #8a5a12;
+  border-color: rgba(183, 119, 25, 0.24);
+  background: rgba(183, 119, 25, 0.1);
+}
+
+.station-list-status-badge-archive {
+  color: var(--muted-strong);
+  border-color: var(--border);
+  background: #f8fafc;
 }
 
 .station-status {

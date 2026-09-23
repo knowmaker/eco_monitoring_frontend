@@ -7,6 +7,16 @@ function getPostTypeLabel(post) {
   return post.active_to ? `Архивная - ${typeLabel}` : typeLabel;
 }
 
+const POST_STATUS_BADGES = {
+  active: { label: "Активна", className: "station-list-status-badge-active" },
+  passive: { label: "Пассивна", className: "station-list-status-badge-passive" },
+  archived: { label: "В архиве", className: "station-list-status-badge-archive" },
+};
+
+function getPostStatusBadge(post) {
+  return POST_STATUS_BADGES[post.activity_status] ?? null;
+}
+
 export default function StationsPanel({
   isStationDetailsInPanel,
   isAdmin,
@@ -52,33 +62,44 @@ export default function StationsPanel({
           {isAdmin && adminPostsError && <p className="station-card-error">{adminPostsError}</p>}
 
           <ul className="stations-list">
-            {stationPanelPosts.map((post) => (
-              <li key={post.id}>
-                <div className="station-list-row">
-                  <button
-                    type="button"
-                    className={`station-list-button${
-                      selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
-                    }`}
-                    onClick={() => onSelectPost(post)}
-                  >
-                    <span className="station-list-text">
-                      <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
-                      <small>{getPostTypeLabel(post)}</small>
-                    </span>
-                    {post.is_confirmed ? (
-                      <span className="station-status station-status-confirmed" title="Подтверждена">
-                        <CheckCircle2 size={16} />
+            {stationPanelPosts.map((post) => {
+              const statusBadge = getPostStatusBadge(post);
+              return (
+                <li key={post.id}>
+                  <div className="station-list-row">
+                    <button
+                      type="button"
+                      className={`station-list-button${
+                        selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
+                      }`}
+                      onClick={() => onSelectPost(post)}
+                    >
+                      <span className="station-list-text">
+                        <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
+                        <small>{getPostTypeLabel(post)}</small>
                       </span>
-                    ) : (
-                      <span className="station-status station-status-pending" title="Не подтверждена">
-                        <CircleDashed size={16} />
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </li>
-            ))}
+                      {statusBadge && (
+                        <span
+                          className={`station-list-status-badge ${statusBadge.className}`}
+                          title={statusBadge.label}
+                        >
+                          {statusBadge.label}
+                        </span>
+                      )}
+                      {post.is_confirmed ? (
+                        <span className="station-status station-status-confirmed" title="Подтверждена">
+                          <CheckCircle2 size={16} />
+                        </span>
+                      ) : (
+                        <span className="station-status station-status-pending" title="Не подтверждена">
+                          <CircleDashed size={16} />
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </>
       )}
