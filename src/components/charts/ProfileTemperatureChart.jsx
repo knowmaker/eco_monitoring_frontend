@@ -8,7 +8,9 @@ import {
   normalizeChartValue,
 } from "./chartFormatters";
 import {
+  AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
+  COMPACT_AXIS_NAME_TEXT_STYLE,
   GRID_LINE_STYLE,
   TOOLTIP_BACKGROUND_COLOR,
   TOOLTIP_BORDER_COLOR,
@@ -81,10 +83,10 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       backgroundColor: "transparent",
       animation: true,
       grid: {
-        left: 48,
+        left: 52,
         right: 72,
         top: 24,
-        bottom: 46,
+        bottom: 58,
       },
       tooltip: {
         trigger: "item",
@@ -122,6 +124,10 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       xAxis: {
         type: "category",
         data: periodLabels,
+        name: viewMode === "month" ? "Дата" : "Время",
+        nameLocation: "middle",
+        nameGap: 34,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
@@ -133,6 +139,11 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
       yAxis: {
         type: "category",
         data: heights.map((height) => String(height)),
+        name: "Высота, м",
+        nameLocation: "middle",
+        nameRotate: 90,
+        nameGap: 36,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: AXIS_TEXT_COLOR },
@@ -174,7 +185,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
     };
 
     return withResponsiveChartOption(baseOption, {
-      grid: { left: 36, right: 50, top: 20, bottom: 40 },
+      grid: { left: 44, right: 50, top: 20, bottom: 50 },
       visualMap: {
         right: 0,
         top: 16,
@@ -182,13 +193,19 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
         textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
       },
       xAxis: {
+        nameGap: 30,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
         axisLabel: {
           fontSize: 9,
           interval: viewMode === "month" ? 2 : 3,
           hideOverlap: true,
         },
       },
-      yAxis: { axisLabel: { fontSize: 9 } },
+      yAxis: {
+        nameGap: 30,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
+        axisLabel: { fontSize: 9 },
+      },
     });
   }, [profiles, viewMode]);
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, RefreshCw, X } from "lucide-react";
 
 import {
+  DEVICE_METRIC_TABS,
   DEVICE_TYPE_LABELS,
   METEO_WIND_KEY,
 } from "../../domain/devices";
@@ -32,6 +33,26 @@ import useRawReadings from "./useRawReadings";
 import TimeLineChart from "../charts/TimeLineChart";
 import WindCompassStrip from "../charts/WindCompassStrip";
 import XYLineChart from "../charts/XYLineChart";
+
+const GAS_Y_AXIS_NAME = "Концентрация, мг/м³";
+const DUST_Y_AXIS_NAME = "Концентрация, мг/м³";
+
+function getXAxisName(viewMode) {
+  return viewMode === "month" ? "Дата" : "Время";
+}
+
+function getYAxisName(selectedDeviceType, selectedMetricKey) {
+  if (selectedDeviceType === "gas") {
+    return GAS_Y_AXIS_NAME;
+  }
+  if (selectedDeviceType === "dust") {
+    return DUST_Y_AXIS_NAME;
+  }
+  if (selectedDeviceType === "meteo" || selectedDeviceType === "ivtm") {
+    return DEVICE_METRIC_TABS[selectedDeviceType]?.find((item) => item.key === selectedMetricKey)?.yAxisName;
+  }
+  return undefined;
+}
 
 export default function ReadingsHistoryPanel({
   monitoringPostId,
@@ -118,6 +139,8 @@ export default function ReadingsHistoryPanel({
   });
 
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
+  const xAxisName = getXAxisName(viewMode);
+  const yAxisName = getYAxisName(selectedDeviceType, selectedMetricKey);
   const canOpenRawDrilldown = isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";
   const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
@@ -298,6 +321,8 @@ export default function ReadingsHistoryPanel({
                   series={rawSeries}
                   start={rawDrilldown.start}
                   end={rawDrilldown.end}
+                  xAxisName="Время"
+                  yAxisName={yAxisName}
                   emptyText="Нет сырых данных за выбранный час."
                 />
               )
@@ -356,6 +381,8 @@ export default function ReadingsHistoryPanel({
                 xKey={axis.key}
                 xValues={axis.values}
                 xLabels={axis.labels}
+                xAxisName={xAxisName}
+                yAxisName={yAxisName}
                 onEvents={canOpenRawDrilldown ? aggregateChartEvents : undefined}
                 emptyText={axis.emptyText}
               />

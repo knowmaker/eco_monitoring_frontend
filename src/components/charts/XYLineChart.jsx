@@ -3,7 +3,9 @@ import ReactECharts from "echarts-for-react";
 
 import { normalizeChartValue } from "./chartFormatters";
 import {
+  AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
+  COMPACT_AXIS_NAME_TEXT_STYLE,
   DEFAULT_CHART_COLOR,
   GRID_LINE_STYLE,
   TOOLTIP_BACKGROUND_COLOR,
@@ -85,8 +87,8 @@ export default function XYLineChart({
         scale: true,
         name: xAxisName,
         nameLocation: xAxisName ? "middle" : undefined,
-        nameGap: xAxisName ? 30 : undefined,
-        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 12, fontWeight: 600 },
+        nameGap: xAxisName ? 28 : undefined,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         splitNumber: xAxisSplitNumber,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
@@ -101,8 +103,8 @@ export default function XYLineChart({
         name: yAxisName,
         nameLocation: yAxisName ? "middle" : undefined,
         nameRotate: yAxisName ? 90 : undefined,
-        nameGap: yAxisName ? 42 : undefined,
-        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 12, fontWeight: 600 },
+        nameGap: yAxisName ? 34 : undefined,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         interval: yAxisInterval,
         axisLine: { show: false },
         axisTick: { show: false },
@@ -156,13 +158,13 @@ export default function XYLineChart({
           }
         : undefined,
       xAxis: {
-        nameGap: xAxisName ? 25 : undefined,
-        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 10, fontWeight: 600 },
+        nameGap: xAxisName ? 23 : undefined,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
         axisLabel: { fontSize: 9, hideOverlap: true },
       },
       yAxis: {
-        nameGap: yAxisName ? 32 : undefined,
-        nameTextStyle: { color: AXIS_TEXT_COLOR, fontSize: 10, fontWeight: 600 },
+        nameGap: yAxisName ? 28 : undefined,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
         axisLabel: { fontSize: 9 },
       },
     });

@@ -234,12 +234,12 @@
   }
 
   .chart-echarts {
-    height: clamp(230px, 68vw, 300px);
+    height: clamp(210px, 60vw, 270px) !important;
   }
 
   .profile-line-echarts,
   .profile-heatmap-echarts {
-    height: clamp(260px, 82vw, 340px);
+    height: clamp(230px, 72vw, 310px) !important;
   }
 }
 

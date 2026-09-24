@@ -3,8 +3,10 @@ import ReactECharts from "echarts-for-react";
 
 import { formatAxisValue, normalizeChartValue } from "./chartFormatters";
 import {
+  AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
   CHART_PALETTE,
+  COMPACT_AXIS_NAME_TEXT_STYLE,
   GRID_LINE_STYLE,
   TOOLTIP_BACKGROUND_COLOR,
   TOOLTIP_BORDER_COLOR,
@@ -43,11 +45,16 @@ function formatTooltipValue(value) {
   return formatAxisValue(number);
 }
 
-function createYAxis({ position = "left", showSplitLine = true } = {}) {
+function createYAxis({ position = "left", showSplitLine = true, name } = {}) {
   return {
     type: "value",
     scale: true,
     position,
+    name,
+    nameLocation: name ? "middle" : undefined,
+    nameRotate: name ? 90 : undefined,
+    nameGap: name ? 38 : undefined,
+    nameTextStyle: AXIS_NAME_TEXT_STYLE,
     splitLine: showSplitLine
       ? {
           lineStyle: {
@@ -67,6 +74,8 @@ export default function TimeLineChart({
   series,
   start,
   end,
+  xAxisName,
+  yAxisName,
   emptyText = "Нет сырых данных за выбранный интервал.",
 }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
@@ -82,10 +91,10 @@ export default function TimeLineChart({
       backgroundColor: "transparent",
       animation: true,
       grid: {
-        left: 48,
+        left: yAxisName ? 52 : 48,
         right: hasSecondaryAxis ? 48 : 20,
         top: 24,
-        bottom: 44,
+        bottom: xAxisName ? 56 : 44,
       },
       tooltip: {
         trigger: "axis",
@@ -113,6 +122,10 @@ export default function TimeLineChart({
         type: "time",
         min: start,
         max: end,
+        name: xAxisName,
+        nameLocation: xAxisName ? "middle" : undefined,
+        nameGap: xAxisName ? 32 : undefined,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         interval: 10 * 60 * 1000,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
@@ -129,8 +142,8 @@ export default function TimeLineChart({
         },
       },
       yAxis: hasSecondaryAxis
-        ? [createYAxis(), createYAxis({ position: "right", showSplitLine: false })]
-        : createYAxis(),
+        ? [createYAxis({ name: yAxisName }), createYAxis({ position: "right", showSplitLine: false })]
+        : createYAxis({ name: yAxisName }),
       series: series.map((item, index) => ({
         type: "line",
         name: item.label,
@@ -154,11 +167,22 @@ export default function TimeLineChart({
     };
 
     const compactYAxis = hasSecondaryAxis
-      ? [{ axisLabel: { fontSize: 9 } }, { axisLabel: { fontSize: 9 } }]
-      : { axisLabel: { fontSize: 9 } };
+      ? [
+          {
+            nameGap: yAxisName ? 32 : undefined,
+            nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
+            axisLabel: { fontSize: 9 },
+          },
+          { axisLabel: { fontSize: 9 } },
+        ]
+      : {
+          nameGap: yAxisName ? 32 : undefined,
+          nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
+          axisLabel: { fontSize: 9 },
+        };
 
     return withResponsiveChartOption(baseOption, {
-      grid: { left: 36, right: hasSecondaryAxis ? 36 : 8, top: 22, bottom: 38 },
+      grid: { left: yAxisName ? 44 : 36, right: hasSecondaryAxis ? 36 : 8, top: 22, bottom: xAxisName ? 48 : 38 },
       legend: {
         right: 0,
         itemWidth: 12,
@@ -167,6 +191,8 @@ export default function TimeLineChart({
         textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
       },
       xAxis: {
+        nameGap: xAxisName ? 30 : undefined,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
         axisLabel: {
           fontSize: 9,
           hideOverlap: true,
@@ -174,7 +200,7 @@ export default function TimeLineChart({
       },
       yAxis: compactYAxis,
     });
-  }, [series, hasValues, start, end]);
+  }, [series, hasValues, start, end, xAxisName, yAxisName]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;

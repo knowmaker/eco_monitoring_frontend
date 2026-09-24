@@ -8,8 +8,10 @@ import {
   normalizeChartValue,
 } from "./chartFormatters";
 import {
+  AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
   CHART_PALETTE,
+  COMPACT_AXIS_NAME_TEXT_STYLE,
   GRID_LINE_STYLE,
   TOOLTIP_BACKGROUND_COLOR,
   TOOLTIP_BORDER_COLOR,
@@ -30,6 +32,8 @@ export default function CategoryLineChart({
   xKey = "hour",
   xValues,
   xLabels,
+  xAxisName,
+  yAxisName,
   onEvents,
   emptyText = "Нет данных за выбранный период.",
 }) {
@@ -73,10 +77,10 @@ export default function CategoryLineChart({
       backgroundColor: "transparent",
       animation: true,
       grid: {
-        left: 48,
+        left: yAxisName ? 56 : 48,
         right: 20,
         top: 24,
-        bottom: 44,
+        bottom: xAxisName ? 56 : 44,
       },
       tooltip: {
         trigger: "axis",
@@ -93,6 +97,10 @@ export default function CategoryLineChart({
       xAxis: {
         type: "category",
         data: categories,
+        name: xAxisName,
+        nameLocation: xAxisName ? "middle" : undefined,
+        nameGap: xAxisName ? 34 : undefined,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         axisLine: { lineStyle: { color: "rgba(15, 23, 42, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
@@ -112,6 +120,11 @@ export default function CategoryLineChart({
       yAxis: {
         type: "value",
         scale: true,
+        name: yAxisName,
+        nameLocation: yAxisName ? "middle" : undefined,
+        nameRotate: yAxisName ? 90 : undefined,
+        nameGap: yAxisName ? 42 : undefined,
+        nameTextStyle: AXIS_NAME_TEXT_STYLE,
         splitLine: {
           lineStyle: {
             ...GRID_LINE_STYLE,
@@ -127,7 +140,7 @@ export default function CategoryLineChart({
     };
 
     return withResponsiveChartOption(baseOption, {
-      grid: { left: 36, right: 8, top: 22, bottom: 38 },
+      grid: { left: yAxisName ? 46 : 36, right: 8, top: 22, bottom: xAxisName ? 48 : 38 },
       legend: {
         right: 0,
         itemWidth: 12,
@@ -136,14 +149,20 @@ export default function CategoryLineChart({
         textStyle: { color: AXIS_TEXT_COLOR, fontSize: 9 },
       },
       xAxis: {
+        nameGap: xAxisName ? 30 : undefined,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
         axisLabel: {
           fontSize: 9,
           interval: xKey === "day" ? 2 : 3,
         },
       },
-      yAxis: { axisLabel: { fontSize: 9 } },
+      yAxis: {
+        nameGap: yAxisName ? 34 : undefined,
+        nameTextStyle: COMPACT_AXIS_NAME_TEXT_STYLE,
+        axisLabel: { fontSize: 9 },
+      },
     });
-  }, [series, hasValues, xKey, xValues, xLabels, onEvents]);
+  }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, onEvents]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;

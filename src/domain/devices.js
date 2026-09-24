@@ -11,10 +11,10 @@ export const DEVICE_TYPE_LABELS = {
 export const GAS_SUBSTANCE_ORDER = ["NO2", "O3", "NO", "SO2", "CO", "H2S"];
 
 export const DUST_METRIC_TABS = [
-  { key: "pm1_concentration", label: "PM1" },
-  { key: "pm2_concentration", label: "PM2.5" },
-  { key: "pm10_concentration", label: "PM10" },
-  { key: "tsp_concentration", label: "TSP" },
+  { key: "pm1_concentration", label: "PM1", yAxisName: "Концентрация, мг/м³" },
+  { key: "pm2_concentration", label: "PM2.5", yAxisName: "Концентрация, мг/м³" },
+  { key: "pm10_concentration", label: "PM10", yAxisName: "Концентрация, мг/м³" },
+  { key: "tsp_concentration", label: "TSP", yAxisName: "Концентрация, мг/м³" },
 ];
 
 export const DUST_METRIC_KEYS = DUST_METRIC_TABS.map((item) => item.key);
@@ -23,14 +23,14 @@ export const METEO_WIND_KEY = "__meteo_wind__";
 
 export const DEVICE_METRIC_TABS = {
   meteo: [
-    { key: "air_temp", label: "Температура воздуха" },
-    { key: "air_hum", label: "Влажность воздуха" },
-    { key: "atm_press", label: "Давление" },
+    { key: "air_temp", label: "Температура воздуха", yAxisName: "Температура, °C" },
+    { key: "air_hum", label: "Влажность воздуха", yAxisName: "Влажность, %" },
+    { key: "atm_press", label: "Давление", yAxisName: "Давление, мм рт. ст." },
     { key: METEO_WIND_KEY, label: "Ветер" },
   ],
   ivtm: [
-    { key: "sensor_ivtm_temp", label: "Температура ИВТМ" },
-    { key: "sensor_ivtm_hum", label: "Влажность ИВТМ" },
+    { key: "sensor_ivtm_temp", label: "Температура ИВТМ", yAxisName: "Температура, °C" },
+    { key: "sensor_ivtm_hum", label: "Влажность ИВТМ", yAxisName: "Влажность, %" },
   ],
 };
 
