@@ -30,13 +30,12 @@
 }
 
 .brand-block h1 {
+  flex: 0 0 auto;
   margin: 0;
-  overflow: hidden;
   color: var(--text);
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

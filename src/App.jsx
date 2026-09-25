@@ -20,7 +20,7 @@ const RawMqttPayloadPanel = lazy(() => import("./components/raw-mqtt/RawMqttPayl
 const ReadingsHistoryPanel = lazy(() => import("./components/readings-history/ReadingsHistoryPanel"));
 
 const POSTS_REFRESH_MS = 30_000;
-const MOBILE_VIEWPORT_QUERY = "(max-width: 760px)";
+const STACKED_PANELS_QUERY = "(max-width: 1000px)";
 
 function formatCoordinateInput(value) {
   return Number.isFinite(value) ? String(value) : "";
@@ -83,7 +83,7 @@ export default function App() {
     () => localStorage.getItem(GAS_VALUE_CORRECTION_DISABLED_STORAGE_KEY) === "true"
   );
   const { isAuthenticated, isAdmin, applyAuthSuccess, clearAuth } = useAuthState();
-  const isMobileViewport = useResponsiveViewport(MOBILE_VIEWPORT_QUERY);
+  const isStackedPanelsViewport = useResponsiveViewport(STACKED_PANELS_QUERY);
   const { monitoringPosts, loadError, isLoadingPosts } = useMonitoringPosts({
     isAdmin,
     refreshMs: POSTS_REFRESH_MS,
@@ -380,7 +380,7 @@ export default function App() {
     isAdmin && isStationCardOpen && isRawPacketsOpen && selectedMonitoringPostId !== null
   );
   const isStationsPanelCovered =
-    isMobileViewport &&
+    isStackedPanelsViewport &&
     (isStationManagementPanelOpen || isReadingsPanelOpen || isRawPacketsPanelOpen);
 
   const closeStationDetails = () => {
