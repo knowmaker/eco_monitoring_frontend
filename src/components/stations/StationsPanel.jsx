@@ -34,6 +34,7 @@ export default function StationsPanel({
 }) {
   return (
     <ScrollablePanel
+      key={isStationDetailsInPanel ? `station-details-${selectedMonitoringPostId}` : "station-list"}
       className={`stations-panel${isCovered ? " stations-panel-covered" : ""}`}
       aria-hidden={isCovered || undefined}
     >
