@@ -10,6 +10,7 @@ import {
 import {
   AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
+  CHART_BACKGROUND_COLOR,
   COMPACT_AXIS_NAME_TEXT_STYLE,
   GRID_LINE_STYLE,
   TOOLTIP_BACKGROUND_COLOR,
@@ -80,7 +81,7 @@ export default function ProfileTemperatureChart({ profiles, viewMode, emptyText 
     }
 
     const baseOption = {
-      backgroundColor: "transparent",
+      backgroundColor: CHART_BACKGROUND_COLOR,
       animation: true,
       grid: {
         left: 52,

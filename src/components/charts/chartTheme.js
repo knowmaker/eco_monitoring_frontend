@@ -1,4 +1,5 @@
 export const CHART_PALETTE = ["#16856d", "#4f6db8", "#d4872d", "#8b5fbf", "#c5536f", "#2f8aa6"];
+export const CHART_BACKGROUND_COLOR = "#ffffff";
 export const DEFAULT_CHART_COLOR = "#16856d";
 export const AXIS_TEXT_COLOR = "#647184";
 export const AXIS_NAME_TEXT_STYLE = { color: AXIS_TEXT_COLOR, fontSize: 12, fontWeight: 600 };

@@ -5,6 +5,7 @@ import { formatAxisValue, normalizeChartValue } from "./chartFormatters";
 import {
   AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
+  CHART_BACKGROUND_COLOR,
   CHART_PALETTE,
   COMPACT_AXIS_NAME_TEXT_STYLE,
   GRID_LINE_STYLE,
@@ -88,7 +89,7 @@ export default function TimeLineChart({
     const hasSecondaryAxis = series.some((item) => item.yAxisIndex === 1);
 
     const baseOption = {
-      backgroundColor: "transparent",
+      backgroundColor: CHART_BACKGROUND_COLOR,
       animation: true,
       grid: {
         left: yAxisName ? 52 : 48,

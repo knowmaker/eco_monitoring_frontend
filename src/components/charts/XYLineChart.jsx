@@ -5,6 +5,7 @@ import { normalizeChartValue } from "./chartFormatters";
 import {
   AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
+  CHART_BACKGROUND_COLOR,
   COMPACT_AXIS_NAME_TEXT_STYLE,
   DEFAULT_CHART_COLOR,
   GRID_LINE_STYLE,
@@ -46,7 +47,7 @@ export default function XYLineChart({
     }
 
     const baseOption = {
-      backgroundColor: "transparent",
+      backgroundColor: CHART_BACKGROUND_COLOR,
       animation: true,
       animationDurationUpdate: 0,
       grid: {
