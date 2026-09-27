@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { LoaderCircle, X } from "lucide-react";
 
-import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasForecasts";
+import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasHeatmap";
+import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
 import ScrollablePanel from "../layout/ScrollablePanel";
 import HeatmapTimeline from "./HeatmapTimeline";
 
@@ -90,10 +91,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
     };
   }, [selectedItem, substanceCode, onFrameChange]);
 
-  const range = useMemo(() => {
-    const values = (frame?.points ?? []).map((point) => point.value).filter(Number.isFinite);
-    return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
-  }, [frame]);
+  const hasCells = (frame?.cells ?? []).some((cell) => Number.isFinite(cell.value));
 
   return (
     <ScrollablePanel className="stations-panel heatmap-panel">
@@ -148,14 +146,16 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
 
       {frame && (
         <section className="heatmap-summary">
-          <div><span>Станций</span><strong>{frame.points.filter((point) => Number.isFinite(point.value)).length}</strong></div>
-          {range && (
+          <div><span>Станций</span><strong>{frame.source_station_count}</strong></div>
+          {hasCells && (
             <div className="heatmap-legend-block">
               <span>Диапазон</span><div className="heatmap-legend" />
-              <div className="heatmap-legend-labels"><span>{formatValue(range.min)}</span><span>{formatValue(range.max)}</span></div>
+              <div className="heatmap-legend-labels"><span>{formatValue(GAS_HEATMAP_MIN_VALUE)}</span><span>{formatValue(GAS_HEATMAP_MAX_VALUE)}</span></div>
             </div>
           )}
-          {frame.generated_at && <small>Прогноз рассчитан {formatHour(frame.generated_at)}</small>}
+          {frame.data_kind === "forecast" && frame.generated_at && (
+            <small>Прогноз рассчитан {formatHour(frame.generated_at)}</small>
+          )}
         </section>
       )}
     </ScrollablePanel>

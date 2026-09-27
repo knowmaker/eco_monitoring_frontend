@@ -1,7 +1,7 @@
 import { requestJson } from "./client";
 
 
-export function fetchGasHeatmapTimeline(substanceCode, pastHours = 168, futureHours = 24) {
+export function fetchGasHeatmapTimeline(substanceCode, pastHours = 336, futureHours = 24) {
   const params = new URLSearchParams({
     substance_code: substanceCode,
     past_hours: String(pastHours),
@@ -19,7 +19,7 @@ export function fetchGasHeatmap(substanceCode, hourStart) {
   const params = new URLSearchParams({ substance_code: substanceCode, hour_start: hourStart });
   return requestJson(`/api/v1/gases/heatmap?${params}`, {
     errorMessage: "Ошибка загрузки тепловой карты",
-    validate: (value) => value && Array.isArray(value.points),
+    validate: (value) => value && Array.isArray(value.cells),
     validationMessage: "Некорректный формат данных тепловой карты",
   });
 }

@@ -1,34 +1,45 @@
+import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
+
+
 const HEATMAP_SOURCE_ID = "gas-heatmap-source";
 const HEATMAP_LAYER_ID = "gas-heatmap-layer";
-const HEATMAP_POINTS_LAYER_ID = "gas-heatmap-points";
 
 function emptyFeatureCollection() {
   return { type: "FeatureCollection", features: [] };
 }
 
 function createHeatmapGeoJson(frame) {
-  const points = (frame?.points ?? []).filter(
-    (point) =>
-      Number.isFinite(point.latitude) &&
-      Number.isFinite(point.longitude) &&
-      Number.isFinite(point.value)
+  const cells = (frame?.cells ?? []).filter(
+    (cell) =>
+      Number.isFinite(cell.south) &&
+      Number.isFinite(cell.west) &&
+      Number.isFinite(cell.north) &&
+      Number.isFinite(cell.east) &&
+      Number.isFinite(cell.value)
   );
-  const values = points.map((point) => point.value);
-  const min = values.length ? Math.min(...values) : 0;
-  const max = values.length ? Math.max(...values) : 1;
-  const span = max - min || 1;
+  const span = GAS_HEATMAP_MAX_VALUE - GAS_HEATMAP_MIN_VALUE;
 
   return {
     type: "FeatureCollection",
-    features: points.map((point) => ({
+    features: cells.map((cell) => ({
       type: "Feature",
       geometry: {
-        type: "Point",
-        coordinates: [point.longitude, point.latitude],
+        type: "Polygon",
+        coordinates: [[
+          [cell.west, cell.south],
+          [cell.east, cell.south],
+          [cell.east, cell.north],
+          [cell.west, cell.north],
+          [cell.west, cell.south],
+        ]],
       },
       properties: {
-        value: point.value,
-        normalized: (point.value - min) / span,
+        value: cell.value,
+        normalized: Math.min(
+          1,
+          Math.max(0, (cell.value - GAS_HEATMAP_MIN_VALUE) / span)
+        ),
+        confidence: Number.isFinite(cell.confidence) ? cell.confidence : 0,
       },
     })),
   };
@@ -47,90 +58,42 @@ export function initializeGasHeatmap(map) {
     map.addLayer(
       {
         id: HEATMAP_LAYER_ID,
-        type: "heatmap",
+        type: "fill",
         source: HEATMAP_SOURCE_ID,
         paint: {
-          "heatmap-weight": ["interpolate", ["linear"], ["get", "normalized"], 0, 0.2, 1, 1],
-          "heatmap-intensity": [
+          "fill-antialias": false,
+          "fill-color": [
             "interpolate",
             ["linear"],
-            ["zoom"],
-            7,
-            0.8,
-            14,
-            2.1,
-            18,
-            1.5,
-            22,
-            1.25,
-          ],
-          "heatmap-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            7,
-            30,
-            12,
-            62,
-            14,
-            82,
-            16,
-            110,
-            17,
-            220,
-            18,
-            360,
-            20,
-            640,
-            22,
-            900,
-          ],
-          "heatmap-opacity": 0.78,
-          "heatmap-color": [
-            "interpolate",
-            ["linear"],
-            ["heatmap-density"],
+            ["get", "normalized"],
             0,
-            "rgba(44,123,182,0)",
-            0.15,
-            "rgba(171,217,233,0.35)",
-            0.35,
+            "#2c7bb6",
+            0.25,
             "#74add1",
-            0.55,
+            0.5,
             "#ffffbf",
             0.75,
             "#fdae61",
             1,
             "#d7191c",
           ],
+          "fill-opacity": [
+            "interpolate",
+            ["linear"],
+            ["get", "confidence"],
+            0,
+            0,
+            0.2,
+            0.18,
+            0.6,
+            0.55,
+            1,
+            0.78,
+          ],
         },
       },
       firstSymbolLayer
     );
-  }
-
-  if (!map.getLayer(HEATMAP_POINTS_LAYER_ID)) {
-    map.addLayer({
-      id: HEATMAP_POINTS_LAYER_ID,
-      type: "circle",
-      source: HEATMAP_SOURCE_ID,
-      paint: {
-        "circle-radius": 6,
-        "circle-color": [
-          "interpolate",
-          ["linear"],
-          ["get", "normalized"],
-          0,
-          "#2c7bb6",
-          0.5,
-          "#ffffbf",
-          1,
-          "#d7191c",
-        ],
-        "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 2,
-      },
-    });
   }
 }
 

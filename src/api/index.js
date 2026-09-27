@@ -34,4 +34,4 @@ export { fetchStationLatestHourlyReadings } from "./stationReadings";
 export {
   fetchGasHeatmap,
   fetchGasHeatmapTimeline,
-} from "./gasForecasts";
+} from "./gasHeatmap";
