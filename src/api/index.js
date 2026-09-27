@@ -31,3 +31,7 @@ export {
   fetchProfileStateMonthly,
 } from "./readings";
 export { fetchStationLatestHourlyReadings } from "./stationReadings";
+export {
+  fetchGasHeatmap,
+  fetchGasHeatmapTimeline,
+} from "./gasForecasts";

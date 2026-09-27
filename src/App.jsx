@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/auth/AuthModal";
 import ExportPanel from "./components/export-aggregates/ExportPanel";
+import GasHeatmapPanel from "./components/forecast/GasHeatmapPanel";
 import SideMenu from "./components/layout/SideMenu";
 import Topbar from "./components/layout/Topbar";
 import StationDetails from "./components/stations/StationDetails";
@@ -62,6 +63,7 @@ function createStationTransferForm(post = {}) {
 export default function App() {
   const [postsReloadToken, setPostsReloadToken] = useState(0);
   const [activeMenuPanel, setActiveMenuPanel] = useState(null);
+  const [heatmapFrame, setHeatmapFrame] = useState(null);
   const [editingStationId, setEditingStationId] = useState(null);
   const [stationForm, setStationForm] = useState(createEmptyStationForm);
   const [isSavingStation, setIsSavingStation] = useState(false);
@@ -164,6 +166,8 @@ export default function App() {
     monitoringPosts,
     selectedMonitoringPostId,
     onPostClick: handleMapPostClick,
+    heatmapFrame,
+    heatmapEnabled: activeMenuPanel === "heatmap",
   });
 
   useEffect(() => {
@@ -419,6 +423,18 @@ export default function App() {
       <SideMenu
         activeMenuPanel={activeMenuPanel}
         onStationsClick={() => setActiveMenuPanel((current) => (current === "stations" ? null : "stations"))}
+        onHeatmapClick={() => {
+          if (isStationCardOpen) {
+            closeStationDetails();
+          }
+          setActiveMenuPanel((current) => {
+            const next = current === "heatmap" ? null : "heatmap";
+            if (next === null) setHeatmapFrame(null);
+            return next;
+          });
+          setIsReadingsCardOpen(false);
+          setIsRawPacketsOpen(false);
+        }}
         onExportClick={() => {
           if (isStationCardOpen) {
             closeStationDetails();
@@ -488,6 +504,16 @@ export default function App() {
           isAuthenticated={isAuthenticated}
           onLoginClick={() => setModalMode("login")}
           onClose={() => setActiveMenuPanel(null)}
+        />
+      )}
+
+      {activeMenuPanel === "heatmap" && (
+        <GasHeatmapPanel
+          onFrameChange={setHeatmapFrame}
+          onClose={() => {
+            setHeatmapFrame(null);
+            setActiveMenuPanel(null);
+          }}
         />
       )}
 

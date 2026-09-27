@@ -1,6 +1,6 @@
-import { Calculator, Download, List, TrendingUp } from "lucide-react";
+import { Download, Layers3, List } from "lucide-react";
 
-export default function SideMenu({ activeMenuPanel, onStationsClick, onExportClick }) {
+export default function SideMenu({ activeMenuPanel, onStationsClick, onHeatmapClick, onExportClick }) {
   return (
     <nav className={`side-menu${activeMenuPanel ? " side-menu-collapsed" : ""}`}>
       <button
@@ -11,13 +11,13 @@ export default function SideMenu({ activeMenuPanel, onStationsClick, onExportCli
         <List size={18} aria-hidden="true" />
         <span>Станции мониторинга</span>
       </button>
-      <button type="button" className="side-menu-button side-menu-button-disabled" disabled>
-        <Calculator size={18} aria-hidden="true" />
-        <span>Математические модели расчетов</span>
-      </button>
-      <button type="button" className="side-menu-button side-menu-button-disabled" disabled>
-        <TrendingUp size={18} aria-hidden="true" />
-        <span>Прогнозирование</span>
+      <button
+        type="button"
+        className={`side-menu-button${activeMenuPanel === "heatmap" ? " side-menu-button-active" : ""}`}
+        onClick={onHeatmapClick}
+      >
+        <Layers3 size={18} aria-hidden="true" />
+        <span>Тепловая карта</span>
       </button>
       <button
         type="button"

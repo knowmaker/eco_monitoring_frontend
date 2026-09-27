@@ -4,6 +4,7 @@ import { RadioTower, Truck } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import { getPostTitle } from "../../domain/monitoringPosts";
+import { initializeGasHeatmap, updateGasHeatmap } from "./gasHeatmapLayer";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = [37.6173, 55.7558];
@@ -49,7 +50,6 @@ function fitMapToPoints(map, points) {
     map.easeTo({ center: points[0], zoom: Math.max(map.getZoom(), 13), duration: 500 });
     return;
   }
-
   const bounds = points.reduce(
     (currentBounds, point) => currentBounds.extend(point),
     new maplibregl.LngLatBounds(points[0], points[0])
@@ -92,16 +92,32 @@ function applyRussianMapLabels(map) {
   });
 }
 
-export default function useMonitoringMap({ monitoringPosts, selectedMonitoringPostId, onPostClick }) {
+export default function useMonitoringMap({
+  monitoringPosts,
+  selectedMonitoringPostId,
+  onPostClick,
+  heatmapFrame,
+  heatmapEnabled = false,
+}) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const fittedMapPointsKeyRef = useRef("");
   const onPostClickRef = useRef(onPostClick);
+  const heatmapFrameRef = useRef(heatmapFrame);
+  const heatmapEnabledRef = useRef(heatmapEnabled);
 
   useEffect(() => {
     onPostClickRef.current = onPostClick;
   }, [onPostClick]);
+
+  useEffect(() => {
+    heatmapFrameRef.current = heatmapFrame;
+  }, [heatmapFrame]);
+
+  useEffect(() => {
+    heatmapEnabledRef.current = heatmapEnabled;
+  }, [heatmapEnabled]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
@@ -119,6 +135,8 @@ export default function useMonitoringMap({ monitoringPosts, selectedMonitoringPo
     mapRef.current.on("load", () => {
       hidePoliticalBoundaries(mapRef.current);
       applyRussianMapLabels(mapRef.current);
+      initializeGasHeatmap(mapRef.current);
+      updateGasHeatmap(mapRef.current, heatmapFrameRef.current, heatmapEnabledRef.current);
     });
     mapRef.current.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
     mapRef.current.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
@@ -130,6 +148,13 @@ export default function useMonitoringMap({ monitoringPosts, selectedMonitoringPo
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) {
+      updateGasHeatmap(map, heatmapFrame, heatmapEnabled);
+    }
+  }, [heatmapFrame, heatmapEnabled]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -146,7 +171,6 @@ export default function useMonitoringMap({ monitoringPosts, selectedMonitoringPo
       fitMapToPoints(mapRef.current, points);
       fittedMapPointsKeyRef.current = pointsKey;
     }
-
     postsWithCoordinates.forEach((post) => {
       const { element, root } = createTowerMarkerElement(
         post.post_type,
