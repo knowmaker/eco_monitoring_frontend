@@ -22,6 +22,13 @@ function formatValue(value) {
     : "—";
 }
 
+function getSelectedIndex(items, selectedHour) {
+  const retainedIndex = items.findIndex((item) => item.hour_start === selectedHour);
+  if (retainedIndex >= 0) return retainedIndex;
+  const forecastIndex = items.findIndex((item) => item.data_kind === "forecast");
+  return forecastIndex >= 0 ? forecastIndex : items.length - 1;
+}
+
 export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   const [substanceCode, setSubstanceCode] = useState("NO2");
   const [timeline, setTimeline] = useState([]);
@@ -59,17 +66,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
         setTimeline(response.items);
         setCurrentHour(response.current_hour);
         loadedSubstanceRef.current = substanceCode;
-        const retainedIndex = response.items.findIndex(
-          (item) => item.hour_start === selectedHourRef.current,
-        );
-        const forecastIndex = response.items.findIndex((item) => item.data_kind === "forecast");
-        setSelectedIndex(
-          retainedIndex >= 0
-            ? retainedIndex
-            : forecastIndex >= 0
-              ? forecastIndex
-              : response.items.length - 1,
-        );
+        setSelectedIndex(getSelectedIndex(response.items, selectedHourRef.current));
       })
       .catch((requestError) => {
         if (active) setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить ленту");
