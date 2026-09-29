@@ -71,19 +71,20 @@
   pointer-events: none;
 }
 
-.heatmap-loading-indicator {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  place-items: center;
-  color: var(--accent-strong);
-  opacity: 0;
-  transition: opacity 120ms ease;
+.heatmap-refresh-btn:disabled {
+  cursor: wait;
+  opacity: 1;
 }
 
-.heatmap-loading-indicator-active {
-  opacity: 1;
+.heatmap-refresh-icon-loading {
+  color: var(--accent-strong);
+  animation: heatmap-refresh-spin 800ms linear infinite;
+}
+
+@keyframes heatmap-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .heatmap-time-card {

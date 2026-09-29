@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { LoaderCircle, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { RefreshCw, X } from "lucide-react";
 
 import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasHeatmap";
 import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
@@ -31,24 +31,45 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(true);
   const [isLoadingFrame, setIsLoadingFrame] = useState(false);
   const [error, setError] = useState("");
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  const loadedSubstanceRef = useRef(null);
+  const selectedHourRef = useRef(null);
+  const selectedItem = timeline[selectedIndex] ?? null;
+
+  useEffect(() => {
+    selectedHourRef.current = selectedItem?.hour_start ?? null;
+  }, [selectedItem]);
 
   useEffect(() => {
     let active = true;
+    const isSubstanceChange = loadedSubstanceRef.current !== substanceCode;
     setIsLoadingTimeline(true);
     setError("");
-    setTimeline([]);
-    setCurrentHour(null);
-    setSelectedIndex(-1);
-    setFrame(null);
-    setIsLoadingFrame(false);
-    onFrameChange(null);
+    if (isSubstanceChange) {
+      setTimeline([]);
+      setCurrentHour(null);
+      setSelectedIndex(-1);
+      setFrame(null);
+      setIsLoadingFrame(false);
+      onFrameChange(null);
+    }
     fetchGasHeatmapTimeline(substanceCode)
       .then((response) => {
         if (!active) return;
         setTimeline(response.items);
         setCurrentHour(response.current_hour);
+        loadedSubstanceRef.current = substanceCode;
+        const retainedIndex = response.items.findIndex(
+          (item) => item.hour_start === selectedHourRef.current,
+        );
         const forecastIndex = response.items.findIndex((item) => item.data_kind === "forecast");
-        setSelectedIndex(forecastIndex >= 0 ? forecastIndex : response.items.length - 1);
+        setSelectedIndex(
+          retainedIndex >= 0
+            ? retainedIndex
+            : forecastIndex >= 0
+              ? forecastIndex
+              : response.items.length - 1,
+        );
       })
       .catch((requestError) => {
         if (active) setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить ленту");
@@ -57,9 +78,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
         if (active) setIsLoadingTimeline(false);
       });
     return () => { active = false; };
-  }, [substanceCode, onFrameChange]);
-
-  const selectedItem = timeline[selectedIndex] ?? null;
+  }, [substanceCode, refreshCounter, onFrameChange]);
 
   useEffect(() => {
     if (!selectedItem) {
@@ -101,13 +120,20 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
           <p className="heatmap-subtitle">Концентрации газов, мг/м³</p>
         </div>
         <div className="card-header-actions">
-          <span
-            className={`heatmap-loading-indicator${isLoadingTimeline || isLoadingFrame ? " heatmap-loading-indicator-active" : ""}`}
-            title="Обновление данных"
-            aria-label={isLoadingTimeline || isLoadingFrame ? "Обновление данных" : undefined}
+          <button
+            type="button"
+            className="card-refresh-btn heatmap-refresh-btn"
+            aria-label="Обновить тепловую карту"
+            aria-busy={isLoadingTimeline || isLoadingFrame}
+            disabled={isLoadingTimeline || isLoadingFrame}
+            onClick={() => setRefreshCounter((value) => value + 1)}
           >
-            {(isLoadingTimeline || isLoadingFrame) && <LoaderCircle className="spin" size={17} />}
-          </span>
+            <RefreshCw
+              className={isLoadingTimeline || isLoadingFrame ? "heatmap-refresh-icon-loading" : undefined}
+              size={16}
+              aria-hidden="true"
+            />
+          </button>
           <button type="button" className="card-close-btn" onClick={onClose} aria-label="Закрыть">
             <X size={16} aria-hidden="true" />
           </button>
