@@ -44,7 +44,7 @@ export default function StationDetails({
           <span className="station-grid-label">Название</span>
           <span className="station-title-row">
             <span className="station-grid-value">{getPostTitle(selectedMonitoringPost)}</span>
-            {isAdmin && placementBadge && (
+            {placementBadge && (
               <span className={`station-placement-badge ${placementBadge.className}`}>
                 {placementBadge.label}
               </span>
