@@ -1,19 +1,23 @@
 ﻿.modal-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 18px;
   background: rgba(15, 23, 42, 0.28);
   backdrop-filter: blur(3px);
 }
 
 .modal-card {
-  position: relative;
-  width: min(420px, 100%);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 31;
+  width: min(420px, calc(100vw - 36px));
+  max-height: calc(100vh - 36px);
   padding: 18px;
+  overflow-y: auto;
   border-radius: 8px;
+  outline: none;
+  transform: translate(-50%, -50%);
 }
 
 .modal-card h2 {
@@ -24,6 +28,18 @@
   position: absolute;
   top: 10px;
   right: 10px;
+}
+
+.modal-description-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .modal-card form {

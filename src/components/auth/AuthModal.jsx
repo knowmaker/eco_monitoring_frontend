@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { LogIn, Send, UserPlus, X } from "lucide-react";
+import { LogIn, Send, UserPlus } from "lucide-react";
 
 import { AUTH_IS_ADMIN_STORAGE_KEY, AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../../api";
+import Dialog from "../ui/Dialog";
 
 export default function AuthModal({ mode, onClose, onAuthSuccess }) {
   const [email, setEmail] = useState("");
@@ -45,52 +46,50 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
   };
 
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-card" role="dialog" aria-modal="true">
-        <button className="modal-close icon-btn" type="button" onClick={onClose}>
-          <X size={17} aria-hidden="true" />
-        </button>
-        <h2>{title}</h2>
-        <form onSubmit={onSubmit}>
+    <Dialog
+      title={title}
+      description={isRegister ? "Регистрация нового пользователя" : "Вход в систему экологического мониторинга"}
+      onClose={onClose}
+    >
+      <form onSubmit={onSubmit}>
+        <label>
+          {isRegister ? "Email" : "Логин"}
+          <input
+            type={isRegister ? "email" : "text"}
+            autoComplete={isRegister ? "email" : "username"}
+            placeholder={isRegister ? "Введите email" : "Введите логин"}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </label>
+
+        {!isRegister && (
           <label>
-            {isRegister ? "Email" : "Логин"}
+            Пароль
             <input
-              type={isRegister ? "email" : "text"}
-              autoComplete={isRegister ? "email" : "username"}
-              placeholder={isRegister ? "user@example.com" : "demo"}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Введите пароль"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </label>
+        )}
 
-          {!isRegister && (
-            <label>
-              Пароль
-              <input
-                type="password"
-                autoComplete="current-password"
-                placeholder="Введите пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </label>
-          )}
+        {errorText ? <div className="form-message form-message-error">{errorText}</div> : null}
+        {successText ? <div className="form-message form-message-success">{successText}</div> : null}
 
-          {errorText ? <div className="form-message form-message-error">{errorText}</div> : null}
-          {successText ? <div className="form-message form-message-success">{successText}</div> : null}
-
-          <button
-            className={`btn ${isRegister ? "btn-primary" : "btn-secondary"} modal-submit`}
-            type="submit"
-            disabled={isSubmitting}
-          >
-            <SubmitIcon size={16} aria-hidden="true" />
-            {isSubmitting ? "Отправка..." : isRegister ? "Регистрация" : "Вход"}
-          </button>
-        </form>
-      </div>
-    </div>
+        <button
+          className={`btn ${isRegister ? "btn-primary" : "btn-secondary"} modal-submit`}
+          type="submit"
+          disabled={isSubmitting}
+        >
+          <SubmitIcon size={16} aria-hidden="true" />
+          {isSubmitting ? "Отправка..." : isRegister ? "Регистрация" : "Вход"}
+        </button>
+      </form>
+    </Dialog>
   );
 }

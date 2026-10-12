@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Save, User, X } from "lucide-react";
+import { Save, User } from "lucide-react";
 
 import { fetchCurrentUserProfile, updateCurrentUserProfile } from "../../api";
+import Dialog from "../ui/Dialog";
 
 const emptyProfile = {
   last_name: "",
@@ -90,65 +91,59 @@ export default function ProfileModal({
   };
 
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-card" role="dialog" aria-modal="true">
-        <button className="modal-close icon-btn" type="button" onClick={onClose}>
-          <X size={17} aria-hidden="true" />
+    <Dialog title="Профиль" description="Настройки профиля пользователя" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Фамилия
+          <input
+            type="text"
+            autoComplete="family-name"
+            value={profile.last_name}
+            onChange={handleChange("last_name")}
+            disabled={isLoading}
+          />
+        </label>
+        <label>
+          Имя
+          <input
+            type="text"
+            autoComplete="given-name"
+            value={profile.first_name}
+            onChange={handleChange("first_name")}
+            disabled={isLoading}
+          />
+        </label>
+        <label>
+          Отчество
+          <input
+            type="text"
+            autoComplete="additional-name"
+            value={profile.middle_name}
+            onChange={handleChange("middle_name")}
+            disabled={isLoading}
+          />
+        </label>
+
+        <label className="profile-setting-checkbox">
+          <input
+            type="checkbox"
+            checked={isGasValueCorrectionDisabled}
+            onChange={handleGasValueCorrectionChange}
+          />
+          <span>Отключить коррекцию значений газа по модулю</span>
+        </label>
+        <div className="profile-setting-hint">
+          По умолчанию значения газа на графиках и панелях показываются по модулю.
+        </div>
+
+        {errorText ? <div className="form-message form-message-error">{errorText}</div> : null}
+        {successText ? <div className="form-message form-message-success">{successText}</div> : null}
+
+        <button className="btn btn-secondary modal-submit" type="submit" disabled={isLoading || isSaving}>
+          {isSaving ? <Save size={16} aria-hidden="true" /> : <User size={16} aria-hidden="true" />}
+          {isSaving ? "Сохранение..." : "Сохранить"}
         </button>
-        <h2>Профиль</h2>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Фамилия
-            <input
-              type="text"
-              autoComplete="family-name"
-              value={profile.last_name}
-              onChange={handleChange("last_name")}
-              disabled={isLoading}
-            />
-          </label>
-          <label>
-            Имя
-            <input
-              type="text"
-              autoComplete="given-name"
-              value={profile.first_name}
-              onChange={handleChange("first_name")}
-              disabled={isLoading}
-            />
-          </label>
-          <label>
-            Отчество
-            <input
-              type="text"
-              autoComplete="additional-name"
-              value={profile.middle_name}
-              onChange={handleChange("middle_name")}
-              disabled={isLoading}
-            />
-          </label>
-
-          <label className="profile-setting-checkbox">
-            <input
-              type="checkbox"
-              checked={isGasValueCorrectionDisabled}
-              onChange={handleGasValueCorrectionChange}
-            />
-            <span>Отключить коррекцию значений газа по модулю</span>
-          </label>
-          <div className="profile-setting-hint">
-            По умолчанию значения газа на графиках и панелях показываются по модулю.
-          </div>
-
-          {errorText ? <div className="form-message form-message-error">{errorText}</div> : null}
-          {successText ? <div className="form-message form-message-success">{successText}</div> : null}
-
-          <button className="btn btn-secondary modal-submit" type="submit" disabled={isLoading || isSaving}>
-            {isSaving ? <Save size={16} aria-hidden="true" /> : <User size={16} aria-hidden="true" />}
-            {isSaving ? "Сохранение..." : "Сохранить"}
-          </button>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Dialog>
   );
 }
