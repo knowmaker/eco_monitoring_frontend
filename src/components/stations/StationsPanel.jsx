@@ -1,4 +1,5 @@
-import { CheckCircle2, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
 
 import { getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
 import ScrollablePanel from "../layout/ScrollablePanel";
@@ -34,6 +35,20 @@ export default function StationsPanel({
   onEditSelectedPost,
   canEditSelectedPost = false,
 }) {
+  const [expandedGroups, setExpandedGroups] = useState({ internal: true, mosecom: false });
+  const stationGroups = [
+    {
+      key: "internal",
+      label: "МГТУ",
+      posts: stationPanelPosts.filter((post) => post.source !== "mosecom"),
+    },
+    {
+      key: "mosecom",
+      label: "Мосэкомониторинг",
+      posts: stationPanelPosts.filter((post) => post.source === "mosecom"),
+    },
+  ];
+
   return (
     <ScrollablePanel
       key={isStationDetailsInPanel ? `station-details-${selectedMonitoringPostId}` : "station-list"}
@@ -69,46 +84,77 @@ export default function StationsPanel({
           {isAdmin && isLoadingAdminPosts && <p className="station-card-hint">Загрузка списка станций...</p>}
           {isAdmin && adminPostsError && <p className="station-card-error">{adminPostsError}</p>}
 
-          <ul className="stations-list">
-            {stationPanelPosts.map((post) => {
-              const statusBadge = getPostStatusBadge(post);
+          <div className="station-list-groups">
+            {stationGroups.map((group) => {
+              const isExpanded = expandedGroups[group.key];
+              const groupContentId = `station-list-group-${group.key}`;
+
               return (
-                <li key={post.id}>
-                  <div className="station-list-row">
-                    <button
-                      type="button"
-                      className={`station-list-button${
-                        selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
-                      }`}
-                      onClick={() => onSelectPost(post)}
-                    >
-                      <span className="station-list-text">
-                        <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
-                        <small>{getPostTypeLabel(post)}</small>
-                      </span>
-                      {statusBadge && (
-                        <span
-                          className={`station-list-status-badge ${statusBadge.className}`}
-                          title={statusBadge.label}
-                        >
-                          {statusBadge.label}
-                        </span>
-                      )}
-                      {post.is_confirmed ? (
-                        <span className="station-status station-status-confirmed" title="Подтверждена">
-                          <CheckCircle2 size={16} />
-                        </span>
-                      ) : (
-                        <span className="station-status station-status-pending" title="Не подтверждена">
-                          <CircleDashed size={16} />
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </li>
+                <section key={group.key} className="station-list-group">
+                  <button
+                    type="button"
+                    className="station-list-group-toggle"
+                    aria-expanded={isExpanded}
+                    aria-controls={groupContentId}
+                    onClick={() =>
+                      setExpandedGroups((current) => ({ ...current, [group.key]: !current[group.key] }))
+                    }
+                  >
+                    {isExpanded ? (
+                      <ChevronDown size={17} aria-hidden="true" />
+                    ) : (
+                      <ChevronRight size={17} aria-hidden="true" />
+                    )}
+                    <span>{group.label}</span>
+                    <strong>{group.posts.length}</strong>
+                  </button>
+
+                  {isExpanded && (
+                    <ul id={groupContentId} className="stations-list">
+                      {group.posts.map((post) => {
+                        const statusBadge = getPostStatusBadge(post);
+                        return (
+                          <li key={post.id}>
+                            <div className="station-list-row">
+                              <button
+                                type="button"
+                                className={`station-list-button${
+                                  selectedMonitoringPostId === post.id ? " station-list-button-active" : ""
+                                }`}
+                                onClick={() => onSelectPost(post)}
+                              >
+                                <span className="station-list-text">
+                                  <strong title={getPostTitle(post)}>{getPostTitle(post)}</strong>
+                                  <small>{getPostTypeLabel(post)}</small>
+                                </span>
+                                {statusBadge && (
+                                  <span
+                                    className={`station-list-status-badge ${statusBadge.className}`}
+                                    title={statusBadge.label}
+                                  >
+                                    {statusBadge.label}
+                                  </span>
+                                )}
+                                {post.is_confirmed ? (
+                                  <span className="station-status station-status-confirmed" title="Подтверждена">
+                                    <CheckCircle2 size={16} />
+                                  </span>
+                                ) : (
+                                  <span className="station-status station-status-pending" title="Не подтверждена">
+                                    <CircleDashed size={16} />
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
               );
             })}
-          </ul>
+          </div>
         </>
       )}
     </ScrollablePanel>
