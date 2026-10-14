@@ -35,6 +35,7 @@ export default function CategoryLineChart({
   xLabels,
   xAxisName,
   yAxisName,
+  yAxisMin,
   onEvents,
   emptyText = "Нет данных за выбранный период.",
 }) {
@@ -121,6 +122,7 @@ export default function CategoryLineChart({
       yAxis: {
         type: "value",
         scale: true,
+        min: yAxisMin,
         name: yAxisName,
         nameLocation: yAxisName ? "middle" : undefined,
         nameRotate: yAxisName ? 90 : undefined,
@@ -163,7 +165,7 @@ export default function CategoryLineChart({
         axisLabel: { fontSize: 9 },
       },
     });
-  }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, onEvents]);
+  }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, yAxisMin, onEvents]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;

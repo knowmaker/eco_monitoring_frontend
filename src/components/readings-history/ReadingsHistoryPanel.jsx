@@ -142,6 +142,7 @@ export default function ReadingsHistoryPanel({
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const xAxisName = getXAxisName(viewMode);
   const yAxisName = getYAxisName(selectedDeviceType, selectedMetricKey);
+  const yAxisMin = selectedDeviceType === "gas" || selectedDeviceType === "dust" ? 0 : undefined;
   const canOpenRawDrilldown =
     allowsRawDrilldown && isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";
@@ -325,6 +326,7 @@ export default function ReadingsHistoryPanel({
                   end={rawDrilldown.end}
                   xAxisName="Время"
                   yAxisName={yAxisName}
+                  yAxisMin={yAxisMin}
                   emptyText="Нет сырых данных за выбранный час."
                 />
               )
@@ -385,6 +387,7 @@ export default function ReadingsHistoryPanel({
                 xLabels={axis.labels}
                 xAxisName={xAxisName}
                 yAxisName={yAxisName}
+                yAxisMin={yAxisMin}
                 onEvents={canOpenRawDrilldown ? aggregateChartEvents : undefined}
                 emptyText={axis.emptyText}
               />

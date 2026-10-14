@@ -46,10 +46,11 @@ function formatTooltipValue(value) {
   return formatAxisValue(number);
 }
 
-function createYAxis({ position = "left", showSplitLine = true, name } = {}) {
+function createYAxis({ position = "left", showSplitLine = true, name, min } = {}) {
   return {
     type: "value",
     scale: true,
+    min,
     position,
     name,
     nameLocation: name ? "middle" : undefined,
@@ -77,6 +78,7 @@ export default function TimeLineChart({
   end,
   xAxisName,
   yAxisName,
+  yAxisMin,
   emptyText = "Нет сырых данных за выбранный интервал.",
 }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
@@ -143,8 +145,11 @@ export default function TimeLineChart({
         },
       },
       yAxis: hasSecondaryAxis
-        ? [createYAxis({ name: yAxisName }), createYAxis({ position: "right", showSplitLine: false })]
-        : createYAxis({ name: yAxisName }),
+        ? [
+            createYAxis({ name: yAxisName, min: yAxisMin }),
+            createYAxis({ position: "right", showSplitLine: false }),
+          ]
+        : createYAxis({ name: yAxisName, min: yAxisMin }),
       series: series.map((item, index) => ({
         type: "line",
         name: item.label,
@@ -201,7 +206,7 @@ export default function TimeLineChart({
       },
       yAxis: compactYAxis,
     });
-  }, [series, hasValues, start, end, xAxisName, yAxisName]);
+  }, [series, hasValues, start, end, xAxisName, yAxisName, yAxisMin]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;
