@@ -86,14 +86,26 @@ function LatestGasDeviceBlock({ device, useGasAbsoluteValues = true }) {
 }
 
 function LatestDustDeviceBlock({ device }) {
+  const metrics = [
+    { key: "pm1", label: "PM1", precision: 4 },
+    { key: "pm2", label: "PM2.5", precision: 4 },
+    { key: "pm10", label: "PM10", precision: 4 },
+    { key: "tsp", label: "TSP", precision: 4 },
+  ].filter((metric) => Number.isFinite(device[metric.key]));
+
   return (
     <div className="latest-device-block">
       <LatestDeviceHeader title={DEVICE_TYPE_LABELS.dust} bucketMs={device.bucket_ms} />
       <div className="latest-metrics">
-        <LatestMetric label="PM1" value={device.pm1} precision={4} limit={device.limits?.pm1} />
-        <LatestMetric label="PM2.5" value={device.pm2} precision={4} limit={device.limits?.pm2} />
-        <LatestMetric label="PM10" value={device.pm10} precision={4} limit={device.limits?.pm10} />
-        <LatestMetric label="TSP" value={device.tsp} precision={4} limit={device.limits?.tsp} />
+        {metrics.map((metric) => (
+          <LatestMetric
+            key={metric.key}
+            label={metric.label}
+            value={device[metric.key]}
+            precision={metric.precision}
+            limit={device.limits?.[metric.key]}
+          />
+        ))}
       </div>
     </div>
   );
