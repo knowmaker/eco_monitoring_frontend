@@ -17,6 +17,7 @@ import {
   TOOLTIP_BACKGROUND_COLOR,
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
+  createPdkMarkLine,
 } from "./chartTheme";
 import { withResponsiveChartOption } from "./responsiveChartOption";
 
@@ -68,6 +69,7 @@ export default function CategoryLineChart({
         itemStyle: {
           color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
+        markLine: createPdkMarkLine(item.pdk),
         data: axisValues.map((axisValue) => {
           const value = byAxisValue.get(axisValue);
           return value === undefined ? null : normalizeChartValue(value);

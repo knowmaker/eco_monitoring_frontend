@@ -11,3 +11,25 @@ export const GRID_LINE_STYLE = {
 export const TOOLTIP_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.98)";
 export const TOOLTIP_BORDER_COLOR = "rgba(15, 23, 42, 0.14)";
 export const TOOLTIP_TEXT_STYLE = { color: "#172033" };
+
+export function createPdkMarkLine(pdk) {
+  if (!Number.isFinite(pdk)) {
+    return undefined;
+  }
+
+  return {
+    silent: true,
+    symbol: "none",
+    label: {
+      color: "#9f2f2f",
+      fontSize: 11,
+      formatter: `ПДК: ${pdk.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}`,
+    },
+    lineStyle: {
+      color: "#9f2f2f",
+      type: "dashed",
+      width: 1.2,
+    },
+    data: [{ yAxis: pdk }],
+  };
+}

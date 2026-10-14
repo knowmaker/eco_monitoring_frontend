@@ -56,6 +56,7 @@ export default function useRawReadings({
                 {
                   key: selectedGasSubstance,
                   label: selectedGasSubstance,
+                  pdk: substance.pdk,
                   points: applyGasPointValueCorrection(substance.points || [], useGasAbsoluteValues),
                 },
               ]

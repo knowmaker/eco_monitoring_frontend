@@ -36,6 +36,7 @@ import XYLineChart from "../charts/XYLineChart";
 
 const GAS_Y_AXIS_NAME = "Концентрация, мг/м³";
 const DUST_Y_AXIS_NAME = "Концентрация, мг/м³";
+const INCLUDE_ZERO_Y_AXIS_MIN = ({ min }) => Math.min(0, min);
 
 function getXAxisName(viewMode) {
   return viewMode === "month" ? "Дата" : "Время";
@@ -142,7 +143,8 @@ export default function ReadingsHistoryPanel({
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const xAxisName = getXAxisName(viewMode);
   const yAxisName = getYAxisName(selectedDeviceType, selectedMetricKey);
-  const yAxisMin = selectedDeviceType === "gas" || selectedDeviceType === "dust" ? 0 : undefined;
+  const yAxisMin =
+    selectedDeviceType === "gas" || selectedDeviceType === "dust" ? INCLUDE_ZERO_Y_AXIS_MIN : undefined;
   const canOpenRawDrilldown =
     allowsRawDrilldown && isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";

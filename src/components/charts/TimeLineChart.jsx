@@ -12,6 +12,7 @@ import {
   TOOLTIP_BACKGROUND_COLOR,
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
+  createPdkMarkLine,
 } from "./chartTheme";
 import { withResponsiveChartOption } from "./responsiveChartOption";
 
@@ -166,6 +167,7 @@ export default function TimeLineChart({
         itemStyle: {
           color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
+        markLine: createPdkMarkLine(item.pdk),
         data: (item.points || [])
           .filter((point) => point.timestamp && Number.isFinite(Number(point.value)))
           .map((point) => [point.timestamp, normalizeChartValue(point.value)]),

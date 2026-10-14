@@ -192,6 +192,7 @@ export default function useReadingsData({
         {
           key: selectedGasSubstance,
           label: selectedGasSubstance,
+          pdk: substance?.pdk,
           points: applyGasPointValueCorrection(
             substance?.points || createEmptyPoints(axis.values, axis.key),
             useGasAbsoluteValues
