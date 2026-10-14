@@ -25,7 +25,6 @@ function createTowerMarkerElement(postType, activityStatus, source, isSelected) 
   element.className = [
     "tower-marker",
     getMarkerStatusClass(activityStatus),
-    source === "mosecom" ? "tower-marker-mosecom" : "",
     isSelected ? "tower-marker-selected" : "",
   ].filter(Boolean).join(" ");
   const root = createRoot(element);
