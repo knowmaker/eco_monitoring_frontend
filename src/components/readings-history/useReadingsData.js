@@ -208,6 +208,7 @@ export default function useReadingsData({
           ? {
               key: item.key,
               label: getMetricLabel(item.key),
+              pdk: item.pdk,
               points: item.points || createEmptyPoints(axis.values, axis.key),
             }
           : null;

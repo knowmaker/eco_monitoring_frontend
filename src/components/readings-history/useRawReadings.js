@@ -84,7 +84,9 @@ export default function useRawReadings({
         setRawSeries(
           DUST_METRIC_KEYS.map((key) => {
             const item = (payload.series || []).find((candidate) => candidate.key === key);
-            return item ? { key: item.key, label: getMetricLabel(item.key), points: item.points || [] } : null;
+            return item
+              ? { key: item.key, label: getMetricLabel(item.key), pdk: item.pdk, points: item.points || [] }
+              : null;
           }).filter(Boolean)
         );
         return;
