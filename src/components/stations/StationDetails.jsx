@@ -36,6 +36,7 @@ export default function StationDetails({
     latestErrorText,
   } = useLatestReadings({ monitoringPostId: selectedMonitoringPostId, refreshCounter });
   const placementBadge = getPlacementBadge(selectedMonitoringPost);
+  const isMosecomStation = selectedMonitoringPost?.source === "mosecom";
 
   return (
     <>
@@ -57,6 +58,12 @@ export default function StationDetails({
             {POST_TYPE_LABELS[selectedMonitoringPost?.post_type] ?? selectedMonitoringPost?.post_type ?? "-"}
           </span>
         </div>
+        {isMosecomStation && (
+          <div>
+            <span className="station-grid-label">Источник</span>
+            <span className="station-grid-value station-source-mosecom">Мосэкомониторинг</span>
+          </div>
+        )}
         <div>
           <span className="station-grid-label">Координаты</span>
           <span className="station-grid-value">
@@ -64,13 +71,13 @@ export default function StationDetails({
           </span>
         </div>
       </div>
-      {isAdmin && selectedMonitoringPost?.notes && (
+      {isAdmin && !isMosecomStation && selectedMonitoringPost?.notes && (
         <div className="station-notes">
           <span className="station-grid-label">Заметки</span>
           <p>{selectedMonitoringPost.notes}</p>
         </div>
       )}
-      {isAdmin && (
+      {isAdmin && !isMosecomStation && (
         <button
           type="button"
           className={`station-raw-action${isRawPacketsOpen ? " station-raw-action-active" : ""}`}

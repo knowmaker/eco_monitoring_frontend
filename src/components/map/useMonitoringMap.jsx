@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { RadioTower, Truck } from "lucide-react";
+import { Building2, RadioTower, Truck } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import { getPostTitle } from "../../domain/monitoringPosts";
@@ -20,15 +20,16 @@ function getMarkerStatusClass(activityStatus) {
   return "tower-marker-passive";
 }
 
-function createTowerMarkerElement(postType, activityStatus, isSelected) {
+function createTowerMarkerElement(postType, activityStatus, source, isSelected) {
   const element = document.createElement("div");
   element.className = [
     "tower-marker",
     getMarkerStatusClass(activityStatus),
+    source === "mosecom" ? "tower-marker-mosecom" : "",
     isSelected ? "tower-marker-selected" : "",
   ].filter(Boolean).join(" ");
   const root = createRoot(element);
-  const Icon = postType === "mobile" ? Truck : RadioTower;
+  const Icon = source === "mosecom" ? Building2 : postType === "mobile" ? Truck : RadioTower;
   root.render(<Icon size={23} strokeWidth={2.2} aria-hidden="true" />);
   return { element, root };
 }
@@ -175,9 +176,10 @@ export default function useMonitoringMap({
       const { element, root } = createTowerMarkerElement(
         post.post_type,
         post.activity_status,
+        post.source,
         post.id === selectedMonitoringPostId
       );
-      element.title = getPostTitle(post);
+      element.title = `${getPostTitle(post)}${post.source === "mosecom" ? " · Мосэкомониторинг" : ""}`;
       element.addEventListener("click", () => {
         focusPostOnMap(mapRef.current, post);
         onPostClickRef.current?.(post);

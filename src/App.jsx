@@ -381,7 +381,11 @@ export default function App() {
     isStationCardOpen && isReadingsCardOpen && selectedMonitoringPostId !== null && selectedDeviceType
   );
   const isRawPacketsPanelOpen = Boolean(
-    isAdmin && isStationCardOpen && isRawPacketsOpen && selectedMonitoringPostId !== null
+    isAdmin &&
+    selectedMonitoringPost?.source !== "mosecom" &&
+    isStationCardOpen &&
+    isRawPacketsOpen &&
+    selectedMonitoringPostId !== null
   );
   const isStationsPanelCovered =
     isStackedPanelsViewport &&
@@ -468,6 +472,7 @@ export default function App() {
               handleStartEditStation(selectedMonitoringPost);
             }
           }}
+          canEditSelectedPost={selectedMonitoringPost?.source !== "mosecom"}
         >
           <StationDetails
             selectedMonitoringPost={selectedMonitoringPost}
@@ -500,7 +505,7 @@ export default function App() {
 
       {activeMenuPanel === "export" && (
         <ExportPanel
-          monitoringPosts={monitoringPosts}
+          monitoringPosts={monitoringPosts.filter((post) => post.source !== "mosecom")}
           isAuthenticated={isAuthenticated}
           onLoginClick={() => setModalMode("login")}
           onClose={() => setActiveMenuPanel(null)}
@@ -545,6 +550,7 @@ export default function App() {
             monitoringPostId={selectedMonitoringPostId}
             selectedDeviceType={selectedDeviceType}
             isAuthenticated={isAuthenticated}
+            allowsRawDrilldown={selectedMonitoringPost?.source !== "mosecom"}
             useGasAbsoluteValues={useGasAbsoluteValues}
             onClose={() => setIsReadingsCardOpen(false)}
           />

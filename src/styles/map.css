@@ -39,6 +39,14 @@
   --marker-selected-ring: rgba(100, 116, 139, 0.18);
 }
 
+.tower-marker-mosecom {
+  --marker-color: #315f9f;
+  --marker-border: rgba(49, 95, 159, 0.36);
+  --marker-bg: #ffffff;
+  --marker-selected-border: rgba(40, 79, 134, 0.54);
+  --marker-selected-ring: rgba(49, 95, 159, 0.2);
+}
+
 .tower-marker svg {
   width: 23px;
   height: 23px;

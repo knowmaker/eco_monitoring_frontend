@@ -5,7 +5,8 @@ import ScrollablePanel from "../layout/ScrollablePanel";
 
 function getPostTypeLabel(post) {
   const typeLabel = POST_TYPE_LABELS[post.post_type] ?? "Тип не выбран";
-  return post.active_to ? `Архивная - ${typeLabel}` : typeLabel;
+  const placementLabel = post.active_to ? `Архивная - ${typeLabel}` : typeLabel;
+  return post.source === "mosecom" ? `${placementLabel} · Мосэкомониторинг` : placementLabel;
 }
 
 const POST_STATUS_BADGES = {
@@ -31,6 +32,7 @@ export default function StationsPanel({
   onClose,
   onSelectPost,
   onEditSelectedPost,
+  canEditSelectedPost = false,
 }) {
   return (
     <ScrollablePanel
@@ -41,7 +43,7 @@ export default function StationsPanel({
       <div className="card-header">
         <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
         <div className="card-header-actions">
-          {isAdmin && isStationDetailsInPanel && (
+          {isAdmin && isStationDetailsInPanel && canEditSelectedPost && (
             <button
               type="button"
               className="card-edit-btn"

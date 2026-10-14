@@ -491,6 +491,11 @@
   word-break: break-word;
 }
 
+.station-source-mosecom {
+  color: #315f9f;
+  font-weight: 700;
+}
+
 .station-title-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

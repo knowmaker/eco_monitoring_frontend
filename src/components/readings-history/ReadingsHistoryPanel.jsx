@@ -58,6 +58,7 @@ export default function ReadingsHistoryPanel({
   monitoringPostId,
   selectedDeviceType,
   isAuthenticated = false,
+  allowsRawDrilldown = true,
   useGasAbsoluteValues = true,
   onClose,
 }) {
@@ -141,7 +142,8 @@ export default function ReadingsHistoryPanel({
   const isWindCompositeMetric = selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY;
   const xAxisName = getXAxisName(viewMode);
   const yAxisName = getYAxisName(selectedDeviceType, selectedMetricKey);
-  const canOpenRawDrilldown = isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
+  const canOpenRawDrilldown =
+    allowsRawDrilldown && isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";
   const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
   const maxDateInputValue = viewMode === "month" ? toIsoMonth(new Date()) : toIsoDay(new Date());
