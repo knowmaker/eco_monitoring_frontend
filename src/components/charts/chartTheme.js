@@ -24,7 +24,6 @@ export function createPdkMarkLine(pdk) {
       color: "#9f2f2f",
       fontSize: 11,
       position: "insideStartTop",
-      offset: [10, 0],
       formatter: `ПДК: ${pdk.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}`,
     },
     lineStyle: {
