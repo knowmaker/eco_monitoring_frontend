@@ -23,6 +23,7 @@ export function createPdkMarkLine(pdk) {
     label: {
       color: "#9f2f2f",
       fontSize: 11,
+      position: "start",
       formatter: `ПДК: ${pdk.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}`,
     },
     lineStyle: {
@@ -32,4 +33,14 @@ export function createPdkMarkLine(pdk) {
     },
     data: [{ yAxis: pdk }],
   };
+}
+
+export function createPdkYAxisMax(series) {
+  const pdkValues = (series || []).map((item) => item.pdk).filter(Number.isFinite);
+  if (!pdkValues.length) {
+    return undefined;
+  }
+
+  const pdkMax = Math.max(...pdkValues);
+  return ({ max }) => Math.max(max, pdkMax) * 1.1;
 }

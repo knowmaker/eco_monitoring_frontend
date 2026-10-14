@@ -18,6 +18,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
   createPdkMarkLine,
+  createPdkYAxisMax,
 } from "./chartTheme";
 import { withResponsiveChartOption } from "./responsiveChartOption";
 
@@ -125,6 +126,7 @@ export default function CategoryLineChart({
         type: "value",
         scale: true,
         min: yAxisMin,
+        max: createPdkYAxisMax(series),
         name: yAxisName,
         nameLocation: yAxisName ? "middle" : undefined,
         nameRotate: yAxisName ? 90 : undefined,

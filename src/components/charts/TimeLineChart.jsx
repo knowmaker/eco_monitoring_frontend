@@ -13,6 +13,7 @@ import {
   TOOLTIP_BORDER_COLOR,
   TOOLTIP_TEXT_STYLE,
   createPdkMarkLine,
+  createPdkYAxisMax,
 } from "./chartTheme";
 import { withResponsiveChartOption } from "./responsiveChartOption";
 
@@ -47,11 +48,12 @@ function formatTooltipValue(value) {
   return formatAxisValue(number);
 }
 
-function createYAxis({ position = "left", showSplitLine = true, name, min } = {}) {
+function createYAxis({ position = "left", showSplitLine = true, name, min, max } = {}) {
   return {
     type: "value",
     scale: true,
     min,
+    max,
     position,
     name,
     nameLocation: name ? "middle" : undefined,
@@ -90,6 +92,7 @@ export default function TimeLineChart({
     }
 
     const hasSecondaryAxis = series.some((item) => item.yAxisIndex === 1);
+    const yAxisMax = createPdkYAxisMax(series);
 
     const baseOption = {
       backgroundColor: CHART_BACKGROUND_COLOR,
@@ -147,10 +150,10 @@ export default function TimeLineChart({
       },
       yAxis: hasSecondaryAxis
         ? [
-            createYAxis({ name: yAxisName, min: yAxisMin }),
+            createYAxis({ name: yAxisName, min: yAxisMin, max: yAxisMax }),
             createYAxis({ position: "right", showSplitLine: false }),
           ]
-        : createYAxis({ name: yAxisName, min: yAxisMin }),
+        : createYAxis({ name: yAxisName, min: yAxisMin, max: yAxisMax }),
       series: series.map((item, index) => ({
         type: "line",
         name: item.label,
