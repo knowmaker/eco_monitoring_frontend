@@ -15,7 +15,7 @@ export default function LatestReadingsCard({
 
       {isLoadingLatest && <p className="station-card-hint">Загрузка последних показаний...</p>}
       {!isLoadingLatest && latestErrorText && <p className="station-card-error">{latestErrorText}</p>}
-      {!isLoadingLatest && !latestErrorText && latestReadings?.bucket_ms !== null && latestReadings && (
+      {!isLoadingLatest && !latestErrorText && latestReadings?.timestamp_ms !== null && latestReadings && (
         <div className="latest-readings-grid">
           {DEVICE_TYPE_ORDER.map((deviceType) =>
             renderLatestDeviceBlock(deviceType, latestReadings, { useGasAbsoluteValues })

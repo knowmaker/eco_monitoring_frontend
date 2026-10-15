@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { fetchStationLatestHourlyReadings } from "../../api";
+import { fetchStationLatestReadings } from "../../api";
 
 export default function useLatestReadings({ monitoringPostId, refreshCounter = 0 }) {
   const [latestReadings, setLatestReadings] = useState(null);
@@ -19,7 +19,7 @@ export default function useLatestReadings({ monitoringPostId, refreshCounter = 0
     setIsLoadingLatest(true);
     setLatestErrorText("");
 
-    fetchStationLatestHourlyReadings(monitoringPostId)
+    fetchStationLatestReadings(monitoringPostId)
       .then((payload) => {
         if (!cancelled) {
           setLatestReadings(payload);

@@ -6,7 +6,7 @@ import LatestDeviceHeader from "./LatestDeviceHeader";
 import LatestMetric from "./LatestMetric";
 import { formatLatestValue, formatWindValue } from "./latestReadingsFormatters";
 
-function LatestProfileDeviceBlock({ device }) {
+function LatestProfileDeviceBlock({ device, timeMode }) {
   const levels = Array.isArray(device.levels) ? device.levels : [];
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
   const selectedLevel = levels[selectedLevelIndex] ?? levels[0] ?? null;
@@ -29,7 +29,7 @@ function LatestProfileDeviceBlock({ device }) {
 
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} bucketMs={device.bucket_ms} />
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.profile} timestampMs={device.timestamp_ms} timeMode={timeMode} />
       <div className="latest-metrics latest-profile-level-metrics">
         <LatestMetric label="Высота" value={selectedLevel?.height} unit="м" precision={0} />
         <LatestMetric label="Темп." value={selectedLevel?.temperature} unit="°C" />
@@ -62,10 +62,10 @@ function LatestProfileDeviceBlock({ device }) {
   );
 }
 
-function LatestGasDeviceBlock({ device, useGasAbsoluteValues = true }) {
+function LatestGasDeviceBlock({ device, timeMode, useGasAbsoluteValues = true }) {
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} bucketMs={device.bucket_ms} />
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} timestampMs={device.timestamp_ms} timeMode={timeMode} />
       <div className="latest-metrics latest-metrics-gas">
         {GAS_SUBSTANCE_ORDER.map((substanceCode) =>
           device.substances.find((item) => item.substance_code === substanceCode)
@@ -85,7 +85,7 @@ function LatestGasDeviceBlock({ device, useGasAbsoluteValues = true }) {
   );
 }
 
-function LatestDustDeviceBlock({ device }) {
+function LatestDustDeviceBlock({ device, timeMode }) {
   const metrics = [
     { key: "pm1", label: "PM1", precision: 4 },
     { key: "pm2", label: "PM2.5", precision: 4 },
@@ -95,7 +95,7 @@ function LatestDustDeviceBlock({ device }) {
 
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.dust} bucketMs={device.bucket_ms} />
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.dust} timestampMs={device.timestamp_ms} timeMode={timeMode} />
       <div className="latest-metrics">
         {metrics.map((metric) => (
           <LatestMetric
@@ -111,10 +111,10 @@ function LatestDustDeviceBlock({ device }) {
   );
 }
 
-function LatestMeteoDeviceBlock({ device }) {
+function LatestMeteoDeviceBlock({ device, timeMode }) {
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.meteo} bucketMs={device.bucket_ms} />
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.meteo} timestampMs={device.timestamp_ms} timeMode={timeMode} />
       <div className="latest-metrics">
         <LatestMetric label="Темп." value={device.air_temp} unit="°C" />
         <LatestMetric label="Влажн." value={device.air_hum} unit="%" />
@@ -125,10 +125,10 @@ function LatestMeteoDeviceBlock({ device }) {
   );
 }
 
-function LatestIvtmDeviceBlock({ device }) {
+function LatestIvtmDeviceBlock({ device, timeMode }) {
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.ivtm} bucketMs={device.bucket_ms} />
+      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.ivtm} timestampMs={device.timestamp_ms} timeMode={timeMode} />
       <div className="latest-metrics">
         <LatestMetric label="Влажн." value={device.sensor_ivtm_hum} unit="%" />
         <LatestMetric label="Темп." value={device.sensor_ivtm_temp} unit="°C" />
@@ -157,6 +157,7 @@ export function renderLatestDeviceBlock(deviceType, latestReadings, options = {}
     <DeviceBlock
       key={deviceType}
       device={device}
+      timeMode={latestReadings.time_mode}
       useGasAbsoluteValues={options.useGasAbsoluteValues}
     />
   );

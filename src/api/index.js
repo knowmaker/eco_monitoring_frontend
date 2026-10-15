@@ -30,7 +30,7 @@ export {
   fetchProfileStateHourly,
   fetchProfileStateMonthly,
 } from "./readings";
-export { fetchStationLatestHourlyReadings } from "./stationReadings";
+export { fetchStationLatestReadings } from "./stationReadings";
 export {
   fetchGasHeatmap,
   fetchGasHeatmapTimeline,

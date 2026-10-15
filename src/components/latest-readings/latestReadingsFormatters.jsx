@@ -1,12 +1,24 @@
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
-export function formatLatestTime(bucketMs) {
-  if (!Number.isFinite(bucketMs)) {
+export function formatLatestTime(timestampMs, timeMode) {
+  if (!Number.isFinite(timestampMs)) {
     return "нет данных";
   }
 
-  const start = new Date(bucketMs);
-  const end = new Date(bucketMs + 59 * 60 * 1000);
+  const start = new Date(timestampMs);
+  if (timeMode === "exact") {
+    return new Intl.DateTimeFormat("ru-RU", {
+      timeZone: "Europe/Moscow",
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(start);
+  }
+
+  const end = new Date(timestampMs + 59 * 60 * 1000);
   const startText = new Intl.DateTimeFormat("ru-RU", {
     timeZone: "Europe/Moscow",
     day: "2-digit",
