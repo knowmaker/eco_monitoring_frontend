@@ -20,7 +20,7 @@ const ProfileModal = lazy(() => import("./components/profile/ProfileModal"));
 const RawMqttPayloadPanel = lazy(() => import("./components/raw-mqtt/RawMqttPayloadPanel"));
 const ReadingsHistoryPanel = lazy(() => import("./components/readings-history/ReadingsHistoryPanel"));
 
-const POSTS_REFRESH_MS = 30_000;
+const POSTS_REFRESH_MS = 600_000;
 const STACKED_PANELS_QUERY = "(max-width: 1000px)";
 
 function formatCoordinateInput(value) {
