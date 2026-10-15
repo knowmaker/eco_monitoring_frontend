@@ -86,7 +86,7 @@ export default function App() {
   );
   const { isAuthenticated, isAdmin, applyAuthSuccess, clearAuth } = useAuthState();
   const isStackedPanelsViewport = useResponsiveViewport(STACKED_PANELS_QUERY);
-  const { monitoringPosts, loadError, isLoadingPosts } = useMonitoringPosts({
+  const { monitoringPosts, loadError, isLoadingPosts, scheduledRefreshCounter } = useMonitoringPosts({
     isAdmin,
     refreshMs: POSTS_REFRESH_MS,
     reloadToken: postsReloadToken,
@@ -484,7 +484,7 @@ export default function App() {
             isReadingsCardOpen={isReadingsCardOpen}
             isLoadingDetails={isLoadingDetails}
             detailsError={detailsError}
-            refreshCounter={stationDetailsRefreshCounter}
+            refreshCounter={stationDetailsRefreshCounter + scheduledRefreshCounter}
             useGasAbsoluteValues={useGasAbsoluteValues}
             onOpenRawPackets={() => {
               setEditingStationId(null);
@@ -552,6 +552,7 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             allowsRawDrilldown={selectedMonitoringPost?.source !== "mosecom"}
             useGasAbsoluteValues={useGasAbsoluteValues}
+            autoRefreshCounter={scheduledRefreshCounter}
             onClose={() => setIsReadingsCardOpen(false)}
           />
         </Suspense>

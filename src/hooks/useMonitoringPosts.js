@@ -6,6 +6,7 @@ export default function useMonitoringPosts({ isAdmin, refreshMs, reloadToken }) 
   const [monitoringPosts, setMonitoringPosts] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [scheduledRefreshCounter, setScheduledRefreshCounter] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,7 +33,10 @@ export default function useMonitoringPosts({ isAdmin, refreshMs, reloadToken }) 
     };
 
     loadMonitoringPosts();
-    const intervalId = setInterval(loadMonitoringPosts, refreshMs);
+    const intervalId = setInterval(() => {
+      loadMonitoringPosts();
+      setScheduledRefreshCounter((value) => value + 1);
+    }, refreshMs);
     return () => {
       cancelled = true;
       clearInterval(intervalId);
@@ -43,5 +47,6 @@ export default function useMonitoringPosts({ isAdmin, refreshMs, reloadToken }) 
     monitoringPosts,
     loadError,
     isLoadingPosts,
+    scheduledRefreshCounter,
   };
 }

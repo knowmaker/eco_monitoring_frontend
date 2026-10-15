@@ -61,6 +61,7 @@ export default function ReadingsHistoryPanel({
   isAuthenticated = false,
   allowsRawDrilldown = true,
   useGasAbsoluteValues = true,
+  autoRefreshCounter = 0,
   onClose,
 }) {
   const [viewMode, setViewMode] = useState("day");
@@ -70,6 +71,7 @@ export default function ReadingsHistoryPanel({
   const [month, setMonth] = useState(new Date());
   const [rawDrilldown, setRawDrilldown] = useState(null);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const dataRefreshCounter = refreshCounter + autoRefreshCounter;
 
   const axis = useMemo(() => createReadingsAxis(viewMode, month), [viewMode, month]);
   const {
@@ -90,7 +92,7 @@ export default function ReadingsHistoryPanel({
     day,
     month,
     viewMode,
-    refreshCounter,
+    refreshCounter: dataRefreshCounter,
     axis,
     useGasAbsoluteValues,
   });
@@ -119,7 +121,7 @@ export default function ReadingsHistoryPanel({
     selectedGasSubstance,
     selectedMetricKey,
     rawDrilldown,
-    refreshCounter,
+    refreshCounter: dataRefreshCounter,
     isAuthenticated,
     day,
     month,
