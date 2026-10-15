@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 
 import StationEditForm from "./StationEditForm";
 import StationTransferForm from "./StationTransferForm";
+import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 
 export default function StationManagementPanel({
@@ -24,13 +26,27 @@ export default function StationManagementPanel({
   onClose,
 }) {
   const isTransferMode = mode === "transfer";
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <ScrollablePanel className="readings-card station-management-card">
+    <ScrollablePanel
+      className={`readings-card station-management-card${isCollapsed ? " panel-collapsed" : ""}`}
+    >
       <div className="card-header">
         <h2>{isTransferMode ? "Перенос станции" : "Редактирование станции"}</h2>
         <div className="card-header-actions">
-          <button type="button" className="card-close-btn" onClick={onClose}>
+          <PanelCollapseButton
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed((value) => !value)}
+          />
+          <button
+            type="button"
+            className="card-close-btn"
+            onClick={() => {
+              setIsCollapsed(false);
+              onClose();
+            }}
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>

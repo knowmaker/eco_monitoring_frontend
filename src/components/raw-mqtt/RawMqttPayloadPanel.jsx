@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 
 import { fetchRawMqttPayload } from "../../api";
+import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 
 function toIsoDay(day) {
@@ -57,6 +58,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [records, setRecords] = useState([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const dateInputValue = toIsoDay(day);
   const maxDateInputValue = toIsoDay(new Date());
@@ -112,7 +114,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
   };
 
   return (
-    <ScrollablePanel className="readings-card raw-data-card">
+    <ScrollablePanel className={`readings-card raw-data-card${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
         <h2>Сырые данные</h2>
         <div className="card-header-actions">
@@ -123,7 +125,18 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
           >
             <RefreshCw size={16} aria-hidden="true" />
           </button>
-          <button type="button" className="card-close-btn" onClick={onClose}>
+          <PanelCollapseButton
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed((value) => !value)}
+          />
+          <button
+            type="button"
+            className="card-close-btn"
+            onClick={() => {
+              setIsCollapsed(false);
+              onClose();
+            }}
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>

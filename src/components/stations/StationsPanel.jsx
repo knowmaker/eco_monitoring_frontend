@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
 
 import { getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
+import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 
 function getPostTypeLabel(post) {
@@ -36,6 +37,7 @@ export default function StationsPanel({
   canEditSelectedPost = false,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({ internal: true, mosecom: false });
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const stationGroups = [
     {
       key: "internal",
@@ -52,7 +54,9 @@ export default function StationsPanel({
   return (
     <ScrollablePanel
       key={isStationDetailsInPanel ? `station-details-${selectedMonitoringPostId}` : "station-list"}
-      className={`stations-panel${isCovered ? " stations-panel-covered" : ""}`}
+      className={`stations-panel${isCovered ? " stations-panel-covered" : ""}${
+        isCollapsed ? " panel-collapsed" : ""
+      }`}
       aria-hidden={isCovered || undefined}
     >
       <div className="card-header">
@@ -71,7 +75,18 @@ export default function StationsPanel({
           <button type="button" className="card-refresh-btn" onClick={onRefresh}>
             <RefreshCw size={16} aria-hidden="true" />
           </button>
-          <button type="button" className="card-close-btn" onClick={onClose}>
+          <PanelCollapseButton
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed((value) => !value)}
+          />
+          <button
+            type="button"
+            className="card-close-btn"
+            onClick={() => {
+              setIsCollapsed(false);
+              onClose();
+            }}
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>

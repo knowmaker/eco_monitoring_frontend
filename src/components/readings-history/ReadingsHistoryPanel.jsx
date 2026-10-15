@@ -16,6 +16,7 @@ import {
 } from "../../lib/date";
 import CategoryLineChart from "../charts/CategoryLineChart";
 import ProfileTemperatureChart from "../charts/ProfileTemperatureChart";
+import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 import ReadingsMetricTabs from "./ReadingsMetricTabs";
 import ReadingsPeriodToolbar from "./ReadingsPeriodToolbar";
@@ -71,6 +72,7 @@ export default function ReadingsHistoryPanel({
   const [month, setMonth] = useState(new Date());
   const [rawDrilldown, setRawDrilldown] = useState(null);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const dataRefreshCounter = refreshCounter + autoRefreshCounter;
 
   const axis = useMemo(() => createReadingsAxis(viewMode, month), [viewMode, month]);
@@ -207,7 +209,7 @@ export default function ReadingsHistoryPanel({
   };
 
   return (
-    <ScrollablePanel className="readings-card">
+    <ScrollablePanel className={`readings-card${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
         <h2>Исторические наблюдения</h2>
         <div className="card-header-actions">
@@ -218,7 +220,18 @@ export default function ReadingsHistoryPanel({
           >
             <RefreshCw size={16} aria-hidden="true" />
           </button>
-          <button type="button" className="card-close-btn" onClick={onClose}>
+          <PanelCollapseButton
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed((value) => !value)}
+          />
+          <button
+            type="button"
+            className="card-close-btn"
+            onClick={() => {
+              setIsCollapsed(false);
+              onClose();
+            }}
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>

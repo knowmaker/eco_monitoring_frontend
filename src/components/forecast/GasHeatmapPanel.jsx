@@ -3,6 +3,7 @@ import { RefreshCw, X } from "lucide-react";
 
 import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasHeatmap";
 import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
+import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 import HeatmapTimeline from "./HeatmapTimeline";
 
@@ -39,6 +40,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   const [isLoadingFrame, setIsLoadingFrame] = useState(false);
   const [error, setError] = useState("");
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const loadedSubstanceRef = useRef(null);
   const selectedHourRef = useRef(null);
   const selectedItem = timeline[selectedIndex] ?? null;
@@ -110,7 +112,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   const hasCells = (frame?.cells ?? []).some((cell) => Number.isFinite(cell.value));
 
   return (
-    <ScrollablePanel className="stations-panel heatmap-panel">
+    <ScrollablePanel className={`stations-panel heatmap-panel${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
         <div>
           <h2>Тепловая карта</h2>
@@ -131,7 +133,19 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
               aria-hidden="true"
             />
           </button>
-          <button type="button" className="card-close-btn" onClick={onClose} aria-label="Закрыть">
+          <PanelCollapseButton
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed((value) => !value)}
+          />
+          <button
+            type="button"
+            className="card-close-btn"
+            onClick={() => {
+              setIsCollapsed(false);
+              onClose();
+            }}
+            aria-label="Закрыть"
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
