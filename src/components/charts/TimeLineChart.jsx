@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 
-import { formatAxisValue, normalizeChartValue } from "./chartFormatters";
+import { formatAxisValue, formatTooltipValue, normalizeChartValue } from "./chartFormatters";
 import {
   AXIS_NAME_TEXT_STYLE,
   AXIS_TEXT_COLOR,
@@ -40,14 +40,6 @@ function formatTimeLabel(value, { withSeconds = false } = {}) {
   return date.toLocaleTimeString("ru-RU", options);
 }
 
-function formatTooltipValue(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return "-";
-  }
-  return formatAxisValue(number);
-}
-
 function createYAxis({ position = "left", showSplitLine = true, name, min, max } = {}) {
   return {
     type: "value",
@@ -82,6 +74,7 @@ export default function TimeLineChart({
   xAxisName,
   yAxisName,
   yAxisMin,
+  tooltipPrecision,
   emptyText = "Нет сырых данных за выбранный интервал.",
 }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
@@ -115,7 +108,7 @@ export default function TimeLineChart({
             formatTimeLabel(items[0]?.value?.[0], { withSeconds: true }),
             ...items.map(
               (item) =>
-                `${item.marker} ${item.seriesName}&nbsp;&nbsp;&nbsp;<strong>${formatTooltipValue(item.value?.[1])}</strong>`
+                `${item.marker} ${item.seriesName}&nbsp;&nbsp;&nbsp;<strong>${formatTooltipValue(item.value?.[1], tooltipPrecision)}</strong>`
             ),
           ].join("<br />");
         },
@@ -173,7 +166,7 @@ export default function TimeLineChart({
         markLine: createPdkMarkLine(item.pdk),
         data: (item.points || [])
           .filter((point) => point.timestamp && Number.isFinite(Number(point.value)))
-          .map((point) => [point.timestamp, normalizeChartValue(point.value)]),
+          .map((point) => [point.timestamp, normalizeChartValue(point.value, tooltipPrecision)]),
       })),
     };
 
@@ -211,7 +204,7 @@ export default function TimeLineChart({
       },
       yAxis: compactYAxis,
     });
-  }, [series, hasValues, start, end, xAxisName, yAxisName, yAxisMin]);
+  }, [series, hasValues, start, end, xAxisName, yAxisName, yAxisMin, tooltipPrecision]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;

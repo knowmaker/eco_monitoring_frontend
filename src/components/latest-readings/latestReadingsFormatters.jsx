@@ -29,9 +29,12 @@ export function formatLatestValue(value, unit = "", precision = null) {
     return "-";
   }
 
-  const text = precision === null
-    ? (Math.abs(value) >= 100 ? value.toFixed(1) : value.toFixed(2)).replace(/\.?0+$/, "")
+  const fixed = precision === null
+    ? Math.abs(value) >= 100
+      ? value.toFixed(1)
+      : value.toFixed(2)
     : value.toFixed(precision);
+  const text = fixed.includes(".") ? fixed.replace(/\.?0+$/, "") : fixed;
 
   return `${text}${unit ? ` ${unit}` : ""}`;
 }

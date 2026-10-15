@@ -5,6 +5,7 @@ import {
   formatAxisValue,
   formatDayAxisLabel,
   formatHourIntervalAxisLabel,
+  formatTooltipValue,
   normalizeChartValue,
 } from "./chartFormatters";
 import {
@@ -38,6 +39,7 @@ export default function CategoryLineChart({
   xAxisName,
   yAxisName,
   yAxisMin,
+  tooltipPrecision,
   onEvents,
   emptyText = "Нет данных за выбранный период.",
 }) {
@@ -73,7 +75,7 @@ export default function CategoryLineChart({
         markLine: createPdkMarkLine(item.pdk),
         data: axisValues.map((axisValue) => {
           const value = byAxisValue.get(axisValue);
-          return value === undefined ? null : normalizeChartValue(value);
+          return value === undefined ? null : normalizeChartValue(value, tooltipPrecision);
         }),
       };
     });
@@ -93,6 +95,7 @@ export default function CategoryLineChart({
         backgroundColor: TOOLTIP_BACKGROUND_COLOR,
         borderColor: TOOLTIP_BORDER_COLOR,
         textStyle: TOOLTIP_TEXT_STYLE,
+        valueFormatter: (value) => formatTooltipValue(value, tooltipPrecision),
       },
       legend: {
         top: 0,
@@ -169,7 +172,7 @@ export default function CategoryLineChart({
         axisLabel: { fontSize: 9 },
       },
     });
-  }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, yAxisMin, onEvents]);
+  }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, yAxisMin, tooltipPrecision, onEvents]);
 
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;

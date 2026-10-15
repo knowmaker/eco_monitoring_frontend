@@ -145,6 +145,7 @@ export default function ReadingsHistoryPanel({
   const yAxisName = getYAxisName(selectedDeviceType, selectedMetricKey);
   const yAxisMin =
     selectedDeviceType === "gas" || selectedDeviceType === "dust" ? INCLUDE_ZERO_Y_AXIS_MIN : undefined;
+  const tooltipPrecision = selectedDeviceType === "gas" ? 4 : selectedDeviceType === "dust" ? 5 : undefined;
   const canOpenRawDrilldown =
     allowsRawDrilldown && isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
   const dateInputType = viewMode === "month" ? "month" : "date";
@@ -329,6 +330,7 @@ export default function ReadingsHistoryPanel({
                   xAxisName="Время"
                   yAxisName={yAxisName}
                   yAxisMin={yAxisMin}
+                  tooltipPrecision={tooltipPrecision}
                   emptyText="Нет сырых данных за выбранный час."
                 />
               )
@@ -390,6 +392,7 @@ export default function ReadingsHistoryPanel({
                 xAxisName={xAxisName}
                 yAxisName={yAxisName}
                 yAxisMin={yAxisMin}
+                tooltipPrecision={tooltipPrecision}
                 onEvents={canOpenRawDrilldown ? aggregateChartEvents : undefined}
                 emptyText={axis.emptyText}
               />

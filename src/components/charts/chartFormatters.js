@@ -1,9 +1,9 @@
-export function normalizeChartValue(value) {
+export function normalizeChartValue(value, precision = 4) {
   if (value === null || value === undefined) {
     return null;
   }
   const number = Number(value);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : value;
+  return Number.isFinite(number) ? Number(number.toFixed(precision)) : value;
 }
 
 export function formatAxisValue(value) {
@@ -19,6 +19,17 @@ export function formatAxisValue(value) {
     return number.toFixed(3);
   }
   return number.toFixed(2);
+}
+
+export function formatTooltipValue(value, precision) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return "-";
+  }
+  if (!Number.isInteger(precision)) {
+    return formatAxisValue(number);
+  }
+  return number.toFixed(precision).replace(/\.?0+$/, "");
 }
 
 export function formatHourInterval(hour) {

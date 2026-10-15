@@ -76,7 +76,7 @@ function LatestGasDeviceBlock({ device, useGasAbsoluteValues = true }) {
               key={item.substance_code}
               label={item.substance_code}
               value={applyGasValueCorrection(item.value, useGasAbsoluteValues)}
-              precision={2}
+              precision={3}
               limit={item.limit}
             />
           ))}
