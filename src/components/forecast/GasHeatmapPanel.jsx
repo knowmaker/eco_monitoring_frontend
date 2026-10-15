@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { RefreshCw, X } from "lucide-react";
 
 import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasHeatmap";
-import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
+import { GAS_HEATMAP_MIN_VALUE, getGasHeatmapMaxValue } from "../../domain/gasHeatmap";
 import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 import HeatmapTimeline from "./HeatmapTimeline";
@@ -110,13 +110,13 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   }, [selectedItem, substanceCode, onFrameChange]);
 
   const hasCells = (frame?.cells ?? []).some((cell) => Number.isFinite(cell.value));
+  const heatmapMaxValue = getGasHeatmapMaxValue(frame);
 
   return (
     <ScrollablePanel className={`stations-panel heatmap-panel${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
         <div>
           <h2>Тепловая карта</h2>
-          <p className="heatmap-subtitle">Концентрации газов, мг/м³</p>
         </div>
         <div className="card-header-actions">
           <button
@@ -186,8 +186,8 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
           <div><span>Станций</span><strong>{frame.source_station_count}</strong></div>
           {hasCells && (
             <div className="heatmap-legend-block">
-              <span>Диапазон</span><div className="heatmap-legend" />
-              <div className="heatmap-legend-labels"><span>{formatValue(GAS_HEATMAP_MIN_VALUE)}</span><span>{formatValue(GAS_HEATMAP_MAX_VALUE)}</span></div>
+              <span>Диапазон, мг/м³</span><div className="heatmap-legend" />
+              <div className="heatmap-legend-labels"><span>{formatValue(GAS_HEATMAP_MIN_VALUE)}</span><span>{formatValue(heatmapMaxValue)}</span></div>
             </div>
           )}
           {frame.data_kind === "forecast" && frame.generated_at && (

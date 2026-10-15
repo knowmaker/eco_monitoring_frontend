@@ -13,12 +13,6 @@
   margin-bottom: 0;
 }
 
-.heatmap-subtitle {
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 0.74rem;
-}
-
 .heatmap-gas-options {
   min-width: 0;
   margin: 0;

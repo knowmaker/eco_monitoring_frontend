@@ -412,10 +412,6 @@
   margin-bottom: 0;
 }
 
-.panel-collapsed .heatmap-subtitle {
-  display: none;
-}
-
 .station-card,
 .readings-card,
 .modal-card {

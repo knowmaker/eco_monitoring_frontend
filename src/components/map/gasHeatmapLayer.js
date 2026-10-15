@@ -1,4 +1,4 @@
-import { GAS_HEATMAP_MAX_VALUE, GAS_HEATMAP_MIN_VALUE } from "../../domain/gasHeatmap";
+import { GAS_HEATMAP_MIN_VALUE, getGasHeatmapMaxValue } from "../../domain/gasHeatmap";
 
 
 const HEATMAP_SOURCE_ID = "gas-heatmap-source";
@@ -17,7 +17,7 @@ function createHeatmapGeoJson(frame) {
       Number.isFinite(cell.east) &&
       Number.isFinite(cell.value)
   );
-  const span = GAS_HEATMAP_MAX_VALUE - GAS_HEATMAP_MIN_VALUE;
+  const span = getGasHeatmapMaxValue(frame) - GAS_HEATMAP_MIN_VALUE;
 
   return {
     type: "FeatureCollection",
