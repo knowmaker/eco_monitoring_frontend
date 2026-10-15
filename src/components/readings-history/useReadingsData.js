@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   DEVICE_METRIC_TABS,
-  DUST_METRIC_KEYS,
   GAS_SUBSTANCE_ORDER,
   METEO_WIND_KEY,
   getMetricLabel,
@@ -202,17 +201,12 @@ export default function useReadingsData({
     }
 
     if (selectedDeviceType === "dust") {
-      return DUST_METRIC_KEYS.map((key) => {
-        const item = series.find((candidate) => candidate.key === key);
-        return item
-          ? {
-              key: item.key,
-              label: getMetricLabel(item.key),
-              pdk: item.pdk,
-              points: item.points || createEmptyPoints(axis.values, axis.key),
-            }
-          : null;
-      }).filter(Boolean);
+      return series.map((item) => ({
+        key: item.key,
+        label: getMetricLabel(item.key),
+        pdk: item.pdk,
+        points: item.points || createEmptyPoints(axis.values, axis.key),
+      }));
     }
 
     if (selectedDeviceType === "profile") {

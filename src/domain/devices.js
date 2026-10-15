@@ -17,8 +17,6 @@ export const DUST_METRIC_TABS = [
   { key: "tsp_concentration", label: "TSP", yAxisName: "Концентрация, мг/м³" },
 ];
 
-export const DUST_METRIC_KEYS = DUST_METRIC_TABS.map((item) => item.key);
-
 export const METEO_WIND_KEY = "__meteo_wind__";
 
 export const DEVICE_METRIC_TABS = {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { DUST_METRIC_KEYS, METEO_WIND_KEY, getMetricLabel } from "../../domain/devices";
+import { METEO_WIND_KEY, getMetricLabel } from "../../domain/devices";
 import {
   fetchDustStateRaw,
   fetchGasSensorsRaw,
@@ -82,12 +82,12 @@ export default function useRawReadings({
 
       if (selectedDeviceType === "dust") {
         setRawSeries(
-          DUST_METRIC_KEYS.map((key) => {
-            const item = (payload.series || []).find((candidate) => candidate.key === key);
-            return item
-              ? { key: item.key, label: getMetricLabel(item.key), pdk: item.pdk, points: item.points || [] }
-              : null;
-          }).filter(Boolean)
+          (payload.series || []).map((item) => ({
+            key: item.key,
+            label: getMetricLabel(item.key),
+            pdk: item.pdk,
+            points: item.points || [],
+          }))
         );
         return;
       }
