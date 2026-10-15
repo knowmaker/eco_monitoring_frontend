@@ -467,12 +467,6 @@ export default function App() {
             }
           }}
           onSelectPost={handleSelectMonitoringPost}
-          onEditSelectedPost={() => {
-            if (selectedMonitoringPost) {
-              handleStartEditStation(selectedMonitoringPost);
-            }
-          }}
-          canEditSelectedPost={selectedMonitoringPost?.source !== "mosecom"}
         >
           <StationDetails
             selectedMonitoringPost={selectedMonitoringPost}
@@ -486,6 +480,11 @@ export default function App() {
             detailsError={detailsError}
             refreshCounter={stationDetailsRefreshCounter + scheduledRefreshCounter}
             useGasAbsoluteValues={useGasAbsoluteValues}
+            onEditStation={() => {
+              if (selectedMonitoringPost) {
+                handleStartEditStation(selectedMonitoringPost);
+              }
+            }}
             onOpenRawPackets={() => {
               setEditingStationId(null);
               setTransferringStationId(null);

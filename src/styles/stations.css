@@ -378,7 +378,6 @@
 .icon-btn,
 .card-collapse-btn,
 .card-close-btn,
-.card-edit-btn,
 .card-refresh-btn {
   display: grid;
   width: 30px;
@@ -394,7 +393,6 @@
 .icon-btn:hover,
 .card-collapse-btn:hover,
 .card-close-btn:hover,
-.card-edit-btn:hover,
 .card-refresh-btn:hover {
   color: var(--text);
   border-color: var(--border-strong);
@@ -404,21 +402,6 @@
 .card-refresh-btn:hover {
   color: var(--accent-strong);
   border-color: rgba(20, 122, 99, 0.36);
-}
-
-.card-edit-btn:hover {
-  color: #315f9f;
-  border-color: rgba(49, 95, 159, 0.34);
-  background: rgba(49, 95, 159, 0.1);
-}
-
-.stations-panel.panel-collapsed,
-.station-card.panel-collapsed,
-.readings-card.panel-collapsed {
-  height: 44px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  overflow: hidden;
 }
 
 .panel-collapsed [data-overlayscrollbars-contents] > :not(.card-header) {
@@ -637,7 +620,15 @@
   display: block;
 }
 
+.station-details-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .station-raw-action,
+.station-edit-action,
 .station-transfer-action {
   display: inline-flex;
   align-items: center;
@@ -655,11 +646,17 @@
 
 .station-raw-action:hover,
 .station-raw-action-active,
+.station-edit-action:hover,
 .station-transfer-action:hover,
 .station-transfer-action-active {
   color: var(--accent-strong);
   border-color: rgba(20, 122, 99, 0.38);
   background: var(--accent-soft);
+}
+
+.station-details-actions .station-raw-action,
+.station-details-actions .station-edit-action {
+  margin-top: 0;
 }
 
 .station-transfer-action {

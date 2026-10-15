@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Pencil, RefreshCw, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, RefreshCw, X } from "lucide-react";
 
 import { getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
 import PanelCollapseButton from "../layout/PanelCollapseButton";
@@ -33,8 +33,6 @@ export default function StationsPanel({
   onRefresh,
   onClose,
   onSelectPost,
-  onEditSelectedPost,
-  canEditSelectedPost = false,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({ internal: true, mosecom: false });
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -62,16 +60,6 @@ export default function StationsPanel({
       <div className="card-header">
         <h2>{isStationDetailsInPanel ? "Информация о станции" : "Станции мониторинга"}</h2>
         <div className="card-header-actions">
-          {isAdmin && isStationDetailsInPanel && canEditSelectedPost && (
-            <button
-              type="button"
-              className="card-edit-btn"
-              title="Редактировать"
-              onClick={onEditSelectedPost}
-            >
-              <Pencil size={15} aria-hidden="true" />
-            </button>
-          )}
           <button type="button" className="card-refresh-btn" onClick={onRefresh}>
             <RefreshCw size={16} aria-hidden="true" />
           </button>

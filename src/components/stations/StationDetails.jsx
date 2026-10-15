@@ -1,4 +1,4 @@
-import { Database } from "lucide-react";
+import { Database, Pencil } from "lucide-react";
 
 import { DEVICE_TYPE_LABELS } from "../../domain/devices";
 import { formatCoordinates, getPostTitle, POST_TYPE_LABELS } from "../../domain/monitoringPosts";
@@ -27,6 +27,7 @@ export default function StationDetails({
   detailsError,
   refreshCounter,
   useGasAbsoluteValues = true,
+  onEditStation,
   onOpenRawPackets,
   onSelectDeviceType,
 }) {
@@ -77,15 +78,21 @@ export default function StationDetails({
           <p>{selectedMonitoringPost.notes}</p>
         </div>
       )}
-      {isAdmin && !isMosecomStation && (
-        <button
-          type="button"
-          className={`station-raw-action${isRawPacketsOpen ? " station-raw-action-active" : ""}`}
-          onClick={onOpenRawPackets}
-        >
-          <Database size={15} aria-hidden="true" />
-          <span>Сырые пакеты данных с брокера</span>
-        </button>
+      {isAdmin && selectedMonitoringPost && !isMosecomStation && (
+        <div className="station-details-actions">
+          <button
+            type="button"
+            className={`station-raw-action${isRawPacketsOpen ? " station-raw-action-active" : ""}`}
+            onClick={onOpenRawPackets}
+          >
+            <Database size={15} aria-hidden="true" />
+            <span>Пакеты данных с брокера</span>
+          </button>
+          <button type="button" className="station-edit-action" onClick={onEditStation}>
+            <Pencil size={15} aria-hidden="true" />
+            <span>Редактировать</span>
+          </button>
+        </div>
       )}
       <LatestReadingsCard
         latestReadings={latestReadings}
