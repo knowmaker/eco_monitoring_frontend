@@ -86,7 +86,7 @@ export default function StationDetails({
             onClick={onOpenRawPackets}
           >
             <Database size={15} aria-hidden="true" />
-            <span>Пакеты данных с брокера</span>
+            <span>MQTT-пакеты</span>
           </button>
           <button type="button" className="station-edit-action" onClick={onEditStation}>
             <Pencil size={15} aria-hidden="true" />
