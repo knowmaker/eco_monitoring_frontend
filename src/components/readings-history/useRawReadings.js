@@ -118,7 +118,7 @@ export default function useRawReadings({
     loadRaw()
       .catch((error) => {
         if (!cancelled) {
-          setRawErrorText(error instanceof Error ? error.message : "Не удалось загрузить сырые данные");
+          setRawErrorText(error instanceof Error ? error.message : "Не удалось загрузить исходные показания");
         }
       })
       .finally(() => {

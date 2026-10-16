@@ -12,7 +12,7 @@ export async function fetchRawMqttPayload(monitoringPostId, day, limit = 100) {
 
   return requestJson(`/api/v1/raw-mqtt-payload/admin?${params.toString()}`, {
     auth: true,
-    errorMessage: "Ошибка загрузки сырых пакетов",
+    errorMessage: "Ошибка загрузки MQTT-пакетов",
     validate: (value) => value && Array.isArray(value.records),
     validationMessage: "Некорректный формат ответа /api/v1/raw-mqtt-payload/admin",
   });

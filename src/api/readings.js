@@ -47,7 +47,7 @@ function fetchSeriesRaw(deviceType, monitoringPostId, start, end) {
   const config = SERIES_ENDPOINTS[deviceType];
   return requestJson(endpoint(config.resource, "raw", buildRawParams(monitoringPostId, start, end)), {
     auth: true,
-    errorMessage: `Ошибка загрузки сырых данных ${config.graphName}`,
+    errorMessage: `Ошибка загрузки исходных показаний ${config.graphName}`,
     validate: config.validate,
     validationMessage: `Некорректный формат ответа /api/v1/${config.resource}/raw`,
   });
@@ -88,7 +88,7 @@ export async function fetchGasSensorsMonthly(monitoringPostId, month) {
 export async function fetchGasSensorsRaw(monitoringPostId, start, end) {
   return requestJson(endpoint("gas-sensors", "raw", buildRawParams(monitoringPostId, start, end)), {
     auth: true,
-    errorMessage: "Ошибка загрузки сырых данных gas-sensors",
+    errorMessage: "Ошибка загрузки исходных показаний gas-sensors",
     validate: validateGas,
     validationMessage: "Некорректный формат ответа /api/v1/gas-sensors/raw",
   });

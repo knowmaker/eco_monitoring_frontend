@@ -315,7 +315,7 @@ export default function ReadingsHistoryPanel({
                 <ChevronLeft size={16} aria-hidden="true" />
                 К графику
               </button>
-              <span className="chart-drilldown-label">Сырые данные: {rawDrilldown.label}</span>
+              <span className="chart-drilldown-label">Исходные показания: {rawDrilldown.label}</span>
             </div>
           )}
 
@@ -325,7 +325,7 @@ export default function ReadingsHistoryPanel({
             !errorText &&
             (rawDrilldown ? (
               isRawLoading ? (
-                <p className="station-card-hint">Загрузка сырых данных...</p>
+                <p className="station-card-hint">Загрузка исходных показаний...</p>
               ) : rawErrorText ? (
                 <p className="station-card-error">{rawErrorText}</p>
               ) : selectedDeviceType === "meteo" && selectedMetricKey === METEO_WIND_KEY ? (
@@ -335,7 +335,7 @@ export default function ReadingsHistoryPanel({
                   xKey="timestamp"
                   xValues={rawWindTimestamps}
                   labelFormatter={formatTimeOfDay}
-                  emptyText="Нет сырых данных за выбранный час."
+                  emptyText="Нет исходных показаний за выбранный час."
                 />
               ) : (
                 <TimeLineChart
@@ -346,7 +346,7 @@ export default function ReadingsHistoryPanel({
                   yAxisName={yAxisName}
                   yAxisMin={yAxisMin}
                   tooltipPrecision={tooltipPrecision}
-                  emptyText="Нет сырых данных за выбранный час."
+                  emptyText="Нет исходных показаний за выбранный час."
                 />
               )
             ) : selectedDeviceType === "profile" ? (
@@ -414,7 +414,7 @@ export default function ReadingsHistoryPanel({
             ))}
           {!isLoading && !errorText && !rawDrilldown && canOpenRawDrilldown && (
             <div className="chart-raw-access-note">
-              Для просмотра сырых измерений за час, нажмите на нужное значение.
+              Для просмотра исходных показаний за час нажмите на нужное значение.
             </div>
           )}
         </>

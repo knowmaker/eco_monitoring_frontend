@@ -84,7 +84,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
       })
       .catch((error) => {
         if (!cancelled) {
-          setErrorText(error instanceof Error ? error.message : "Не удалось загрузить сырые данные");
+          setErrorText(error instanceof Error ? error.message : "Не удалось загрузить MQTT-пакеты");
           setRecords([]);
         }
       })
@@ -116,7 +116,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
   return (
     <ScrollablePanel className={`readings-card raw-data-card${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
-        <h2>Сырые данные</h2>
+        <h2>MQTT-пакеты</h2>
         <div className="card-header-actions">
           <button
             type="button"
@@ -186,7 +186,7 @@ export default function RawMqttPayloadPanel({ monitoringPostId, onClose }) {
         </div>
       </div>
 
-      {isLoading && <p className="station-card-hint">Загрузка сырых данных...</p>}
+      {isLoading && <p className="station-card-hint">Загрузка MQTT-пакетов...</p>}
       {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
       {!isLoading && !errorText && !records.length && <p className="station-card-hint">Нет данных за указанную дату</p>}
 

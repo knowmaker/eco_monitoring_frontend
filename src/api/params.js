@@ -28,7 +28,7 @@ export function formatDateTimeParam(value) {
   }
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
-    throw new Error("Некорректный интервал запроса сырых данных");
+    throw new Error("Некорректный интервал запроса исходных показаний");
   }
   return toLocalDateTimeParam(date);
 }

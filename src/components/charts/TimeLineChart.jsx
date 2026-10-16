@@ -75,7 +75,7 @@ export default function TimeLineChart({
   yAxisName,
   yAxisMin,
   tooltipPrecision,
-  emptyText = "Нет сырых данных за выбранный интервал.",
+  emptyText = "Нет исходных показаний за выбранный интервал.",
 }) {
   const hasValues = useMemo(() => hasNumericValues(series), [series]);
 
