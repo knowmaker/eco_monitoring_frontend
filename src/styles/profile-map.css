@@ -1,0 +1,113 @@
+.temperature-profile-panel > [data-overlayscrollbars-contents] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.temperature-profile-panel .card-header {
+  margin-bottom: 0;
+}
+
+.profile-period-controls {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) minmax(116px, auto) 36px;
+  gap: 7px;
+}
+
+.profile-period-controls button,
+.profile-period-controls input,
+.profile-period-controls select {
+  min-width: 0;
+  height: 36px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  font: inherit;
+}
+
+.profile-period-controls button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--muted-strong);
+}
+
+.profile-period-controls button:disabled {
+  opacity: 0.4;
+}
+
+.profile-period-controls input,
+.profile-period-controls select {
+  padding: 0 8px;
+  font-size: 0.76rem;
+}
+
+.profile-map-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-map-summary > div:not(.profile-map-legend-block) {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+
+.profile-map-summary span {
+  color: var(--muted);
+}
+
+.profile-map-summary strong {
+  color: var(--text);
+}
+
+.profile-map-legend-block {
+  display: grid;
+  gap: 6px;
+  font-size: 0.74rem;
+}
+
+.profile-map-legend {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.profile-map-legend-values {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.7rem;
+}
+
+.profile-refresh-loading {
+  animation: profile-refresh-spin 800ms linear infinite;
+}
+
+@keyframes profile-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .profile-period-controls {
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+  }
+
+  .profile-period-controls select {
+    grid-column: 2;
+  }
+
+  .profile-period-controls button:last-child {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    height: 79px;
+  }
+
+  .profile-period-controls button:first-child {
+    grid-row: 1 / span 2;
+    height: 79px;
+  }
+}

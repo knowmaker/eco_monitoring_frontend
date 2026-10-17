@@ -5,6 +5,7 @@ import maplibregl from "maplibre-gl";
 
 import { getPostTitle } from "../../domain/monitoringPosts";
 import { initializeGasHeatmap, updateGasHeatmap } from "./gasHeatmapLayer";
+import { removeTemperatureProfileLayer, updateTemperatureProfileLayer } from "./temperatureProfileLayer";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = [37.6173, 55.7558];
@@ -57,6 +58,19 @@ function fitMapToPoints(map, points) {
   map.fitBounds(bounds, { padding: MAP_FIT_PADDING, maxZoom: 13, duration: 500 });
 }
 
+function getProfileFitPadding(map) {
+  const canvas = map.getCanvas();
+  if (canvas.clientWidth <= 640) {
+    return {
+      top: Math.round(canvas.clientHeight * 0.52),
+      right: 32,
+      bottom: 48,
+      left: 32,
+    };
+  }
+  return MAP_FIT_PADDING;
+}
+
 function focusPostOnMap(map, post) {
   map.flyTo({
     center: getPostMapPoint(post),
@@ -66,8 +80,8 @@ function focusPostOnMap(map, post) {
 
 function removeTowerMarkers(markerEntries) {
   markerEntries.forEach(({ marker, root }) => {
-    root.unmount();
     marker.remove();
+    queueMicrotask(() => root.unmount());
   });
 }
 
@@ -98,6 +112,8 @@ export default function useMonitoringMap({
   onPostClick,
   heatmapFrame,
   heatmapEnabled = false,
+  temperatureProfileFrame,
+  temperatureProfileEnabled = false,
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -106,6 +122,10 @@ export default function useMonitoringMap({
   const onPostClickRef = useRef(onPostClick);
   const heatmapFrameRef = useRef(heatmapFrame);
   const heatmapEnabledRef = useRef(heatmapEnabled);
+  const temperatureProfileFrameRef = useRef(temperatureProfileFrame);
+  const temperatureProfileEnabledRef = useRef(temperatureProfileEnabled);
+  const savedCameraRef = useRef(null);
+  const fittedProfileHourRef = useRef(null);
 
   useEffect(() => {
     onPostClickRef.current = onPostClick;
@@ -118,6 +138,14 @@ export default function useMonitoringMap({
   useEffect(() => {
     heatmapEnabledRef.current = heatmapEnabled;
   }, [heatmapEnabled]);
+
+  useEffect(() => {
+    temperatureProfileFrameRef.current = temperatureProfileFrame;
+  }, [temperatureProfileFrame]);
+
+  useEffect(() => {
+    temperatureProfileEnabledRef.current = temperatureProfileEnabled;
+  }, [temperatureProfileEnabled]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
@@ -137,6 +165,11 @@ export default function useMonitoringMap({
       applyRussianMapLabels(mapRef.current);
       initializeGasHeatmap(mapRef.current);
       updateGasHeatmap(mapRef.current, heatmapFrameRef.current, heatmapEnabledRef.current);
+      updateTemperatureProfileLayer(
+        mapRef.current,
+        temperatureProfileFrameRef.current,
+        temperatureProfileEnabledRef.current
+      );
     });
     mapRef.current.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
     mapRef.current.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
@@ -144,6 +177,7 @@ export default function useMonitoringMap({
     return () => {
       removeTowerMarkers(markersRef.current);
       markersRef.current = [];
+      removeTemperatureProfileLayer(mapRef.current);
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -157,6 +191,67 @@ export default function useMonitoringMap({
   }, [heatmapFrame, heatmapEnabled]);
 
   useEffect(() => {
+    const map = mapRef.current;
+    if (map) {
+      updateTemperatureProfileLayer(map, temperatureProfileFrame, temperatureProfileEnabled);
+    }
+  }, [temperatureProfileFrame, temperatureProfileEnabled]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+    if (temperatureProfileEnabled && savedCameraRef.current === null) {
+      savedCameraRef.current = {
+        center: map.getCenter().toArray(),
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      };
+      map.easeTo({ pitch: 60, bearing: -25, duration: 700 });
+      return;
+    }
+    if (!temperatureProfileEnabled && savedCameraRef.current !== null) {
+      map.easeTo({ ...savedCameraRef.current, duration: 700 });
+      savedCameraRef.current = null;
+      fittedProfileHourRef.current = null;
+    }
+  }, [temperatureProfileEnabled]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const hourStart = temperatureProfileFrame?.hour_start;
+    if (
+      !map ||
+      !temperatureProfileEnabled ||
+      !hourStart ||
+      fittedProfileHourRef.current === hourStart
+    ) {
+      return;
+    }
+    const points = (temperatureProfileFrame.stations ?? [])
+      .filter((station) => Number.isFinite(station.latitude) && Number.isFinite(station.longitude))
+      .map((station) => [station.longitude, station.latitude]);
+    if (!points.length) {
+      fittedProfileHourRef.current = hourStart;
+      return;
+    }
+    const bounds = points.reduce(
+      (currentBounds, point) => currentBounds.extend(point),
+      new maplibregl.LngLatBounds(points[0], points[0])
+    );
+    map.fitBounds(bounds, {
+      padding: getProfileFitPadding(map),
+      maxZoom: 9.5,
+      pitch: 60,
+      bearing: -25,
+      duration: 700,
+    });
+    fittedProfileHourRef.current = hourStart;
+  }, [temperatureProfileEnabled, temperatureProfileFrame]);
+
+  useEffect(() => {
     if (!mapRef.current) {
       return;
     }
@@ -165,13 +260,21 @@ export default function useMonitoringMap({
     markersRef.current = [];
 
     const postsWithCoordinates = getPostsWithCoordinates(monitoringPosts);
+    const visibleProfilePostIds = new Set(
+      temperatureProfileEnabled
+        ? (temperatureProfileFrame?.stations ?? []).map((station) => station.monitoring_post_id)
+        : []
+    );
+    const visiblePosts = temperatureProfileEnabled
+      ? postsWithCoordinates.filter((post) => visibleProfilePostIds.has(post.id))
+      : postsWithCoordinates;
     const points = postsWithCoordinates.map(getPostMapPoint);
     const pointsKey = getMapPointsKey(points);
     if (pointsKey && pointsKey !== fittedMapPointsKeyRef.current) {
       fitMapToPoints(mapRef.current, points);
       fittedMapPointsKeyRef.current = pointsKey;
     }
-    postsWithCoordinates.forEach((post) => {
+    visiblePosts.forEach((post) => {
       const { element, root } = createTowerMarkerElement(
         post.post_type,
         post.activity_status,
@@ -190,7 +293,7 @@ export default function useMonitoringMap({
 
       markersRef.current.push({ marker, root });
     });
-  }, [monitoringPosts, selectedMonitoringPostId]);
+  }, [monitoringPosts, selectedMonitoringPostId, temperatureProfileEnabled, temperatureProfileFrame]);
 
   const focusPost = (post) => {
     if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {

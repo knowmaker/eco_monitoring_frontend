@@ -3,6 +3,7 @@ import AuthModal from "./components/auth/AuthModal";
 import ExportPanel from "./components/export-aggregates/ExportPanel";
 import GasHeatmapPanel from "./components/forecast/GasHeatmapPanel";
 import SideMenu from "./components/layout/SideMenu";
+import TemperatureProfilePanel from "./components/profile-map/TemperatureProfilePanel";
 import Topbar from "./components/layout/Topbar";
 import StationDetails from "./components/stations/StationDetails";
 import StationManagementPanel from "./components/stations/StationManagementPanel";
@@ -64,6 +65,7 @@ export default function App() {
   const [postsReloadToken, setPostsReloadToken] = useState(0);
   const [activeMenuPanel, setActiveMenuPanel] = useState(null);
   const [heatmapFrame, setHeatmapFrame] = useState(null);
+  const [temperatureProfileFrame, setTemperatureProfileFrame] = useState(null);
   const [editingStationId, setEditingStationId] = useState(null);
   const [stationForm, setStationForm] = useState(createEmptyStationForm);
   const [isSavingStation, setIsSavingStation] = useState(false);
@@ -168,7 +170,15 @@ export default function App() {
     onPostClick: handleMapPostClick,
     heatmapFrame,
     heatmapEnabled: activeMenuPanel === "heatmap",
+    temperatureProfileFrame,
+    temperatureProfileEnabled: activeMenuPanel === "temperature-profile",
   });
+
+  useEffect(() => {
+    if (activeMenuPanel !== "temperature-profile") {
+      setTemperatureProfileFrame(null);
+    }
+  }, [activeMenuPanel]);
 
   useEffect(() => {
     setSelectedMonitoringPostId((current) => {
@@ -439,6 +449,17 @@ export default function App() {
           setIsReadingsCardOpen(false);
           setIsRawPacketsOpen(false);
         }}
+        onTemperatureProfileClick={() => {
+          if (isStationCardOpen) {
+            closeStationDetails();
+          }
+          setHeatmapFrame(null);
+          setActiveMenuPanel((current) => (
+            current === "temperature-profile" ? null : "temperature-profile"
+          ));
+          setIsReadingsCardOpen(false);
+          setIsRawPacketsOpen(false);
+        }}
         onExportClick={() => {
           if (isStationCardOpen) {
             closeStationDetails();
@@ -516,6 +537,16 @@ export default function App() {
           onFrameChange={setHeatmapFrame}
           onClose={() => {
             setHeatmapFrame(null);
+            setActiveMenuPanel(null);
+          }}
+        />
+      )}
+
+      {activeMenuPanel === "temperature-profile" && (
+        <TemperatureProfilePanel
+          onFrameChange={setTemperatureProfileFrame}
+          onClose={() => {
+            setTemperatureProfileFrame(null);
             setActiveMenuPanel(null);
           }}
         />
