@@ -32,6 +32,6 @@ export {
 } from "./readings";
 export { fetchStationLatestReadings } from "./stationReadings";
 export {
-  fetchGasHeatmap,
-  fetchGasHeatmapTimeline,
-} from "./gasHeatmap";
+  fetchConcentrationMap,
+  fetchConcentrationMapTimeline,
+} from "./concentrationMap";

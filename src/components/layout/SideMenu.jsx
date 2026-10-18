@@ -3,7 +3,7 @@ import { Download, Layers3, List, Thermometer } from "lucide-react";
 export default function SideMenu({
   activeMenuPanel,
   onStationsClick,
-  onHeatmapClick,
+  onConcentrationMapClick,
   onTemperatureProfileClick,
   onExportClick,
 }) {
@@ -19,11 +19,11 @@ export default function SideMenu({
       </button>
       <button
         type="button"
-        className={`side-menu-button${activeMenuPanel === "heatmap" ? " side-menu-button-active" : ""}`}
-        onClick={onHeatmapClick}
+        className={`side-menu-button${activeMenuPanel === "concentration-map" ? " side-menu-button-active" : ""}`}
+        onClick={onConcentrationMapClick}
       >
         <Layers3 size={18} aria-hidden="true" />
-        <span>Тепловая карта</span>
+        <span>Карта концентраций</span>
       </button>
       <button
         type="button"

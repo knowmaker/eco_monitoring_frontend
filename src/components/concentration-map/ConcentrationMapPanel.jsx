@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, X } from "lucide-react";
 
-import { fetchGasHeatmap, fetchGasHeatmapTimeline } from "../../api/gasHeatmap";
-import { GAS_HEATMAP_MIN_VALUE, getGasHeatmapMaxValue } from "../../domain/gasHeatmap";
+import { fetchConcentrationMap, fetchConcentrationMapTimeline } from "../../api/concentrationMap";
+import {
+  CONCENTRATION_MAP_MIN_VALUE,
+  getConcentrationMapMaxValue,
+} from "../../domain/concentrationMap";
 import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
-import HeatmapTimeline from "./HeatmapTimeline";
+import ConcentrationMapTimeline from "./ConcentrationMapTimeline";
 
 
 const GASES = ["CO", "NO", "NO2", "O3", "SO2"];
@@ -30,7 +33,7 @@ function getSelectedIndex(items, selectedHour) {
   return forecastIndex >= 0 ? forecastIndex : items.length - 1;
 }
 
-export default function GasHeatmapPanel({ onClose, onFrameChange }) {
+export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
   const [substanceCode, setSubstanceCode] = useState("NO2");
   const [timeline, setTimeline] = useState([]);
   const [currentHour, setCurrentHour] = useState(null);
@@ -62,7 +65,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
       setIsLoadingFrame(false);
       onFrameChange(null);
     }
-    fetchGasHeatmapTimeline(substanceCode)
+    fetchConcentrationMapTimeline(substanceCode)
       .then((response) => {
         if (!active) return;
         setTimeline(response.items);
@@ -87,7 +90,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
     const requestTimer = window.setTimeout(() => {
       setIsLoadingFrame(true);
       setError("");
-      fetchGasHeatmap(substanceCode, selectedItem.hour_start)
+      fetchConcentrationMap(substanceCode, selectedItem.hour_start)
         .then((response) => {
           if (!active) return;
           setFrame(response);
@@ -110,25 +113,25 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
   }, [selectedItem, substanceCode, onFrameChange]);
 
   const hasCells = (frame?.cells ?? []).some((cell) => Number.isFinite(cell.value));
-  const heatmapMaxValue = getGasHeatmapMaxValue(frame);
+  const concentrationMapMaxValue = getConcentrationMapMaxValue(frame);
 
   return (
-    <ScrollablePanel className={`stations-panel heatmap-panel${isCollapsed ? " panel-collapsed" : ""}`}>
+    <ScrollablePanel className={`stations-panel concentration-map-panel${isCollapsed ? " panel-collapsed" : ""}`}>
       <div className="card-header">
         <div>
-          <h2>Тепловая карта</h2>
+          <h2>Карта концентраций</h2>
         </div>
         <div className="card-header-actions">
           <button
             type="button"
-            className="card-refresh-btn heatmap-refresh-btn"
-            aria-label="Обновить тепловую карту"
+            className="card-refresh-btn concentration-map-refresh-btn"
+            aria-label="Обновить карту концентраций"
             aria-busy={isLoadingTimeline || isLoadingFrame}
             disabled={isLoadingTimeline || isLoadingFrame}
             onClick={() => setRefreshCounter((value) => value + 1)}
           >
             <RefreshCw
-              className={isLoadingTimeline || isLoadingFrame ? "heatmap-refresh-icon-loading" : undefined}
+              className={isLoadingTimeline || isLoadingFrame ? "concentration-map-refresh-icon-loading" : undefined}
               size={16}
               aria-hidden="true"
             />
@@ -151,14 +154,14 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
         </div>
       </div>
 
-      <fieldset className="heatmap-gas-options">
+      <fieldset className="concentration-map-gas-options">
         <legend>Газ</legend>
-        <div role="radiogroup" aria-label="Газ для тепловой карты">
+        <div role="radiogroup" aria-label="Газ для карты концентраций">
           {GASES.map((gas) => (
-            <label key={gas} className={substanceCode === gas ? "heatmap-gas-option-selected" : ""}>
+            <label key={gas} className={substanceCode === gas ? "concentration-map-gas-option-selected" : ""}>
               <input
                 type="radio"
-                name="heatmap-gas"
+                name="concentration-map-gas"
                 value={gas}
                 checked={substanceCode === gas}
                 onChange={() => setSubstanceCode(gas)}
@@ -170,7 +173,7 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
       </fieldset>
 
       {!!timeline.length && (
-        <HeatmapTimeline
+        <ConcentrationMapTimeline
           items={timeline}
           selectedIndex={selectedIndex}
           currentHour={currentHour}
@@ -182,12 +185,12 @@ export default function GasHeatmapPanel({ onClose, onFrameChange }) {
       {!isLoadingTimeline && !timeline.length && !error && <p className="station-card-hint">Для выбранного газа пока нет часовых данных.</p>}
 
       {frame && (
-        <section className="heatmap-summary">
+        <section className="concentration-map-summary">
           <div><span>Станций</span><strong>{frame.source_station_count}</strong></div>
           {hasCells && (
-            <div className="heatmap-legend-block">
-              <span>Диапазон, мг/м³</span><div className="heatmap-legend" />
-              <div className="heatmap-legend-labels"><span>{formatValue(GAS_HEATMAP_MIN_VALUE)}</span><span>{formatValue(heatmapMaxValue)}</span></div>
+            <div className="concentration-map-legend-block">
+              <span>Диапазон, мг/м³</span><div className="concentration-map-legend" />
+              <div className="concentration-map-legend-labels"><span>{formatValue(CONCENTRATION_MAP_MIN_VALUE)}</span><span>{formatValue(concentrationMapMaxValue)}</span></div>
             </div>
           )}
           {frame.data_kind === "forecast" && frame.generated_at && (

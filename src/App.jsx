@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/auth/AuthModal";
 import ExportPanel from "./components/export-aggregates/ExportPanel";
-import GasHeatmapPanel from "./components/forecast/GasHeatmapPanel";
+import ConcentrationMapPanel from "./components/concentration-map/ConcentrationMapPanel";
 import SideMenu from "./components/layout/SideMenu";
 import TemperatureProfilePanel from "./components/profile-map/TemperatureProfilePanel";
 import Topbar from "./components/layout/Topbar";
@@ -64,7 +64,7 @@ function createStationTransferForm(post = {}) {
 export default function App() {
   const [postsReloadToken, setPostsReloadToken] = useState(0);
   const [activeMenuPanel, setActiveMenuPanel] = useState(null);
-  const [heatmapFrame, setHeatmapFrame] = useState(null);
+  const [concentrationMapFrame, setConcentrationMapFrame] = useState(null);
   const [temperatureProfileFrame, setTemperatureProfileFrame] = useState(null);
   const [editingStationId, setEditingStationId] = useState(null);
   const [stationForm, setStationForm] = useState(createEmptyStationForm);
@@ -168,8 +168,8 @@ export default function App() {
     monitoringPosts,
     selectedMonitoringPostId,
     onPostClick: handleMapPostClick,
-    heatmapFrame,
-    heatmapEnabled: activeMenuPanel === "heatmap",
+    concentrationMapFrame,
+    concentrationMapEnabled: activeMenuPanel === "concentration-map",
     temperatureProfileFrame,
     temperatureProfileEnabled: activeMenuPanel === "temperature-profile",
   });
@@ -437,13 +437,13 @@ export default function App() {
       <SideMenu
         activeMenuPanel={activeMenuPanel}
         onStationsClick={() => setActiveMenuPanel((current) => (current === "stations" ? null : "stations"))}
-        onHeatmapClick={() => {
+        onConcentrationMapClick={() => {
           if (isStationCardOpen) {
             closeStationDetails();
           }
           setActiveMenuPanel((current) => {
-            const next = current === "heatmap" ? null : "heatmap";
-            if (next === null) setHeatmapFrame(null);
+            const next = current === "concentration-map" ? null : "concentration-map";
+            if (next === null) setConcentrationMapFrame(null);
             return next;
           });
           setIsReadingsCardOpen(false);
@@ -453,7 +453,7 @@ export default function App() {
           if (isStationCardOpen) {
             closeStationDetails();
           }
-          setHeatmapFrame(null);
+          setConcentrationMapFrame(null);
           setActiveMenuPanel((current) => (
             current === "temperature-profile" ? null : "temperature-profile"
           ));
@@ -532,11 +532,11 @@ export default function App() {
         />
       )}
 
-      {activeMenuPanel === "heatmap" && (
-        <GasHeatmapPanel
-          onFrameChange={setHeatmapFrame}
+      {activeMenuPanel === "concentration-map" && (
+        <ConcentrationMapPanel
+          onFrameChange={setConcentrationMapFrame}
           onClose={() => {
-            setHeatmapFrame(null);
+            setConcentrationMapFrame(null);
             setActiveMenuPanel(null);
           }}
         />

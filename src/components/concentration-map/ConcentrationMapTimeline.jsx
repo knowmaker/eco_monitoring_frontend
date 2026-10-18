@@ -36,7 +36,7 @@ function getVisibleRange(items, selectedIndex) {
   return { start, items: items.slice(start, start + VISIBLE_HOURS) };
 }
 
-export default function HeatmapTimeline({
+export default function ConcentrationMapTimeline({
   items,
   selectedIndex,
   currentHour,
@@ -49,18 +49,18 @@ export default function HeatmapTimeline({
     : -1;
 
   return (
-    <section className="heatmap-time-card">
-      <div className="heatmap-time-heading">
-        <span className={`heatmap-kind heatmap-kind-${selectedItem?.data_kind ?? "none"}`}>
+    <section className="concentration-map-time-card">
+      <div className="concentration-map-time-heading">
+        <span className={`concentration-map-kind concentration-map-kind-${selectedItem?.data_kind ?? "none"}`}>
           {selectedItem?.data_kind === "forecast" ? "Прогноз" : "Наблюдение"}
         </span>
         <strong>{formatSelectedHour(selectedItem?.hour_start)}</strong>
       </div>
 
-      <div className="heatmap-timeline">
+      <div className="concentration-map-timeline">
         <button
           type="button"
-          className="heatmap-timeline-arrow"
+          className="concentration-map-timeline-arrow"
           disabled={selectedIndex <= 0}
           onClick={() => onSelect(selectedIndex - 1)}
           aria-label="Предыдущий час"
@@ -68,7 +68,7 @@ export default function HeatmapTimeline({
           <ChevronLeft size={18} />
         </button>
 
-        <div className="heatmap-timeline-hours">
+        <div className="concentration-map-timeline-hours">
           {visibleRange.items.map((item, visibleIndex) => {
             const itemIndex = visibleRange.start + visibleIndex;
             const isSelected = itemIndex === selectedIndex;
@@ -78,15 +78,15 @@ export default function HeatmapTimeline({
                 type="button"
                 key={item.hour_start}
                 className={[
-                  "heatmap-timeline-hour",
-                  isSelected ? "heatmap-timeline-hour-selected" : "",
-                  item.data_kind === "forecast" ? "heatmap-timeline-hour-forecast" : "",
-                  isCurrentBoundary ? "heatmap-timeline-hour-current" : "",
+                  "concentration-map-timeline-hour",
+                  isSelected ? "concentration-map-timeline-hour-selected" : "",
+                  item.data_kind === "forecast" ? "concentration-map-timeline-hour-forecast" : "",
+                  isCurrentBoundary ? "concentration-map-timeline-hour-current" : "",
                 ].filter(Boolean).join(" ")}
                 onClick={() => onSelect(itemIndex)}
                 aria-pressed={isSelected}
               >
-                {isCurrentBoundary && <span className="heatmap-timeline-now">Сейчас</span>}
+                {isCurrentBoundary && <span className="concentration-map-timeline-now">Сейчас</span>}
                 <span>{formatTimelineHour(item.hour_start)}</span>
                 <small>{formatTimelineDate(item.hour_start)}</small>
               </button>
@@ -96,7 +96,7 @@ export default function HeatmapTimeline({
 
         <button
           type="button"
-          className="heatmap-timeline-arrow"
+          className="concentration-map-timeline-arrow"
           disabled={selectedIndex < 0 || selectedIndex >= items.length - 1}
           onClick={() => onSelect(selectedIndex + 1)}
           aria-label="Следующий час"
@@ -105,7 +105,7 @@ export default function HeatmapTimeline({
         </button>
       </div>
 
-      <div className="heatmap-timeline-jump">
+      <div className="concentration-map-timeline-jump">
         <span>{formatTimelineDate(items[0]?.hour_start)}</span>
         <input
           type="range"

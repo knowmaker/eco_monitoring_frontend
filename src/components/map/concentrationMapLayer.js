@@ -1,14 +1,17 @@
-import { GAS_HEATMAP_MIN_VALUE, getGasHeatmapMaxValue } from "../../domain/gasHeatmap";
+import {
+  CONCENTRATION_MAP_MIN_VALUE,
+  getConcentrationMapMaxValue,
+} from "../../domain/concentrationMap";
 
 
-const HEATMAP_SOURCE_ID = "gas-heatmap-source";
-const HEATMAP_LAYER_ID = "gas-heatmap-layer";
+const CONCENTRATION_MAP_SOURCE_ID = "concentration-map-source";
+const CONCENTRATION_MAP_LAYER_ID = "concentration-map-layer";
 
 function emptyFeatureCollection() {
   return { type: "FeatureCollection", features: [] };
 }
 
-function createHeatmapGeoJson(frame) {
+function createConcentrationMapGeoJson(frame) {
   const cells = (frame?.cells ?? []).filter(
     (cell) =>
       Number.isFinite(cell.south) &&
@@ -17,7 +20,7 @@ function createHeatmapGeoJson(frame) {
       Number.isFinite(cell.east) &&
       Number.isFinite(cell.value)
   );
-  const span = getGasHeatmapMaxValue(frame) - GAS_HEATMAP_MIN_VALUE;
+  const span = getConcentrationMapMaxValue(frame) - CONCENTRATION_MAP_MIN_VALUE;
 
   return {
     type: "FeatureCollection",
@@ -37,7 +40,7 @@ function createHeatmapGeoJson(frame) {
         value: cell.value,
         normalized: Math.min(
           1,
-          Math.max(0, (cell.value - GAS_HEATMAP_MIN_VALUE) / span)
+          Math.max(0, (cell.value - CONCENTRATION_MAP_MIN_VALUE) / span)
         ),
         confidence: Number.isFinite(cell.confidence) ? cell.confidence : 0,
       },
@@ -45,21 +48,21 @@ function createHeatmapGeoJson(frame) {
   };
 }
 
-export function initializeGasHeatmap(map) {
-  if (!map.getSource(HEATMAP_SOURCE_ID)) {
-    map.addSource(HEATMAP_SOURCE_ID, {
+export function initializeConcentrationMap(map) {
+  if (!map.getSource(CONCENTRATION_MAP_SOURCE_ID)) {
+    map.addSource(CONCENTRATION_MAP_SOURCE_ID, {
       type: "geojson",
       data: emptyFeatureCollection(),
     });
   }
 
   const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-  if (!map.getLayer(HEATMAP_LAYER_ID)) {
+  if (!map.getLayer(CONCENTRATION_MAP_LAYER_ID)) {
     map.addLayer(
       {
-        id: HEATMAP_LAYER_ID,
+        id: CONCENTRATION_MAP_LAYER_ID,
         type: "fill",
-        source: HEATMAP_SOURCE_ID,
+        source: CONCENTRATION_MAP_SOURCE_ID,
         paint: {
           "fill-antialias": false,
           "fill-color": [
@@ -67,15 +70,15 @@ export function initializeGasHeatmap(map) {
             ["linear"],
             ["get", "normalized"],
             0,
-            "#2c7bb6",
+            "#1a9850",
             0.25,
-            "#74add1",
+            "#91cf60",
             0.5,
             "#ffffbf",
             0.75,
-            "#fdae61",
+            "#fc8d59",
             1,
-            "#d7191c",
+            "#d73027",
           ],
           "fill-opacity": [
             "interpolate",
@@ -97,13 +100,13 @@ export function initializeGasHeatmap(map) {
   }
 }
 
-export function updateGasHeatmap(map, frame, enabled) {
+export function updateConcentrationMap(map, frame, enabled) {
   if (!map.isStyleLoaded()) {
     return;
   }
 
-  initializeGasHeatmap(map);
-  map.getSource(HEATMAP_SOURCE_ID).setData(
-    enabled && frame ? createHeatmapGeoJson(frame) : emptyFeatureCollection()
+  initializeConcentrationMap(map);
+  map.getSource(CONCENTRATION_MAP_SOURCE_ID).setData(
+    enabled && frame ? createConcentrationMapGeoJson(frame) : emptyFeatureCollection()
   );
 }

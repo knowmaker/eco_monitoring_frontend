@@ -4,7 +4,7 @@ import { Building2, RadioTower, Truck } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import { getPostTitle } from "../../domain/monitoringPosts";
-import { initializeGasHeatmap, updateGasHeatmap } from "./gasHeatmapLayer";
+import { initializeConcentrationMap, updateConcentrationMap } from "./concentrationMapLayer";
 import { removeTemperatureProfileLayer, updateTemperatureProfileLayer } from "./temperatureProfileLayer";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
@@ -110,8 +110,8 @@ export default function useMonitoringMap({
   monitoringPosts,
   selectedMonitoringPostId,
   onPostClick,
-  heatmapFrame,
-  heatmapEnabled = false,
+  concentrationMapFrame,
+  concentrationMapEnabled = false,
   temperatureProfileFrame,
   temperatureProfileEnabled = false,
 }) {
@@ -120,8 +120,8 @@ export default function useMonitoringMap({
   const markersRef = useRef([]);
   const fittedMapPointsKeyRef = useRef("");
   const onPostClickRef = useRef(onPostClick);
-  const heatmapFrameRef = useRef(heatmapFrame);
-  const heatmapEnabledRef = useRef(heatmapEnabled);
+  const concentrationMapFrameRef = useRef(concentrationMapFrame);
+  const concentrationMapEnabledRef = useRef(concentrationMapEnabled);
   const temperatureProfileFrameRef = useRef(temperatureProfileFrame);
   const temperatureProfileEnabledRef = useRef(temperatureProfileEnabled);
   const savedCameraRef = useRef(null);
@@ -132,12 +132,12 @@ export default function useMonitoringMap({
   }, [onPostClick]);
 
   useEffect(() => {
-    heatmapFrameRef.current = heatmapFrame;
-  }, [heatmapFrame]);
+    concentrationMapFrameRef.current = concentrationMapFrame;
+  }, [concentrationMapFrame]);
 
   useEffect(() => {
-    heatmapEnabledRef.current = heatmapEnabled;
-  }, [heatmapEnabled]);
+    concentrationMapEnabledRef.current = concentrationMapEnabled;
+  }, [concentrationMapEnabled]);
 
   useEffect(() => {
     temperatureProfileFrameRef.current = temperatureProfileFrame;
@@ -163,8 +163,12 @@ export default function useMonitoringMap({
     mapRef.current.on("load", () => {
       hidePoliticalBoundaries(mapRef.current);
       applyRussianMapLabels(mapRef.current);
-      initializeGasHeatmap(mapRef.current);
-      updateGasHeatmap(mapRef.current, heatmapFrameRef.current, heatmapEnabledRef.current);
+      initializeConcentrationMap(mapRef.current);
+      updateConcentrationMap(
+        mapRef.current,
+        concentrationMapFrameRef.current,
+        concentrationMapEnabledRef.current
+      );
       updateTemperatureProfileLayer(
         mapRef.current,
         temperatureProfileFrameRef.current,
@@ -186,9 +190,9 @@ export default function useMonitoringMap({
   useEffect(() => {
     const map = mapRef.current;
     if (map) {
-      updateGasHeatmap(map, heatmapFrame, heatmapEnabled);
+      updateConcentrationMap(map, concentrationMapFrame, concentrationMapEnabled);
     }
-  }, [heatmapFrame, heatmapEnabled]);
+  }, [concentrationMapFrame, concentrationMapEnabled]);
 
   useEffect(() => {
     const map = mapRef.current;
