@@ -317,7 +317,7 @@ function createOverlay(map) {
           }
         });
         if (!Number.isFinite(rightmostX)) {
-          element.hidden = true;
+          element.style.visibility = "hidden";
           return;
         }
         const x = rightmostX + 7;
@@ -334,13 +334,14 @@ function createOverlay(map) {
           bounds.top < occupied.bottom &&
           bounds.bottom > occupied.top
         ));
-        element.hidden =
+        const isHidden =
           x < 0 ||
           bounds.right > this.canvas.clientWidth ||
           bounds.top < 0 ||
           bounds.bottom > this.canvas.clientHeight ||
           overlaps;
-        if (element.hidden) {
+        element.style.visibility = isHidden ? "hidden" : "visible";
+        if (isHidden) {
           return;
         }
         element.style.transform = `translate(0, -50%) translate(${x}px, ${y}px)`;
