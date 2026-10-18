@@ -274,5 +274,13 @@
 .concentration-map-legend {
   height: 10px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #1a9850, #91cf60, #ffffbf, #fc8d59, #d73027);
+  background: linear-gradient(
+    90deg,
+    #1a9850 0%,
+    #91cf60 25%,
+    #ffe066 40%,
+    #ffd54f 75%,
+    #f57c00 90%,
+    #d73027 100%
+  );
 }
