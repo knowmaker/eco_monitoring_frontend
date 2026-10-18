@@ -334,12 +334,7 @@ function createOverlay(map) {
           bounds.top < occupied.bottom &&
           bounds.bottom > occupied.top
         ));
-        const isHidden =
-          x < 0 ||
-          bounds.right > this.canvas.clientWidth ||
-          bounds.top < 0 ||
-          bounds.bottom > this.canvas.clientHeight ||
-          overlaps;
+        const isHidden = overlaps;
         element.style.visibility = isHidden ? "hidden" : "visible";
         if (isHidden) {
           return;
