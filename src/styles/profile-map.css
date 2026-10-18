@@ -93,21 +93,12 @@
 
 @media (max-width: 640px) {
   .profile-period-controls {
-    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    grid-template-columns: 34px minmax(0, 1fr) minmax(108px, auto) 34px;
+    gap: 5px;
   }
 
+  .profile-period-controls input,
   .profile-period-controls select {
-    grid-column: 2;
-  }
-
-  .profile-period-controls button:last-child {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-    height: 79px;
-  }
-
-  .profile-period-controls button:first-child {
-    grid-row: 1 / span 2;
-    height: 79px;
+    padding-inline: 5px;
   }
 }
