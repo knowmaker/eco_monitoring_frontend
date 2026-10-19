@@ -65,7 +65,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
         if (!active) return;
         setSubstances(response.items);
         setSubstanceCode((current) => (
-          response.items.includes(current) ? current : (response.items[0] ?? "")
+          response.items.includes(current) ? current : ""
         ));
       })
       .catch((requestError) => {
@@ -223,7 +223,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
       {!isLoadingSubstances && !substances.length && !error && (
         <p className="station-card-hint">Нет доступных для прогноза газов.</p>
       )}
-      {!isLoadingTimeline && !!substances.length && !timeline.length && !error && (
+      {!isLoadingTimeline && !!substanceCode && !timeline.length && !error && (
         <p className="station-card-hint">Для выбранного газа пока нет часовых данных.</p>
       )}
 
