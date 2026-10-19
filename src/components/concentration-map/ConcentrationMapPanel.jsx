@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, X } from "lucide-react";
 
-import { fetchConcentrationMap, fetchConcentrationMapTimeline } from "../../api/concentrationMap";
+import {
+  fetchConcentrationMap,
+  fetchConcentrationMapSubstances,
+  fetchConcentrationMapTimeline,
+} from "../../api/concentrationMap";
 import {
   CONCENTRATION_MAP_MIN_VALUE,
   getConcentrationMapMaxValue,
@@ -10,8 +14,6 @@ import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
 import ConcentrationMapTimeline from "./ConcentrationMapTimeline";
 
-
-const GASES = ["CO", "NO", "NO2", "O3", "SO2"];
 
 function formatHour(value) {
   if (!value) return "—";
@@ -34,12 +36,14 @@ function getSelectedIndex(items, selectedHour) {
 }
 
 export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
-  const [substanceCode, setSubstanceCode] = useState("NO2");
+  const [substances, setSubstances] = useState([]);
+  const [substanceCode, setSubstanceCode] = useState("");
   const [timeline, setTimeline] = useState([]);
   const [currentHour, setCurrentHour] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [frame, setFrame] = useState(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(true);
+  const [isLoadingSubstances, setIsLoadingSubstances] = useState(true);
   const [isLoadingFrame, setIsLoadingFrame] = useState(false);
   const [error, setError] = useState("");
   const [refreshCounter, setRefreshCounter] = useState(0);
@@ -53,6 +57,38 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
   }, [selectedItem]);
 
   useEffect(() => {
+    let active = true;
+    setIsLoadingSubstances(true);
+    setError("");
+    fetchConcentrationMapSubstances()
+      .then((response) => {
+        if (!active) return;
+        setSubstances(response.items);
+        setSubstanceCode((current) => (
+          response.items.includes(current) ? current : (response.items[0] ?? "")
+        ));
+      })
+      .catch((requestError) => {
+        if (active) {
+          setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить доступные газы");
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoadingSubstances(false);
+      });
+    return () => { active = false; };
+  }, [refreshCounter]);
+
+  useEffect(() => {
+    if (!substanceCode) {
+      setIsLoadingTimeline(false);
+      setTimeline([]);
+      setCurrentHour(null);
+      setSelectedIndex(-1);
+      setFrame(null);
+      onFrameChange(null);
+      return undefined;
+    }
     let active = true;
     const isSubstanceChange = loadedSubstanceRef.current !== substanceCode;
     setIsLoadingTimeline(true);
@@ -87,6 +123,8 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
       return undefined;
     }
     let active = true;
+    setFrame(null);
+    onFrameChange(null);
     const requestTimer = window.setTimeout(() => {
       setIsLoadingFrame(true);
       setError("");
@@ -126,12 +164,12 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
             type="button"
             className="card-refresh-btn concentration-map-refresh-btn"
             aria-label="Обновить карту концентраций"
-            aria-busy={isLoadingTimeline || isLoadingFrame}
-            disabled={isLoadingTimeline || isLoadingFrame}
+            aria-busy={isLoadingSubstances || isLoadingTimeline || isLoadingFrame}
+            disabled={isLoadingSubstances || isLoadingTimeline || isLoadingFrame}
             onClick={() => setRefreshCounter((value) => value + 1)}
           >
             <RefreshCw
-              className={isLoadingTimeline || isLoadingFrame ? "concentration-map-refresh-icon-loading" : undefined}
+              className={isLoadingSubstances || isLoadingTimeline || isLoadingFrame ? "concentration-map-refresh-icon-loading" : undefined}
               size={16}
               aria-hidden="true"
             />
@@ -157,7 +195,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
       <fieldset className="concentration-map-gas-options">
         <legend>Газ</legend>
         <div role="radiogroup" aria-label="Газ для карты концентраций">
-          {GASES.map((gas) => (
+          {substances.map((gas) => (
             <label key={gas} className={substanceCode === gas ? "concentration-map-gas-option-selected" : ""}>
               <input
                 type="radio"
@@ -182,7 +220,12 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
       )}
 
       {error && <p className="station-card-error">{error}</p>}
-      {!isLoadingTimeline && !timeline.length && !error && <p className="station-card-hint">Для выбранного газа пока нет часовых данных.</p>}
+      {!isLoadingSubstances && !substances.length && !error && (
+        <p className="station-card-hint">Нет доступных для прогноза газов.</p>
+      )}
+      {!isLoadingTimeline && !!substances.length && !timeline.length && !error && (
+        <p className="station-card-hint">Для выбранного газа пока нет часовых данных.</p>
+      )}
 
       {frame && (
         <section className="concentration-map-summary">

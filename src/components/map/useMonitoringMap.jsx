@@ -263,14 +263,17 @@ export default function useMonitoringMap({
     markersRef.current = [];
 
     const postsWithCoordinates = getPostsWithCoordinates(monitoringPosts);
-    const visibleProfilePostIds = new Set(
-      temperatureProfileEnabled
-        ? (temperatureProfileFrame?.stations ?? []).map((station) => station.monitoring_post_id)
-        : []
-    );
-    const visiblePosts = temperatureProfileEnabled
-      ? postsWithCoordinates.filter((post) => visibleProfilePostIds.has(post.id))
-      : postsWithCoordinates;
+    let visiblePostIds = null;
+    if (temperatureProfileEnabled) {
+      visiblePostIds = new Set(
+        (temperatureProfileFrame?.stations ?? []).map((station) => station.monitoring_post_id)
+      );
+    } else if (concentrationMapEnabled) {
+      visiblePostIds = new Set(concentrationMapFrame?.monitoring_post_ids ?? []);
+    }
+    const visiblePosts = visiblePostIds === null
+      ? postsWithCoordinates
+      : postsWithCoordinates.filter((post) => visiblePostIds.has(post.id));
     const points = postsWithCoordinates.map(getPostMapPoint);
     const pointsKey = getMapPointsKey(points);
     if (pointsKey && pointsKey !== fittedMapPointsKeyRef.current) {
@@ -296,7 +299,14 @@ export default function useMonitoringMap({
 
       markersRef.current.push({ marker, root });
     });
-  }, [monitoringPosts, selectedMonitoringPostId, temperatureProfileEnabled, temperatureProfileFrame]);
+  }, [
+    monitoringPosts,
+    selectedMonitoringPostId,
+    concentrationMapEnabled,
+    concentrationMapFrame,
+    temperatureProfileEnabled,
+    temperatureProfileFrame,
+  ]);
 
   const focusPost = (post) => {
     if (Number.isFinite(post.latitude) && Number.isFinite(post.longitude) && mapRef.current) {

@@ -33,5 +33,6 @@ export {
 export { fetchStationLatestReadings } from "./stationReadings";
 export {
   fetchConcentrationMap,
+  fetchConcentrationMapSubstances,
   fetchConcentrationMapTimeline,
 } from "./concentrationMap";

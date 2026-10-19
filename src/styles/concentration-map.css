@@ -29,7 +29,7 @@
 
 .concentration-map-gas-options > div {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
   gap: 5px;
 }
 
@@ -110,7 +110,7 @@
   font-weight: 750;
 }
 
-.concentration-map-kind-observed { color: #175cd3; background: #eff8ff; }
+.concentration-map-kind-analysis { color: #175cd3; background: #eff8ff; }
 .concentration-map-kind-forecast { color: #7a2e0e; background: #fff4ed; }
 
 .concentration-map-timeline {

@@ -1,6 +1,15 @@
 import { requestJson } from "./client";
 
 
+export function fetchConcentrationMapSubstances() {
+  return requestJson("/api/v1/concentration-map/substances", {
+    errorMessage: "Ошибка загрузки доступных газов",
+    validate: (value) => value && Array.isArray(value.items),
+    validationMessage: "Некорректный формат списка доступных газов",
+  });
+}
+
+
 export function fetchConcentrationMapTimeline(substanceCode, pastHours = 336, futureHours = 24) {
   const params = new URLSearchParams({
     substance_code: substanceCode,

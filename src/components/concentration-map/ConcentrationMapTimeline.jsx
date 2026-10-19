@@ -52,7 +52,7 @@ export default function ConcentrationMapTimeline({
     <section className="concentration-map-time-card">
       <div className="concentration-map-time-heading">
         <span className={`concentration-map-kind concentration-map-kind-${selectedItem?.data_kind ?? "none"}`}>
-          {selectedItem?.data_kind === "forecast" ? "Прогноз" : "Наблюдение"}
+          {selectedItem?.data_kind === "forecast" ? "Прогноз" : "Анализ"}
         </span>
         <strong>{formatSelectedHour(selectedItem?.hour_start)}</strong>
       </div>
