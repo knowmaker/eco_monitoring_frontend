@@ -4,7 +4,7 @@ import { Building2, RadioTower, Truck } from "lucide-react";
 import maplibregl from "maplibre-gl";
 
 import { getPostTitle } from "../../domain/monitoringPosts";
-import { initializeConcentrationMap, updateConcentrationMap } from "./concentrationMapLayer";
+import { updateConcentrationMap } from "./concentrationMapLayer";
 import { removeTemperatureProfileLayer, updateTemperatureProfileLayer } from "./temperatureProfileLayer";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
@@ -163,7 +163,6 @@ export default function useMonitoringMap({
     mapRef.current.on("load", () => {
       hidePoliticalBoundaries(mapRef.current);
       applyRussianMapLabels(mapRef.current);
-      initializeConcentrationMap(mapRef.current);
       updateConcentrationMap(
         mapRef.current,
         concentrationMapFrameRef.current,

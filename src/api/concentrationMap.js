@@ -19,7 +19,7 @@ export function fetchConcentrationMap(substanceCode, hourStart) {
   const params = new URLSearchParams({ substance_code: substanceCode, hour_start: hourStart });
   return requestJson(`/api/v1/concentration-map?${params}`, {
     errorMessage: "Ошибка загрузки карты концентраций",
-    validate: (value) => value && Array.isArray(value.cells),
+    validate: (value) => value && Number.isInteger(value.cell_count),
     validationMessage: "Некорректный формат данных карты концентраций",
   });
 }

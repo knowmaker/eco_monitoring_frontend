@@ -1,104 +1,15 @@
-import {
-  CONCENTRATION_MAP_MIN_VALUE,
-  getConcentrationMapMaxValue,
-} from "../../domain/concentrationMap";
+import { buildUrl } from "../../api/client";
 
 
 const CONCENTRATION_MAP_SOURCE_ID = "concentration-map-source";
 const CONCENTRATION_MAP_LAYER_ID = "concentration-map-layer";
 
-function emptyFeatureCollection() {
-  return { type: "FeatureCollection", features: [] };
-}
-
-function createConcentrationMapGeoJson(frame) {
-  const cells = (frame?.cells ?? []).filter(
-    (cell) =>
-      Number.isFinite(cell.south) &&
-      Number.isFinite(cell.west) &&
-      Number.isFinite(cell.north) &&
-      Number.isFinite(cell.east) &&
-      Number.isFinite(cell.value)
-  );
-  const span = getConcentrationMapMaxValue(frame) - CONCENTRATION_MAP_MIN_VALUE;
-
-  return {
-    type: "FeatureCollection",
-    features: cells.map((cell) => ({
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [[
-          [cell.west, cell.south],
-          [cell.east, cell.south],
-          [cell.east, cell.north],
-          [cell.west, cell.north],
-          [cell.west, cell.south],
-        ]],
-      },
-      properties: {
-        value: cell.value,
-        normalized: Math.min(
-          1,
-          Math.max(0, (cell.value - CONCENTRATION_MAP_MIN_VALUE) / span)
-        ),
-        confidence: Number.isFinite(cell.confidence) ? cell.confidence : 0,
-      },
-    })),
-  };
-}
-
-export function initializeConcentrationMap(map) {
-  if (!map.getSource(CONCENTRATION_MAP_SOURCE_ID)) {
-    map.addSource(CONCENTRATION_MAP_SOURCE_ID, {
-      type: "geojson",
-      data: emptyFeatureCollection(),
-    });
+function removeConcentrationMap(map) {
+  if (map.getLayer(CONCENTRATION_MAP_LAYER_ID)) {
+    map.removeLayer(CONCENTRATION_MAP_LAYER_ID);
   }
-
-  const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-  if (!map.getLayer(CONCENTRATION_MAP_LAYER_ID)) {
-    map.addLayer(
-      {
-        id: CONCENTRATION_MAP_LAYER_ID,
-        type: "fill",
-        source: CONCENTRATION_MAP_SOURCE_ID,
-        paint: {
-          "fill-antialias": false,
-          "fill-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "normalized"],
-            0,
-            "#1a9850",
-            0.25,
-            "#91cf60",
-            0.4,
-            "#ffe066",
-            0.75,
-            "#ffd54f",
-            0.9,
-            "#f57c00",
-            1,
-            "#d73027",
-          ],
-          "fill-opacity": [
-            "interpolate",
-            ["linear"],
-            ["get", "confidence"],
-            0,
-            0,
-            0.2,
-            0.18,
-            0.6,
-            0.55,
-            1,
-            0.78,
-          ],
-        },
-      },
-      firstSymbolLayer
-    );
+  if (map.getSource(CONCENTRATION_MAP_SOURCE_ID)) {
+    map.removeSource(CONCENTRATION_MAP_SOURCE_ID);
   }
 }
 
@@ -107,8 +18,32 @@ export function updateConcentrationMap(map, frame, enabled) {
     return;
   }
 
-  initializeConcentrationMap(map);
-  map.getSource(CONCENTRATION_MAP_SOURCE_ID).setData(
-    enabled && frame ? createConcentrationMapGeoJson(frame) : emptyFeatureCollection()
+  removeConcentrationMap(map);
+  if (!enabled || !frame?.tile_url || !frame?.bounds || frame.cell_count <= 0) {
+    return;
+  }
+
+  const { west, south, east, north } = frame.bounds;
+  map.addSource(CONCENTRATION_MAP_SOURCE_ID, {
+    type: "raster",
+    tiles: [buildUrl(frame.tile_url)],
+    tileSize: 256,
+    bounds: [west, south, east, north],
+    minzoom: 0,
+    maxzoom: 18,
+  });
+
+  const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
+  map.addLayer(
+    {
+      id: CONCENTRATION_MAP_LAYER_ID,
+      type: "raster",
+      source: CONCENTRATION_MAP_SOURCE_ID,
+      paint: {
+        "raster-fade-duration": 0,
+        "raster-resampling": "nearest",
+      },
+    },
+    firstSymbolLayer
   );
 }

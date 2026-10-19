@@ -112,7 +112,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
     };
   }, [selectedItem, substanceCode, onFrameChange]);
 
-  const hasCells = (frame?.cells ?? []).some((cell) => Number.isFinite(cell.value));
+  const hasCells = frame?.cell_count > 0;
   const concentrationMapMaxValue = getConcentrationMapMaxValue(frame);
 
   return (
