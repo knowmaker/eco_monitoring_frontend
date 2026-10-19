@@ -535,6 +535,7 @@ export default function App() {
       {activeMenuPanel === "concentration-map" && (
         <ConcentrationMapPanel
           onFrameChange={setConcentrationMapFrame}
+          autoRefreshCounter={scheduledRefreshCounter}
           onClose={() => {
             setConcentrationMapFrame(null);
             setActiveMenuPanel(null);

@@ -28,14 +28,14 @@ function formatValue(value) {
     : "—";
 }
 
-function getSelectedIndex(items, selectedHour) {
+function getSelectedIndex(items, selectedHour, currentHour) {
   const retainedIndex = items.findIndex((item) => item.hour_start === selectedHour);
   if (retainedIndex >= 0) return retainedIndex;
-  const forecastIndex = items.findIndex((item) => item.data_kind === "forecast");
-  return forecastIndex >= 0 ? forecastIndex : items.length - 1;
+  const currentIndex = items.findIndex((item) => new Date(item.hour_start) >= new Date(currentHour));
+  return currentIndex >= 0 ? currentIndex : items.length - 1;
 }
 
-export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
+export default function ConcentrationMapPanel({ onClose, onFrameChange, autoRefreshCounter }) {
   const [substances, setSubstances] = useState([]);
   const [substanceCode, setSubstanceCode] = useState("");
   const [timeline, setTimeline] = useState([]);
@@ -107,7 +107,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
         setTimeline(response.items);
         setCurrentHour(response.current_hour);
         loadedSubstanceRef.current = substanceCode;
-        setSelectedIndex(getSelectedIndex(response.items, selectedHourRef.current));
+        setSelectedIndex(getSelectedIndex(response.items, selectedHourRef.current, response.current_hour));
       })
       .catch((requestError) => {
         if (active) setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить ленту");
@@ -116,7 +116,7 @@ export default function ConcentrationMapPanel({ onClose, onFrameChange }) {
         if (active) setIsLoadingTimeline(false);
       });
     return () => { active = false; };
-  }, [substanceCode, refreshCounter, onFrameChange]);
+  }, [substanceCode, refreshCounter, autoRefreshCounter, onFrameChange]);
 
   useEffect(() => {
     if (!selectedItem) {
