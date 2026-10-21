@@ -13,7 +13,9 @@ export default function useAuthState() {
     setIsAdmin(Boolean(token) && storedIsAdmin);
   }, []);
 
-  const applyAuthSuccess = useCallback(({ isAdmin: nextIsAdmin }) => {
+  const applyAuthSuccess = useCallback(({ accessToken, isAdmin: nextIsAdmin }) => {
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
+    localStorage.setItem(AUTH_IS_ADMIN_STORAGE_KEY, nextIsAdmin ? "true" : "false");
     setIsAuthenticated(true);
     setIsAdmin(Boolean(nextIsAdmin));
   }, []);

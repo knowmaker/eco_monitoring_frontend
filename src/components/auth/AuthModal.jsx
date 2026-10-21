@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { LogIn, Send, UserPlus } from "lucide-react";
 
-import { AUTH_IS_ADMIN_STORAGE_KEY, AUTH_TOKEN_STORAGE_KEY, loginByEmailPassword, registerByEmail } from "../../api";
+import { loginByEmailPassword, registerByEmail } from "../../api";
 import Dialog from "../ui/Dialog";
 
 export default function AuthModal({ mode, onClose, onAuthSuccess }) {
@@ -32,10 +32,8 @@ export default function AuthModal({ mode, onClose, onAuthSuccess }) {
         setSuccessText(result.message);
       } else {
         const result = await loginByEmailPassword(normalizedEmail, password);
-        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, result.accessToken);
-        localStorage.setItem(AUTH_IS_ADMIN_STORAGE_KEY, result.isAdmin ? "true" : "false");
         setSuccessText("Вход выполнен.");
-        onAuthSuccess?.({ isAdmin: result.isAdmin });
+        onAuthSuccess?.(result);
         setTimeout(() => onClose(), 220);
       }
     } catch (error) {
