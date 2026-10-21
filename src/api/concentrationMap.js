@@ -10,7 +10,7 @@ export function fetchConcentrationMapSubstances() {
 }
 
 
-export function fetchConcentrationMapTimeline(substanceCode, pastHours = 336, futureHours = 24) {
+export function fetchConcentrationMapTimeline(substanceCode, pastHours = 24, futureHours = 24) {
   const params = new URLSearchParams({
     substance_code: substanceCode,
     past_hours: String(pastHours),
