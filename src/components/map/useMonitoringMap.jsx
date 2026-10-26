@@ -14,6 +14,18 @@ const HIDDEN_BOUNDARY_LAYER_IDS = ["boundary_2", "boundary_disputed"];
 const RUSSIAN_MAP_LABEL_FIELD = ["coalesce", ["get", "name:ru"], ["get", "name_ru"], ""];
 const MAP_FIT_PADDING = { top: 120, right: 120, bottom: 120, left: 120 };
 
+function getMapRequestUrl(value) {
+  if (!value) {
+    return "";
+  }
+  try {
+    const url = new URL(value, window.location.href);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return "";
+  }
+}
+
 function getMarkerStatusClass(activityStatus) {
   if (activityStatus === "active" || activityStatus === "archived") {
     return `tower-marker-${activityStatus}`;
@@ -152,36 +164,80 @@ export default function useMonitoringMap({
       return;
     }
 
-    mapRef.current = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: MAP_STYLE_URL,
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
-      attributionControl: false,
-    });
+    const recentRequests = [];
+    let map;
+    try {
+      map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: MAP_STYLE_URL,
+        center: DEFAULT_CENTER,
+        zoom: DEFAULT_ZOOM,
+        attributionControl: false,
+        transformRequest: (url, resourceType) => {
+          recentRequests.push({ type: resourceType, url: getMapRequestUrl(url) });
+          if (recentRequests.length > 6) {
+            recentRequests.shift();
+          }
+          return { url };
+        },
+      });
+    } catch (error) {
+      console.error("[Карта] Ошибка создания карты:", error);
+      return;
+    }
+    mapRef.current = map;
 
-    mapRef.current.on("load", () => {
-      hidePoliticalBoundaries(mapRef.current);
-      applyRussianMapLabels(mapRef.current);
+    map.on("error", ({ error }) => {
+      const url = getMapRequestUrl(error?.url);
+      console.error("[Карта] Ошибка MapLibre:", {
+        message: error?.message ?? String(error),
+        ...(url ? { url } : {}),
+        ...(Number.isFinite(error?.status) ? { status: error.status } : {}),
+        ...(!url && /fetch|network|load failed/i.test(error?.message ?? "")
+          ? { recentRequests: [...recentRequests] }
+          : {}),
+      }, error);
+    });
+    map.on("webglcontextlost", () => {
+      console.error("[Карта] Контекст WebGL потерян");
+    });
+    map.on("webglcontextrestored", () => {
+      console.info("[Карта] Контекст WebGL восстановлен");
+    });
+    let hasLoaded = false;
+    map.on("load", () => {
+      hasLoaded = true;
+      hidePoliticalBoundaries(map);
+      applyRussianMapLabels(map);
       updateConcentrationMap(
-        mapRef.current,
+        map,
         concentrationMapFrameRef.current,
         concentrationMapEnabledRef.current
       );
       updateTemperatureProfileLayer(
-        mapRef.current,
+        map,
         temperatureProfileFrameRef.current,
         temperatureProfileEnabledRef.current
       );
     });
-    mapRef.current.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
-    mapRef.current.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+    const loadTimer = window.setTimeout(() => {
+      if (!hasLoaded) {
+        console.warn("[Карта] Загрузка длится более 15 секунд", {
+          styleLoaded: Boolean(map.isStyleLoaded()),
+          hasPendingTiles: !map.areTilesLoaded(),
+          recentRequests: [...recentRequests],
+        });
+      }
+    }, 15_000);
 
     return () => {
+      window.clearTimeout(loadTimer);
       removeTowerMarkers(markersRef.current);
       markersRef.current = [];
-      removeTemperatureProfileLayer(mapRef.current);
-      mapRef.current?.remove();
+      removeTemperatureProfileLayer(map);
+      map.remove();
       mapRef.current = null;
     };
   }, []);
