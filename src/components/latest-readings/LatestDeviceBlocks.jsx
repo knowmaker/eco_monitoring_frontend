@@ -6,6 +6,8 @@ import LatestDeviceHeader from "./LatestDeviceHeader";
 import LatestMetric from "./LatestMetric";
 import { formatLatestValue, formatWindValue } from "./latestReadingsFormatters";
 
+const CONCENTRATION_UNIT = "мг/м³";
+
 function LatestProfileDeviceBlock({ device, timeMode }) {
   const levels = Array.isArray(device.levels) ? device.levels : [];
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
@@ -65,7 +67,12 @@ function LatestProfileDeviceBlock({ device, timeMode }) {
 function LatestGasDeviceBlock({ device, timeMode, useGasAbsoluteValues = true }) {
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.gas} timestampMs={device.timestamp_ms} timeMode={timeMode} />
+      <LatestDeviceHeader
+        title={DEVICE_TYPE_LABELS.gas}
+        timestampMs={device.timestamp_ms}
+        timeMode={timeMode}
+        unit={CONCENTRATION_UNIT}
+      />
       <div className="latest-metrics latest-metrics-gas">
         {GAS_SUBSTANCE_ORDER.map((substanceCode) =>
           device.substances.find((item) => item.substance_code === substanceCode)
@@ -95,7 +102,12 @@ function LatestDustDeviceBlock({ device, timeMode }) {
 
   return (
     <div className="latest-device-block">
-      <LatestDeviceHeader title={DEVICE_TYPE_LABELS.dust} timestampMs={device.timestamp_ms} timeMode={timeMode} />
+      <LatestDeviceHeader
+        title={DEVICE_TYPE_LABELS.dust}
+        timestampMs={device.timestamp_ms}
+        timeMode={timeMode}
+        unit={CONCENTRATION_UNIT}
+      />
       <div className="latest-metrics">
         {metrics.map((metric) => (
           <LatestMetric

@@ -248,6 +248,21 @@
   min-width: 0;
 }
 
+.latest-device-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.latest-device-unit {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .latest-device-block h4 time {
   display: block;
   min-width: 0;
