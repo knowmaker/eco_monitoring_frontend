@@ -251,8 +251,7 @@
 .latest-device-heading {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 4px;
+  gap: 3px;
 }
 
 .latest-device-unit {
