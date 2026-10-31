@@ -12,7 +12,7 @@ export const TOOLTIP_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.98)";
 export const TOOLTIP_BORDER_COLOR = "rgba(15, 23, 42, 0.14)";
 export const TOOLTIP_TEXT_STYLE = { color: "#172033" };
 
-export function createPdkMarkLine(pdk) {
+export function createPdkMarkLine(pdk, metricLabel) {
   if (!Number.isFinite(pdk)) {
     return undefined;
   }
@@ -24,7 +24,7 @@ export function createPdkMarkLine(pdk) {
       color: "#9f2f2f",
       fontSize: 11,
       position: "insideStartTop",
-      formatter: `ПДК: ${pdk.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}`,
+      formatter: `ПДК${metricLabel ? ` ${metricLabel}` : ""}: ${pdk.toLocaleString("ru-RU", { maximumFractionDigits: 3 })}`,
     },
     lineStyle: {
       color: "#9f2f2f",
@@ -35,10 +35,13 @@ export function createPdkMarkLine(pdk) {
   };
 }
 
-export function createPdkYAxisMax(series) {
-  const pdkValues = (series || []).map((item) => item.pdk).filter(Number.isFinite);
+export function createPdkYAxisMax(series, selected) {
+  const pdkValues = (series || [])
+    .filter((item) => selected?.[item.label] !== false)
+    .map((item) => item.pdk)
+    .filter(Number.isFinite);
   if (!pdkValues.length) {
-    return undefined;
+    return selected ? ({ max }) => max * 100 : undefined;
   }
 
   const pdkMax = Math.max(...pdkValues);

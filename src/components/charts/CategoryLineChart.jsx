@@ -72,7 +72,7 @@ export default function CategoryLineChart({
         itemStyle: {
           color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
-        markLine: createPdkMarkLine(item.pdk),
+        markLine: createPdkMarkLine(item.pdk, series.length > 1 ? item.label : undefined),
         data: axisValues.map((axisValue) => {
           const value = byAxisValue.get(axisValue);
           return value === undefined ? null : normalizeChartValue(value, tooltipPrecision);
@@ -174,13 +174,26 @@ export default function CategoryLineChart({
     });
   }, [series, hasValues, xKey, xValues, xLabels, xAxisName, yAxisName, yAxisMin, tooltipPrecision, onEvents]);
 
+  const chartEvents = useMemo(() => {
+    if (series?.length < 2 || !series.some((item) => Number.isFinite(item.pdk))) {
+      return onEvents;
+    }
+    return {
+      ...onEvents,
+      legendselectchanged: (params, chart) => {
+        chart.setOption({ yAxis: { max: createPdkYAxisMax(series, params.selected) ?? null } });
+        onEvents?.legendselectchanged?.(params, chart);
+      },
+    };
+  }, [series, onEvents]);
+
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;
   }
 
   return (
     <div className="chart-wrap">
-      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" onEvents={onEvents} />
+      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" onEvents={chartEvents} />
     </div>
   );
 }

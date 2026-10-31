@@ -89,6 +89,7 @@ export default function useProfileReadings({
                   label: {
                     color: "#9f2f2f",
                     fontSize: 11,
+                    position: "insideStartTop",
                     formatter: "{b}",
                   },
                   lineStyle: {

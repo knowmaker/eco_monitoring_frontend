@@ -163,7 +163,7 @@ export default function TimeLineChart({
         itemStyle: {
           color: CHART_PALETTE[index % CHART_PALETTE.length],
         },
-        markLine: createPdkMarkLine(item.pdk),
+        markLine: createPdkMarkLine(item.pdk, series.length > 1 ? item.label : undefined),
         data: (item.points || [])
           .filter((point) => point.timestamp && Number.isFinite(Number(point.value)))
           .map((point) => [point.timestamp, normalizeChartValue(point.value, tooltipPrecision)]),
@@ -206,13 +206,24 @@ export default function TimeLineChart({
     });
   }, [series, hasValues, start, end, xAxisName, yAxisName, yAxisMin, tooltipPrecision]);
 
+  const chartEvents = useMemo(() => {
+    if (series?.length < 2 || !series.some((item) => Number.isFinite(item.pdk))) {
+      return undefined;
+    }
+    return {
+      legendselectchanged: (params, chart) => {
+        chart.setOption({ yAxis: { max: createPdkYAxisMax(series, params.selected) ?? null } });
+      },
+    };
+  }, [series]);
+
   if (!series?.length || !hasValues || !option) {
     return <div className="chart-empty">{emptyText}</div>;
   }
 
   return (
     <div className="chart-wrap">
-      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" />
+      <ReactECharts option={option} notMerge lazyUpdate className="chart-echarts" onEvents={chartEvents} />
     </div>
   );
 }
