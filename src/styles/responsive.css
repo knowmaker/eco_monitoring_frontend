@@ -219,6 +219,17 @@
     justify-content: space-between;
   }
 
+  .readings-period-toolbar-month-only {
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .readings-period-toolbar-month-only .period-controls {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+  }
+
   .day-switcher input {
     width: 130px;
   }

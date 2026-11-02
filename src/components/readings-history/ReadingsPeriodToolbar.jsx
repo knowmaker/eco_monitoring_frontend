@@ -12,7 +12,7 @@ export default function ReadingsPeriodToolbar({
   onDateInputChange,
 }) {
   return (
-    <div className="readings-toolbar readings-period-toolbar">
+    <div className={`readings-toolbar readings-period-toolbar${showAggregationSwitcher ? "" : " readings-period-toolbar-month-only"}`}>
       <div className="readings-period-label">{showAggregationSwitcher ? "Период агрегации" : "Месяц"}</div>
       <div className="period-controls">
         {showAggregationSwitcher && (
