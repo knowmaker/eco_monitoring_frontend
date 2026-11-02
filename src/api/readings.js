@@ -85,6 +85,17 @@ export async function fetchGasSensorsMonthly(monitoringPostId, month) {
   );
 }
 
+export async function fetchGasSensorsHourlyByMonth(monitoringPostId, month) {
+  return requestJson(
+    endpoint("gas-sensors", "hourly-by-month", aggregateParams(monitoringPostId, "month", formatMonthParam(month))),
+    {
+      errorMessage: "Ошибка загрузки распределения газа",
+      validate: validateGas,
+      validationMessage: "Некорректный формат ответа /api/v1/gas-sensors/hourly-by-month",
+    }
+  );
+}
+
 export async function fetchGasSensorsRaw(monitoringPostId, start, end) {
   return requestJson(endpoint("gas-sensors", "raw", buildRawParams(monitoringPostId, start, end)), {
     auth: true,
@@ -99,6 +110,16 @@ export const fetchDustStateHourly = (monitoringPostId, day) =>
 
 export const fetchDustStateMonthly = (monitoringPostId, month) =>
   fetchSeriesAggregate("dust", "monthly", monitoringPostId, month);
+
+export const fetchDustStateHourlyByMonth = (monitoringPostId, month) =>
+  requestJson(
+    endpoint("dust-state", "hourly-by-month", aggregateParams(monitoringPostId, "month", formatMonthParam(month))),
+    {
+      errorMessage: "Ошибка загрузки распределения пыли",
+      validate: SERIES_ENDPOINTS.dust.validate,
+      validationMessage: "Некорректный формат ответа /api/v1/dust-state/hourly-by-month",
+    }
+  );
 
 export const fetchDustStateRaw = (monitoringPostId, start, end) =>
   fetchSeriesRaw("dust", monitoringPostId, start, end);

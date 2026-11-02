@@ -4,6 +4,8 @@ import { ChevronLeft, RefreshCw, X } from "lucide-react";
 import {
   DEVICE_METRIC_TABS,
   DEVICE_TYPE_LABELS,
+  DUST_METRIC_TABS,
+  GAS_SUBSTANCE_ORDER,
   METEO_WIND_KEY,
 } from "../../domain/devices";
 import {
@@ -14,7 +16,9 @@ import {
   toIsoDay,
   toIsoMonth,
 } from "../../lib/date";
+import { applyGasPointValueCorrection } from "../../lib/gasValues";
 import CategoryLineChart from "../charts/CategoryLineChart";
+import DayHourHeatmapChart from "../charts/DayHourHeatmapChart";
 import ProfileTemperatureChart from "../charts/ProfileTemperatureChart";
 import PanelCollapseButton from "../layout/PanelCollapseButton";
 import ScrollablePanel from "../layout/ScrollablePanel";
@@ -29,6 +33,7 @@ import {
   isWindSpeedSeries,
 } from "./readingsUtils";
 import useProfileReadings from "./useProfileReadings";
+import useHourlyByMonthReadings from "./useHourlyByMonthReadings";
 import useReadingsData from "./useReadingsData";
 import useRawReadings from "./useRawReadings";
 import TimeLineChart from "../charts/TimeLineChart";
@@ -67,6 +72,8 @@ export default function ReadingsHistoryPanel({
 }) {
   const [viewMode, setViewMode] = useState("day");
   const [profileViewMode, setProfileViewMode] = useState("line");
+  const [concentrationViewMode, setConcentrationViewMode] = useState("line");
+  const [selectedHourlyByMonthDustMetric, setSelectedHourlyByMonthDustMetric] = useState("pm2_concentration");
   const [selectedProfilePeriod, setSelectedProfilePeriod] = useState(0);
   const [day, setDay] = useState(new Date());
   const [month, setMonth] = useState(new Date());
@@ -74,8 +81,11 @@ export default function ReadingsHistoryPanel({
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dataRefreshCounter = refreshCounter + autoRefreshCounter;
+  const isConcentrationDevice = selectedDeviceType === "gas" || selectedDeviceType === "dust";
+  const isHourlyByMonthView = isConcentrationDevice && concentrationViewMode === "hourlyByMonth" && !rawDrilldown;
+  const effectiveViewMode = isHourlyByMonthView ? "month" : viewMode;
 
-  const axis = useMemo(() => createReadingsAxis(viewMode, month), [viewMode, month]);
+  const axis = useMemo(() => createReadingsAxis(effectiveViewMode, month), [effectiveViewMode, month]);
   const {
     isLoading,
     errorText,
@@ -89,15 +99,46 @@ export default function ReadingsHistoryPanel({
     selectedMetricKey,
     setSelectedMetricKey,
   } = useReadingsData({
+    enabled: !isHourlyByMonthView,
     monitoringPostId,
     selectedDeviceType,
     day,
     month,
-    viewMode,
+    viewMode: effectiveViewMode,
     refreshCounter: dataRefreshCounter,
     axis,
     useGasAbsoluteValues,
   });
+
+  const { isHourlyByMonthLoading, hourlyByMonthErrorText, hourlyByMonthSeries } = useHourlyByMonthReadings({
+    enabled: isHourlyByMonthView,
+    monitoringPostId,
+    selectedDeviceType,
+    month,
+    refreshCounter: dataRefreshCounter,
+  });
+
+  const hourlyByMonthGasCodes = GAS_SUBSTANCE_ORDER.filter((code) =>
+    hourlyByMonthSeries.some((item) => item.substance_code === code && item.points.length > 0)
+  );
+  const hourlyByMonthGasCode = hourlyByMonthGasCodes.includes(selectedGasSubstance)
+    ? selectedGasSubstance
+    : hourlyByMonthGasCodes[0];
+  const hourlyByMonthDustTabs = DUST_METRIC_TABS.filter((metric) =>
+    hourlyByMonthSeries.some((item) => item.key === metric.key && item.points.length > 0)
+  );
+  const hourlyByMonthDustKey = hourlyByMonthDustTabs.some((metric) => metric.key === selectedHourlyByMonthDustMetric)
+    ? selectedHourlyByMonthDustMetric
+    : hourlyByMonthDustTabs[0]?.key;
+  const hourlyByMonthPoints = selectedDeviceType === "gas"
+    ? hourlyByMonthSeries.find((item) => item.substance_code === hourlyByMonthGasCode)?.points ?? []
+    : hourlyByMonthSeries.find((item) => item.key === hourlyByMonthDustKey)?.points ?? [];
+  const displayedHourlyByMonthPoints = useMemo(
+    () => selectedDeviceType === "gas"
+      ? applyGasPointValueCorrection(hourlyByMonthPoints, useGasAbsoluteValues)
+      : hourlyByMonthPoints,
+    [selectedDeviceType, hourlyByMonthPoints, useGasAbsoluteValues]
+  );
 
   const meteoWindDirectionSeries = useMemo(
     () => (selectedDeviceType === "meteo" ? series.find((item) => isWindDirectionSeries(item)) ?? null : null),
@@ -152,9 +193,9 @@ export default function ReadingsHistoryPanel({
   const tooltipPrecision = selectedDeviceType === "gas" ? 4 : selectedDeviceType === "dust" ? 5 : undefined;
   const canOpenRawDrilldown =
     allowsRawDrilldown && isAuthenticated && viewMode === "day" && selectedDeviceType !== "profile";
-  const dateInputType = viewMode === "month" ? "month" : "date";
-  const dateInputValue = viewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
-  const maxDateInputValue = viewMode === "month" ? toIsoMonth(new Date()) : toIsoDay(new Date());
+  const dateInputType = effectiveViewMode === "month" ? "month" : "date";
+  const dateInputValue = effectiveViewMode === "month" ? toIsoMonth(month) : toIsoDay(day);
+  const maxDateInputValue = effectiveViewMode === "month" ? toIsoMonth(new Date()) : toIsoDay(new Date());
   const isNextPeriodDisabled = dateInputValue >= maxDateInputValue;
 
   const aggregateChartEvents = useMemo(
@@ -180,7 +221,7 @@ export default function ReadingsHistoryPanel({
   );
 
   const shiftPeriod = (delta) => {
-    if (viewMode === "month") {
+    if (effectiveViewMode === "month") {
       setMonth((prev) => {
         const nextMonth = shiftMonth(prev, delta);
         return delta > 0 && toIsoMonth(nextMonth) > maxDateInputValue ? prev : nextMonth;
@@ -194,7 +235,7 @@ export default function ReadingsHistoryPanel({
   };
 
   const handleDateInputChange = (value) => {
-    if (viewMode === "month") {
+    if (effectiveViewMode === "month") {
       const nextMonth = parseIsoMonth(value);
       if (nextMonth && toIsoMonth(nextMonth) <= maxDateInputValue) {
         setMonth(nextMonth);
@@ -264,13 +305,29 @@ export default function ReadingsHistoryPanel({
                     Тепловая карта
                   </button>
                 </>
+              ) : isConcentrationDevice ? (
+                <>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={!isHourlyByMonthView}
+                    className={`chart-view-tab${!isHourlyByMonthView ? " chart-view-tab-active" : ""}`}
+                    onClick={() => setConcentrationViewMode("line")}
+                  >
+                    График
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={isHourlyByMonthView}
+                    className={`chart-view-tab${isHourlyByMonthView ? " chart-view-tab-active" : ""}`}
+                    onClick={() => setConcentrationViewMode("hourlyByMonth")}
+                  >
+                    Картина месяца
+                  </button>
+                </>
               ) : (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="true"
-                  className="chart-view-tab chart-view-tab-active"
-                >
+                <button type="button" role="tab" aria-selected="true" className="chart-view-tab chart-view-tab-active">
                   График
                 </button>
               )}
@@ -280,7 +337,8 @@ export default function ReadingsHistoryPanel({
           {!rawDrilldown && (
             <>
               <ReadingsPeriodToolbar
-                viewMode={viewMode}
+                viewMode={effectiveViewMode}
+                showAggregationSwitcher={!isHourlyByMonthView}
                 dateInputType={dateInputType}
                 dateInputValue={dateInputValue}
                 maxDateInputValue={maxDateInputValue}
@@ -292,12 +350,12 @@ export default function ReadingsHistoryPanel({
 
               <ReadingsMetricTabs
                 selectedDeviceType={selectedDeviceType}
-                availableGasSubstanceCodes={availableGasSubstanceCodes}
-                selectedGasSubstance={selectedGasSubstance}
+                availableGasSubstanceCodes={isHourlyByMonthView ? hourlyByMonthGasCodes : availableGasSubstanceCodes}
+                selectedGasSubstance={isHourlyByMonthView ? hourlyByMonthGasCode : selectedGasSubstance}
                 onGasSubstanceChange={setSelectedGasSubstance}
-                metricTabs={metricTabs}
-                selectedMetricKey={selectedMetricKey}
-                onMetricKeyChange={setSelectedMetricKey}
+                metricTabs={isHourlyByMonthView && selectedDeviceType === "dust" ? hourlyByMonthDustTabs : metricTabs}
+                selectedMetricKey={isHourlyByMonthView && selectedDeviceType === "dust" ? hourlyByMonthDustKey : selectedMetricKey}
+                onMetricKeyChange={isHourlyByMonthView && selectedDeviceType === "dust" ? setSelectedHourlyByMonthDustMetric : setSelectedMetricKey}
               />
             </>
           )}
@@ -319,10 +377,14 @@ export default function ReadingsHistoryPanel({
             </div>
           )}
 
-          {isLoading && <p className="station-card-hint">Загрузка графика...</p>}
-          {!isLoading && errorText && <p className="station-card-error">{errorText}</p>}
-          {!isLoading &&
-            !errorText &&
+          {(isLoading || (isHourlyByMonthView && isHourlyByMonthLoading)) && (
+            <p className="station-card-hint">Загрузка показаний...</p>
+          )}
+          {!isLoading && !isHourlyByMonthLoading && (errorText || hourlyByMonthErrorText) && (
+            <p className="station-card-error">{errorText || hourlyByMonthErrorText}</p>
+          )}
+          {!isLoading && !isHourlyByMonthLoading &&
+            !errorText && !hourlyByMonthErrorText &&
             (rawDrilldown ? (
               isRawLoading ? (
                 <p className="station-card-hint">Загрузка исходных показаний...</p>
@@ -349,6 +411,12 @@ export default function ReadingsHistoryPanel({
                   emptyText="Нет исходных показаний за выбранный час."
                 />
               )
+            ) : isHourlyByMonthView ? (
+              <DayHourHeatmapChart
+                month={month}
+                points={displayedHourlyByMonthPoints}
+                emptyText="Нет показаний за выбранный месяц."
+              />
             ) : selectedDeviceType === "profile" ? (
               profileViewMode === "heatmap" ? (
                 <ProfileTemperatureChart
@@ -412,7 +480,7 @@ export default function ReadingsHistoryPanel({
                 emptyText={axis.emptyText}
               />
             ))}
-          {!isLoading && !errorText && !rawDrilldown && canOpenRawDrilldown && (
+          {!isLoading && !errorText && !rawDrilldown && !isHourlyByMonthView && canOpenRawDrilldown && (
             <div className="chart-raw-access-note">
               Для просмотра исходных показаний за час нажмите на нужное значение.
             </div>

@@ -22,6 +22,7 @@ import { applyGasPointValueCorrection } from "../../lib/gasValues";
 import { createEmptyPoints } from "./readingsUtils";
 
 export default function useReadingsData({
+  enabled = true,
   monitoringPostId,
   selectedDeviceType,
   day,
@@ -48,6 +49,12 @@ export default function useReadingsData({
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      setErrorText("");
+      return;
+    }
+
     if (!monitoringPostId || !selectedDeviceType) {
       setSeries([]);
       setGasSubstances([]);
@@ -145,7 +152,7 @@ export default function useReadingsData({
     return () => {
       cancelled = true;
     };
-  }, [monitoringPostId, selectedDeviceType, day, month, viewMode, refreshCounter]);
+  }, [enabled, monitoringPostId, selectedDeviceType, day, month, viewMode, refreshCounter]);
 
   useEffect(() => {
     if (selectedDeviceType !== "gas") {

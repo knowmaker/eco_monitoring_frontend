@@ -241,6 +241,10 @@
   .profile-heatmap-echarts {
     height: clamp(230px, 72vw, 310px) !important;
   }
+
+  .day-hour-heatmap-echarts {
+    height: 470px !important;
+  }
 }
 
 @media (max-width: 460px) {

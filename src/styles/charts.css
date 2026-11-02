@@ -66,6 +66,14 @@
   height: 360px;
 }
 
+.day-hour-heatmap-wrap {
+  margin-top: 8px;
+}
+
+.day-hour-heatmap-echarts {
+  width: 100%;
+  height: 510px;
+}
 
 .chart-empty {
   margin-top: 8px;

@@ -16,9 +16,11 @@ export {
 export { fetchRawMqttPayload } from "./rawMqttPayload";
 export {
   fetchDustStateHourly,
+  fetchDustStateHourlyByMonth,
   fetchDustStateMonthly,
   fetchDustStateRaw,
   fetchGasSensorsHourly,
+  fetchGasSensorsHourlyByMonth,
   fetchGasSensorsMonthly,
   fetchGasSensorsRaw,
   fetchIvtmStateHourly,
